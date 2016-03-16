@@ -46,6 +46,14 @@ def count_list_values_for_all_content_children(collection_id, attribute_name):
     return res.fetchall()
 
 
+def get_list_values_for_nodes_with_schema(schema, attribute_name):
+    # XXX: more abstraction needed...
+    func_call = mediatumfunc.get_list_values_for_nodes_with_schema(schema, attribute_name)
+    stmt = sql.select([sql.text("*")], from_obj=func_call)
+    res = db.session.execute(stmt)
+    return [t[0] for t in res.fetchall()]
+
+
 class m_ilist(Metatype):
 
     def getEditorHTML(self, field, value="", width=400, lock=0, language=None, required=None):
@@ -92,19 +100,18 @@ class m_ilist(Metatype):
     def getPopup(self, req):
         try:
             name = req.params['name']
+            schema = req.args['schema']
             fieldname = req.params.get('fieldname', name)
         except:
             logg.exception("missing request parameter")
             return httpstatus.HTTP_NOT_FOUND
 
-        index = getAllAttributeValues(name, req.params.get('schema')).keys()
-        index.sort(lambda x, y: cmp(x.lower(), y.lower()))
+        index = get_list_values_for_nodes_with_schema(schema, fieldname)
 
         if req.params.get("print", "") != "":
             req.reply_headers["Content-Disposition"] = "attachment; filename=index.txt"
             for word in index:
-                if word.strip() != "":
-                    req.write(word.strip() + "\r\n")
+                req.write(word.strip() + "\r\n")
             return
 
         req.writeTAL("metadata/ilist.html", {"index": index, "fieldname": fieldname}, macro="popup")

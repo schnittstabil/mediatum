@@ -92,6 +92,7 @@ $f$;
 CREATE TYPE value_and_count AS (value text, count bigint);
 CREATE OR REPLACE FUNCTION count_list_values_for_all_content_children(parent_id integer,attr text) RETURNS setof value_and_count
     LANGUAGE plpgsql
+    STABLE
     SET search_path = :search_path
     AS $f$
 DECLARE
@@ -105,6 +106,24 @@ BEGIN
     WHERE val IS NOT NULL
     AND val != ''
     GROUP BY val
+    ORDER BY val;
+END;
+$f$;
+
+
+CREATE OR REPLACE FUNCTION get_list_values_for_nodes_with_schema(schema_ text, attr text) RETURNS setof text
+    LANGUAGE plpgsql
+    STABLE
+    SET search_path = :search_path
+    AS $f$
+DECLARE
+BEGIN
+    RETURN QUERY SELECT DISTINCT val
+    FROM (SELECT trim(unnest(regexp_split_to_array(attrs->>attr, ';'))) AS val 
+            FROM node
+            WHERE node.schema=schema_) q
+    WHERE val IS NOT NULL
+    AND val != ''
     ORDER BY val;
 END;
 $f$;
