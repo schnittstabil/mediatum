@@ -48,7 +48,7 @@ def makeAudioThumb(self, audiofile):
 # """ make thumbnail (jpeg 128x128) """
 
 
-def makeThumbNail(self, audiofile):
+def make_thumbnail_image(self, audiofile):
     path, ext = splitfilename(audiofile.filename)
 
     if audiofile.tags:
@@ -87,7 +87,7 @@ def makeThumbNail(self, audiofile):
 
 
 # """ make presentation format (jpeg 320x320) """
-def makePresentationFormat(self, audiofile):
+def make_original_png_image(self, audiofile):
     path, ext = splitfilename(audiofile.filename)
 
     if audiofile.tags:
@@ -209,8 +209,8 @@ class Audio(Content):
                 _original = AudioFile(athumb)
             else:
                 _original = AudioFile(original.abspath)
-            makePresentationFormat(self, _original)
-            makeThumbNail(self, _original)
+            make_original_png_image(self, _original)
+            make_thumbnail_image(self, _original)
             makeMetaData(self, _original)
 
         db.session.commit()

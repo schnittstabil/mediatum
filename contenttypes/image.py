@@ -39,14 +39,15 @@ import lib.iptc.IPTC
 
 logg = logging.getLogger(__name__)
 
+# XXX: some refactoring has to be done for the next two methods, many similarities ...
 
-def makeThumbNail(image, thumb):
+def make_thumbnail_image(src_filepath, dest_filepath):
     """make thumbnail (jpeg 128x128)"""
 
-    if isnewer(thumb, image):
+    if isnewer(dest_filepath, src_filepath):
         return
 
-    pic = PILImage.open(image)
+    pic = PILImage.open(src_filepath)
     temp_jpg_file = tempfile.NamedTemporaryFile(suffix=".jpg", delete=False)
 
     try:
@@ -54,8 +55,8 @@ def makeThumbNail(image, thumb):
         tmpjpg = temp_jpg_file.name
 
         convert = config.get("external.convert", "convert")
-        if pic.mode == "CMYK" and (image.endswith("jpg") or image.endswith("jpeg")) or pic.mode in ["P", "L"]:
-            check_call([convert, "-quality", "100", "-draw", 'rectangle 0,0 1,1', image, tmpjpg])
+        if pic.mode == "CMYK" and (src_filepath.endswith("jpg") or src_filepath.endswith("jpeg")) or pic.mode in ["P", "L"]:
+            check_call([convert, "-quality", "100", "-draw", 'rectangle 0,0 1,1', src_filepath, tmpjpg])
             pic = PILImage.open(tmpjpg)
 
         pic.load()
@@ -84,17 +85,17 @@ def makeThumbNail(image, thumb):
         draw.line([(0, 0), (127, 0), (127, 127), (0, 127), (0, 0)], (128, 128, 128))
 
         im = im.convert("RGB")
-        im.save(thumb, "jpeg")
+        im.save(dest_filepath, "jpeg")
     finally:
         os.unlink(tmpjpg)
 
 
-def makePresentationFormat(image, thumb):
+def make_presentation_image(src_filepath, dest_filepath):
 
-    if isnewer(thumb, image):
+    if isnewer(dest_filepath, src_filepath):
         return
 
-    pic = PILImage.open(image)
+    pic = PILImage.open(src_filepath)
     temp_jpg_file = tempfile.NamedTemporaryFile(suffix=".jpg", delete=False)
 
     try:
@@ -102,8 +103,8 @@ def makePresentationFormat(image, thumb):
         tmpjpg = temp_jpg_file.name
 
         convert = config.get("external.convert", "convert")
-        if pic.mode == "CMYK" and (image.endswith("jpg") or image.endswith("jpeg")) or pic.mode in ["P", "L"]:
-            check_call([convert, "-quality", "100", "-draw", 'rectangle 0,0 1,1', image, tmpjpg])
+        if pic.mode == "CMYK" and (src_filepath.endswith("jpg") or src_filepath.endswith("jpeg")) or pic.mode in ["P", "L"]:
+            check_call([convert, "-quality", "100", "-draw", 'rectangle 0,0 1,1', src_filepath, tmpjpg])
             pic = PILImage.open(tmpjpg)
 
         pic.load()
@@ -123,37 +124,20 @@ def makePresentationFormat(image, thumb):
             pic = pic.resize((newwidth, newheight), PILImage.ANTIALIAS)
 
         try:
-            pic.save(thumb, "jpeg")
+            pic.save(dest_filepath, "jpeg")
         except IOError:
-            pic.convert('RGB').save(thumb, "jpeg")
+            pic.convert('RGB').save(dest_filepath, "jpeg")
 
     finally:
         os.unlink(tmpjpg)
 
-""" make original (png real size) """
 
-
-def makeOriginalFormat(image, thumb):
-    tmpjpg = config.get("paths.datadir") + "tmp/img" + str(random.random()) + ".jpg"
-
-    pic = PILImage.open(image)
-    if pic.mode == "CMYK" and (image.endswith("jpg") or image.endswith("jpeg")) or pic.mode in ["P", "L"]:
-        # if image.endswith("jpg") or image.endswith("jpeg"):
-        os.system("convert -quality 100 -draw \"rectangle 0,0 1,1\" %s %s" % (image, tmpjpg))
-        pic = PILImage.open(tmpjpg)
-
-    try:
-        pic.load()
-    except IOError as e:
-        pic = None
-        raise OperationException("error:" + ustr(e))
-
-    pic.save(thumb, "png")
-    if os.path.exists(tmpjpg):
-        os.unlink(tmpjpg)
-
-
-""" evaluate image dimensions for given file """
+def make_original_png_image(src_filepath, dest_filepath):
+    """Create a PNG with filename `dest_filepath` from a file at `src_filepath`
+    """
+    assert dest_filepath.endswith(".png")
+    convert = config.get("external.convert", "convert")
+    check_call([convert, src_filepath, dest_filepath])
 
 
 def getImageDimensions(image):
@@ -306,7 +290,7 @@ class Image(Content):
                             pngname = path + ".png"
 
                             if not os.path.isfile(pngname):
-                                makeOriginalFormat(f.abspath, pngname)
+                                make_original_png_image(f.abspath, pngname)
 
                                 width, height = getImageDimensions(pngname)
                                 self.set("width", width)
@@ -345,8 +329,8 @@ class Image(Content):
                         assert not os.path.isfile(thumbname)
                         assert not os.path.isfile(thumbname2)
                         width, height = getImageDimensions(f.abspath)
-                        makeThumbNail(f.abspath, thumbname)
-                        makePresentationFormat(f.abspath, thumbname2)
+                        make_thumbnail_image(f.abspath, thumbname)
+                        make_presentation_image(f.abspath, thumbname2)
                         if f.mimetype is None:
                             if f.base_name.lower().endswith("jpg"):
                                 f.mimetype = "image/jpeg"

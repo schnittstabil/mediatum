@@ -27,7 +27,7 @@ import tempfile
 
 from mediatumtal import tal
 from contenttypes.data import Content
-from contenttypes.image import makeThumbNail, makePresentationFormat
+from contenttypes.image import make_thumbnail_image, make_presentation_image
 from core.transition.postgres import check_type_arg_with_schema
 from core import db, File, config
 from core.config import resolve_datadir_path
@@ -141,8 +141,8 @@ class Video(Content):
                 name_without_ext = os.path.splitext(video_file.path)[0]
                 thumbname = u'{}.thumb'.format(name_without_ext)
                 thumbname2 = u'{}.presentation'.format(name_without_ext)
-                makeThumbNail(temp_thumbnail_path, resolve_datadir_path(thumbname))
-                makePresentationFormat(temp_thumbnail_path, resolve_datadir_path(thumbname2))
+                make_thumbnail_image(temp_thumbnail_path, resolve_datadir_path(thumbname))
+                make_presentation_image(temp_thumbnail_path, resolve_datadir_path(thumbname2))
             finally:
                 os.unlink(temp_thumbnail_path)
 

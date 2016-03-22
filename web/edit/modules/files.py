@@ -26,7 +26,7 @@ import core.users as users
 import logging
 from utils.utils import getMimeType, get_user_id
 from utils.fileutils import importFile, getImportDir, importFileIntoDir
-from contenttypes.image import makeThumbNail, makePresentationFormat
+from contenttypes.image import make_thumbnail_image, make_presentation_image
 from core.transition import httpstatus, current_user
 from core.translation import t
 from core import Node
@@ -254,8 +254,8 @@ def getContent(req, ids):
                 thumbname = os.path.join(getImportDir(), hashlib.md5(ustr(random.random())).hexdigest()[0:8]) + ".thumb"
 
                 file = importFile(thumbname, uploadfile.tempname)  # add new file
-                makeThumbNail(file.abspath, thumbname)
-                makePresentationFormat(file.abspath, thumbname + "2")
+                make_thumbnail_image(file.abspath, thumbname)
+                make_presentation_image(file.abspath, thumbname + "2")
 
                 if os.path.exists(file.abspath):  # remove uploaded original
                     os.remove(file.abspath)
