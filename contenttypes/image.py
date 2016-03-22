@@ -19,29 +19,21 @@
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-from core import config
-from PIL import Image as PILImage, ImageDraw
-import core.acl as acl
 import logging
-import random
 import os
-import hashlib
+from subprocess import check_call
+import tempfile
+from PIL import Image as PILImage, ImageDraw
 
-from schema.schema import VIEW_HIDE_EMPTY
+from core import config, File, db
 from core.attachment import filebrowser
-from utils.fileutils import getImportDir
-from utils.utils import splitfilename, isnewer, iso2utf8, OperationException, utf8_decode_escape
-from core.translation import lang, t
+from core.translation import t
 from core.styles import getContentStyles
-from web.frontend import zoom
-from contenttypes.data import Content
 from core.transition.postgres import check_type_arg_with_schema
-from core import File
-from core import db
+from contenttypes.data import Content
+from utils.utils import splitfilename, isnewer, iso2utf8, utf8_decode_escape
 
 import lib.iptc.IPTC
-import tempfile
-from subprocess import call, check_call
 
 
 
@@ -147,7 +139,7 @@ def makeOriginalFormat(image, thumb):
     pic = PILImage.open(image)
     if pic.mode == "CMYK" and (image.endswith("jpg") or image.endswith("jpeg")) or pic.mode in ["P", "L"]:
         # if image.endswith("jpg") or image.endswith("jpeg"):
-        call(("convert", "-quality", "100", "-draw", "rectangle 0,0 1,1", image, tmpjpg))
+        os.system("convert -quality 100 -draw \"rectangle 0,0 1,1\" %s %s" % (image, tmpjpg))
         pic = PILImage.open(tmpjpg)
 
     try:
@@ -279,7 +271,7 @@ class Image(Content):
     """ make a copy of the svg file in png format """
     def svg_to_png(self, filename, imgfile):
         # convert svg to png (imagemagick + ghostview)
-        call(("convert", "-alpha", "off", "-colorspace", "RGB", filename, "-background", "white", imgfile))
+        os.system("convert -alpha off -colorspace RGB %s -background white %s" % (filename, imgfile))
 
     """ postprocess method for object type 'image'. called after object creation """
     def event_files_changed(self):
