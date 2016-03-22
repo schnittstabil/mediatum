@@ -260,138 +260,137 @@ class Image(Content):
     """ postprocess method for object type 'image'. called after object creation """
     def event_files_changed(self):
         logg.debug("Postprocessing node %s", self.id)
-        if "image" in self.type:
+        for f in self.files:
+            if f.base_name.lower().endswith('svg'):
+                self.svg_to_png(f.abspath, f.abspath[:-4] + ".png")
+                self.files.remove(f)
+                self.files.append(File(f.abspath, "original", f.mimetype))
+                self.files.append(File(f.abspath, "image", f.mimetype))
+                self.files.append(File(f.abspath[:-4] + ".png", "tmppng", "image/png"))
+                break
+        orig = 0
+        thumb = 0
+        for f in self.files:
+            if f.type == "original":
+                orig = 1
+            if f.type == "thumb":
+                thumb = 1
+
+        if orig == 0:
             for f in self.files:
-                if f.base_name.lower().endswith('svg'):
-                    self.svg_to_png(f.abspath, f.abspath[:-4] + ".png")
-                    self.files.remove(f)
-                    self.files.append(File(f.abspath, "original", f.mimetype))
-                    self.files.append(File(f.abspath, "image", f.mimetype))
-                    self.files.append(File(f.abspath[:-4] + ".png", "tmppng", "image/png"))
-                    break
-            orig = 0
-            thumb = 0
-            for f in self.files:
-                if f.type == "original":
-                    orig = 1
-                if f.type == "thumb":
-                    thumb = 1
+                if f.type == "image":
 
-            if orig == 0:
-                for f in self.files:
-                    if f.type == "image":
+                    if f.mimetype == "image/tiff" or ((f.mimetype is None or f.mimetype == "application/x-download")
+                                                      and (f.base_name.lower().endswith("tif") or f.base_name.lower().endswith("tiff"))):
+                        # move old file to "original", create a new png to be used as "image"
+                        self.files.remove(f)
 
-                        if f.mimetype == "image/tiff" or ((f.mimetype is None or f.mimetype == "application/x-download")
-                                                          and (f.base_name.lower().endswith("tif") or f.base_name.lower().endswith("tiff"))):
-                            # move old file to "original", create a new png to be used as "image"
-                            self.files.remove(f)
+                        path, ext = splitfilename(f.abspath)
+                        pngname = path + ".png"
 
-                            path, ext = splitfilename(f.abspath)
-                            pngname = path + ".png"
+                        if not os.path.isfile(pngname):
+                            make_original_png_image(f.abspath, pngname)
 
-                            if not os.path.isfile(pngname):
-                                make_original_png_image(f.abspath, pngname)
+                            width, height = getImageDimensions(pngname)
+                            self.set("width", width)
+                            self.set("height", height)
 
-                                width, height = getImageDimensions(pngname)
-                                self.set("width", width)
-                                self.set("height", height)
-
-                            else:
-                                width, height = getImageDimensions(pngname)
-                                self.set("width", width)
-                                self.set("height", height)
-
-                            self.files.append(File(pngname, "image", "image/png"))
-                            self.files.append(File(f.abspath, "original", "image/tiff"))
-                            break
                         else:
-                            self.files.append(File(f.abspath, "original", f.mimetype))
+                            width, height = getImageDimensions(pngname)
+                            self.set("width", width)
+                            self.set("height", height)
 
-            # retrieve technical metadata.
+                        self.files.append(File(pngname, "image", "image/png"))
+                        self.files.append(File(f.abspath, "original", "image/tiff"))
+                        break
+                    else:
+                        self.files.append(File(f.abspath, "original", f.mimetype))
+
+        # retrieve technical metadata.
+        for f in self.files:
+            if (f.type == "image" and not f.base_name.lower().endswith("svg")) or f.type == "tmppng":
+                width, height = getImageDimensions(f.abspath)
+                self.set("origwidth", width)
+                self.set("origheight", height)
+                self.set("origsize", f.getSize())
+
+                if f.mimetype == "image/jpeg":
+                    self.set("jpg_comment", iso2utf8(getJpegSection(f.abspath, 0xFE).strip()))
+
+        if thumb == 0:
             for f in self.files:
                 if (f.type == "image" and not f.base_name.lower().endswith("svg")) or f.type == "tmppng":
+                    path, ext = splitfilename(f.abspath)
+
+                    thumbname = path + ".thumb"
+                    thumbname2 = path + ".thumb2"
+
+                    assert not os.path.isfile(thumbname)
+                    assert not os.path.isfile(thumbname2)
                     width, height = getImageDimensions(f.abspath)
-                    self.set("origwidth", width)
-                    self.set("origheight", height)
-                    self.set("origsize", f.getSize())
+                    make_thumbnail_image(f.abspath, thumbname)
+                    make_presentation_image(f.abspath, thumbname2)
+                    if f.mimetype is None:
+                        if f.base_name.lower().endswith("jpg"):
+                            f.mimetype = "image/jpeg"
+                        else:
+                            f.mimetype = "image/tiff"
+                    self.files.append(File(thumbname, "thumb", "image/jpeg"))
+                    self.files.append(File(thumbname2, "presentation", "image/jpeg"))
+                    self.set("width", width)
+                    self.set("height", height)
 
-                    if f.mimetype == "image/jpeg":
-                        self.set("jpg_comment", iso2utf8(getJpegSection(f.abspath, 0xFE).strip()))
+        #fetch unwanted tags to be omitted
+        unwanted_attrs = self.unwanted_attributes()
 
-            if thumb == 0:
-                for f in self.files:
-                    if (f.type == "image" and not f.base_name.lower().endswith("svg")) or f.type == "tmppng":
-                        path, ext = splitfilename(f.abspath)
+        # Exif
+        try:
+            from lib.Exif import EXIF
+            files = self.files
 
-                        thumbname = path + ".thumb"
-                        thumbname2 = path + ".thumb2"
-
-                        assert not os.path.isfile(thumbname)
-                        assert not os.path.isfile(thumbname2)
-                        width, height = getImageDimensions(f.abspath)
-                        make_thumbnail_image(f.abspath, thumbname)
-                        make_presentation_image(f.abspath, thumbname2)
-                        if f.mimetype is None:
-                            if f.base_name.lower().endswith("jpg"):
-                                f.mimetype = "image/jpeg"
-                            else:
-                                f.mimetype = "image/tiff"
-                        self.files.append(File(thumbname, "thumb", "image/jpeg"))
-                        self.files.append(File(thumbname2, "presentation", "image/jpeg"))
-                        self.set("width", width)
-                        self.set("height", height)
-
-            #fetch unwanted tags to be omitted
-            unwanted_attrs = self.unwanted_attributes()
-
-            # Exif
-            try:
-                from lib.Exif import EXIF
-                files = self.files
-
-                for file in files:
-                    if file.type == "original":
-                        with open(file.abspath, 'rb') as f:
-                            tags = EXIF.process_file(f)
-                            tags.keys().sort()
-
-                        for k in tags.keys():
-                            # don't set unwanted exif attributes
-                            if any(tag in k for tag in unwanted_attrs):
-                                continue
-                            if tags[k] != "" and k != "JPEGThumbnail":
-                                self.set("exif_" + k.replace(" ", "_"),
-                                         utf8_decode_escape(ustr(tags[k])))
-                            elif k == "JPEGThumbnail":
-                                if tags[k] != "":
-                                    self.set("Thumbnail", "True")
-                                else:
-                                    self.set("Thumbnail", "False")
-
-            except:
-                logg.exception("exception get EXIF attributes")
-
-            if dozoom(self) == 1:
-                tileok = 0
-                for f in self.files:
-                    if f.type.startswith("tile"):
-                        tileok = 1
-                if not tileok and self.get("width") and self.get("height"):
-                    zoom.getImage(self.id, 1)
-
-            # iptc
-            for file in self.files:
+            for file in files:
                 if file.type == "original":
+                    with open(file.abspath, 'rb') as f:
+                        tags = EXIF.process_file(f)
+                        tags.keys().sort()
 
-                    tags = lib.iptc.IPTC.get_iptc_values(file.abspath, lib.iptc.IPTC.get_wanted_iptc_tags())
                     for k in tags.keys():
-                        self.attrs[k] = tags[k]
+                        # don't set unwanted exif attributes
+                        if any(tag in k for tag in unwanted_attrs):
+                            continue
+                        if tags[k] != "" and k != "JPEGThumbnail":
+                            self.set("exif_" + k.replace(" ", "_"),
+                                     utf8_decode_escape(ustr(tags[k])))
+                        elif k == "JPEGThumbnail":
+                            if tags[k] != "":
+                                self.set("Thumbnail", "True")
+                            else:
+                                self.set("Thumbnail", "False")
 
+        except:
+            logg.exception("exception get EXIF attributes")
 
+        if dozoom(self) == 1:
+            tileok = 0
             for f in self.files:
-                if f.base_name.lower().endswith("png") and f.type == "tmppng":
-                    self.files.remove(f)
-                    break
+                if f.type.startswith("tile"):
+                    tileok = 1
+            if not tileok and self.get("width") and self.get("height"):
+                zoom.getImage(self.id, 1)
+
+        # iptc
+        for file in self.files:
+            if file.type == "original":
+
+                tags = lib.iptc.IPTC.get_iptc_values(file.abspath, lib.iptc.IPTC.get_wanted_iptc_tags())
+                for k in tags.keys():
+                    self.attrs[k] = tags[k]
+
+
+        for f in self.files:
+            if f.base_name.lower().endswith("png") and f.type == "tmppng":
+                self.files.remove(f)
+                break
 
         db.session.commit()
 
