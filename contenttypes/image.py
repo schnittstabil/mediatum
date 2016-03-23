@@ -275,8 +275,7 @@ class Image(Content):
             for f in self.files:
                 if f.type == "image":
 
-                    if f.mimetype == "image/tiff" or ((f.mimetype is None or f.mimetype == "application/x-download")
-                                                      and (f.base_name.lower().endswith("tif") or f.base_name.lower().endswith("tiff"))):
+                    if f.mimetype == "image/tiff":
                         # move old file to "original", create a new png to be used as "image"
                         self.files.remove(f)
 
