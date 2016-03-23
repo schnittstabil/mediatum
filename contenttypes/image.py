@@ -210,22 +210,16 @@ class Image(Content):
         node = self
 
         tif = ""
-        try:
-            tifs = req.session["fullresolutionfiles"]
-        except:
-            tifs = []
+        can_see_original = self.has_data_access()
 
-        if self.has_data_access():
-            for f in self.files:
-                if f.type == "original":
-                    if self.get('system.origname') == "1":
-                        tif = self.base_name
-                    else:
-                        tif = f.base_name
-
-            archive_path = self.system_attrs.get("archive_path")
+        if can_see_original:
+            archive_path = self.system_attrs.get(u"archive_path")
             if archive_path:
                 tif = u"file/{}/{}".format(self.id, archive_path)
+            else:
+                original_file = self.files.filter_by(filetype=u"original").scalar()
+                if original_file is not None:
+                    tif = self.base_name
 
         files, sum_size = filebrowser(self, req)
 
@@ -234,9 +228,9 @@ class Image(Content):
         obj['tif'] = tif
         obj['zoom'] = dozoom(node)
         obj['tileurl'] = u"/tile/{}/".format(node.id)
-        obj['canseeoriginal'] = node.has_data_access()
+        obj['canseeoriginal'] = can_see_original
         obj['originallink'] = u"getArchivedItem('{}/{}')".format(node.id, tif)
-        obj['archive'] = node.system_attrs.get('archive_type', "")
+        obj['archive'] = node.system_attrs.get(u"archive_type", "")
 
         full_style = req.args.get("style", "full_standard")
         if full_style:
@@ -259,6 +253,7 @@ class Image(Content):
 
     """ postprocess method for object type 'image'. called after object creation """
     def event_files_changed(self):
+        """ postprocess method for object type 'image'. called after object creation """
         logg.debug("Postprocessing node %s", self.id)
         for f in self.files:
             if f.base_name.lower().endswith('svg'):
