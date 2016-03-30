@@ -654,8 +654,8 @@ class Metadatatype(Node):
         if masktype:
             masks = masks.filter(Mask.a.masktype.astext == masktype)
         if language:
-            # return masks with given language or no defined language
-            masks = masks.filter((Mask.a.language.astext == language) | ~Mask.attrs.has_key("language"))
+            # return masks with given language
+            masks = masks.filter(Mask.a.language.astext == language)
         return masks
 
     def get_mask(self, name):
