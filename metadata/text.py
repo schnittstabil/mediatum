@@ -126,7 +126,11 @@ class m_text(Metatype):
 
     def getFormatedValue(self, field, node, language=None, html=1, template_from_caller=None, mask=None):
 
-        value = node.get_special(field.name).replace(";", "; ")
+        value = node.get_special(field.name)
+        # consider int, long values like filesize
+        if isinstance(value, (int, long)):
+            value = str(value)
+        value = value.replace(";", "; ")
 
         # ignore trailing newlines for textfields
         value = value.rstrip("\r\n")
