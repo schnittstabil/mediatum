@@ -28,6 +28,7 @@ import exiftool
 from utils.date import parse_date
 from utils.date import validateDate
 from utils.date import format_date
+from core import config
 import collections
 logger = logging.getLogger('editor')
 
@@ -139,15 +140,31 @@ def get_iptc_values(image_path, tags=None):
         return
 
     # fetch metadata dict from exiftool
-    with exiftool.ExifTool() as et:
+    exiftool_exe = config.get("external.exiftool")
+    with exiftool.ExifTool(exiftool_exe) as et:
         iptc_metadata = et.get_metadata(image_path)
 
     ret = {}
 
-    # TODO:
-    # * return only wanted iptc tags
-    # * format dates for date fields
-    # * join lists to strings
+
+    for iptc_tag in tags.keys():
+        key = iptc_tag.replace('iptc_', 'IPTC:')
+        tag = iptc_tag.split('iptc_')[-1]
+        if key in iptc_metadata.keys():
+            ret[tag] = iptc_metadata[key]
+
+            # format dates for date fields
+            if tag == 'DateCreated':
+                if validateDate(parse_date(ret[tag], format='%Y:%m:%d')):
+                    ret[tag] = format_date(parse_date(ret[tag], format='%Y:%m:%d'))
+                else:
+                    logger.error('Could not validate: {}.'.format(ret['DateCreated']))
+
+            # join lists to strings
+            if isinstance (ret[tag], list):
+                ret[tag] = '; '.join(ret[tag])
+
+    logger.info('{} read from file.'.format(ret))
 
     return ret
 
