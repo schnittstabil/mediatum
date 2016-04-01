@@ -151,17 +151,18 @@ def initContexts():
 
     context = athana.addContext("/", ".")
     # === public area ===
-    file = context.addFile("web/frontend/streams.py")
-    file.addHandler("send_image").addPattern("/images/.*")
+    file = context.addFile("web/frontend/filehandlers.py")
     file.addHandler("send_thumbnail").addPattern("/thumbs/.*")
     file.addHandler("send_thumbnail2").addPattern("/thumb2/.*")
     file.addHandler("send_doc").addPattern("/doc/.*")
-    file.addHandler("send_file").addPattern("/file/.*")
-    file.addHandler("send_file_as_download").addPattern("/download/.*")
+    file.addHandler("send_jpeg").addPattern("/images/.*")
+    handler = file.addHandler("send_file")
+    handler.addPattern("/file/.*")
+    handler.addPattern("/download/.*")
     file.addHandler("send_attachment").addPattern("/attachment/.*")
     file.addHandler("send_attfile").addPattern("/attfile/.*")
     file.addHandler("get_archived").addPattern("/archive/.*")
-    file.addHandler("get_root").addPattern("/[a-z,0-9,-]*\.[a-z]*")  # root directory added /web/root (only files with extensions)
+    file.addHandler("send_from_webroot").addPattern("/[a-z,0-9,-]*\.[a-z]*")  # root directory added /web/root (only files with extensions)
 
     file = context.addFile("web/frontend/zoom.py")
     file.addHandler("send_imageproperties_xml").addPattern("/tile/[0-9]*/ImageProperties.xml")
