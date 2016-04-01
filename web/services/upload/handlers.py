@@ -162,14 +162,13 @@ def upload_new_node(req, path, params, data):
 
     db.session.commit()
 
-    if hasattr(n, "event_files_changed"):
-        try:
-            n.event_files_changed()
-        except OperationException as e:
-            for file in n.getFiles():
-                if os.path.exists(file.retrieveFile()):
-                    os.remove(file.retrieveFile())
-            raise OperationException(e.value)
+    try:
+        n.event_files_changed()
+    except:
+        for file_to_delete in n.getFiles():
+            if os.path.exists(file_to_delete.retrieveFile()):
+                os.remove(file_to_delete.retrieveFile())
+        raise
 
     d = {
         'status': 'Created',

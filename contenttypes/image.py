@@ -199,6 +199,15 @@ class Image(Content):
     def get_sys_filetypes(cls):
         return [u"original", u"thumb", u"image", u"presentation", u"zoom"]
 
+    @classmethod
+    def get_upload_filetype(cls):
+        return u"original"
+
+    @property
+    def zoom_available(self):
+        zoom_file = self.files.filter_by(filetype=u"zoom").scalar()
+        return zoom_file is not None
+
     # prepare hash table with values for TAL-template
     def _prepareData(self, req):
         obj = super(Image, self)._prepareData(req)

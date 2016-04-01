@@ -54,6 +54,7 @@ def getContent(req, ids):
         file._path = file._path.replace(config.get("paths.datadir"), "")
         file._path = "/".join(file._path.split("/")[:-1]) + "/"+fnode.name
         fnode.files.append(file)
+        file.filetype = fnode.get_upload_filetype()
         fnode.event_files_changed()
         node.children.append(fnode)
         db.session.commit()

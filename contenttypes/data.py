@@ -124,9 +124,15 @@ class Data(Node):
 
     @classmethod
     def get_original_filetype(cls):
-        """Returns the File.filetype value for associated files that represent the original ("as uploaded") file
+        """Returns the File.filetype value for associated files that represent the "original" file
         """
         return "original"
+
+    @classmethod
+    def get_upload_filetype(cls):
+        """Returns the File.filetype value that will be used by the editor for uploaded files.
+        """
+        return cls.__name__.lower()
 
     @classmethod
     def isContainer(cls):

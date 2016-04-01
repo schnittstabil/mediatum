@@ -331,21 +331,21 @@ class collection_ftpserver:
         return athana.list_producer(l)
 
 
-def file_to_node(file_node, upload_dir):
+def file_to_node(fileobj, upload_dir):
     '''
-    Converts the FileNode object in the upload_dir into a Node with the FileNode as an attachment
-    @param file_node: FileNode
+    Converts the File object in the upload_dir into a Node with the FileNode as an attachment
+    @param fileobj: FileNode
     @param upload_dir: Node
     @return: Node if one was created
     '''
 
     home_dir = upload_dir.parents[0]
-    file_type = file_node.filetype
+    file_type = fileobj.filetype
 
     if file_type == 'other' or file_type == 'zip':
         return
 
-    path = file_node.abspath.split('/')
+    path = fileobj.abspath.split('/')
 
     new_nodename = path.pop().replace('ftp_', '', 1)
     new_filename = '.'.join([hashlib.md5(unicode(random())).hexdigest()[0:8],
@@ -354,8 +354,8 @@ def file_to_node(file_node, upload_dir):
     new_abspath = '/'.join(path)
 
     try:
-        os.rename(file_node.abspath, new_abspath)
-        file_node.path = new_abspath.replace(config.get('paths.datadir'), '')
+        os.rename(fileobj.abspath, new_abspath)
+        fileobj.path = new_abspath.replace(config.get('paths.datadir'), '')
     except:
         return
 
@@ -363,11 +363,13 @@ def file_to_node(file_node, upload_dir):
     if not schema:
         schema = 'file'
 
-    content_class = Node.get_class_for_typestring(file_node.filetype)
+    content_class = Node.get_class_for_typestring(fileobj.filetype)
     new_node = content_class(utf8_decode_escape(new_nodename), schema=schema)
 
-    new_node.files.append(file_node)
-    upload_dir.files.remove(file_node)
+    upload_dir.files.remove(fileobj)
+    fileobj.filetype = content_class.get_upload_filetype()
+    new_node.files.append(fileobj)
+
     new_node.event_files_changed()
     upload_dir.children.append(new_node)
     db.session.commit()
