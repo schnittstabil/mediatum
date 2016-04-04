@@ -153,31 +153,6 @@ def get_image_dimensions(image):
     return width, height
 
 
-def getJpegSection(image, section):  # section character
-    data = ""
-    try:
-        with open(image, "rb") as fin:
-            done = False
-            capture = False
-
-            while not done:
-                c = fin.read(1)
-                if capture and ord(c) != 0xFF and ord(c) != section:
-                    data += c
-
-                if ord(c) == 0xFF:  # found tag start
-                    if capture:
-                        done = True
-
-                    c = fin.read(1)
-                    if ord(c) == section:  # found tag
-                        capture = True
-    except:
-        logg.exception("exception in getJpegSection")
-        data = ""
-    return data
-
-
 @contextmanager
 def _create_zoom_tile_buffer(img, max_level, tilesize, level, x, y):
     level = 1 << (max_level - level)
@@ -426,35 +401,6 @@ class Image(Content):
 
     def _extract_metadata(self, files=None):
         image_file = self._find_processing_file(files)
-        unwanted_attrs = self.unwanted_attributes()
-
-        # Exif
-        with open(image_file.abspath, 'rb') as f:
-            tags = EXIF.process_file(f)
-            tags.keys().sort()
-
-        for k in tags.keys():
-            # don't set unwanted exif attributes
-            if any(tag in k for tag in unwanted_attrs):
-                continue
-            if tags[k] and k != "JPEGThumbnail":
-                self.set("exif_" + k.replace(" ", "_"), utf8_decode_escape(unicode(tags[k]), encoding="utf8"))
-            elif k == "JPEGThumbnail":
-                if tags[k] != "":
-                    self.set("Thumbnail", "True")
-                else:
-                    self.set("Thumbnail", "False")
-        # iptc
-        #tags = lib.iptc.IPTC.get_iptc_values(image_file.abspath, lib.iptc.IPTC.get_wanted_iptc_tags())
-        for k in tags.keys():
-            self.attrs[k] = tags[k]
-
-    def _extract_technical_metadata(self, files=None):
-        image_file = self._find_processing_file(files)
-
-        if image_file is None:
-            return
-
         width, height = get_image_dimensions(image_file)
         # XXX: this is a bit redundant...
         self.set("origwidth", width)
@@ -463,9 +409,22 @@ class Image(Content):
         self.set("width", width)
         self.set("height", height)
 
-        if image_file.mimetype == "image/jpeg":
-            self.set("jpg_comment", iso2utf8(getJpegSection(image_file.abspath, 0xFE).strip()))
+        # Exif
+        unwanted_attrs = Image.get_unwanted_exif_attributes()
 
+        with open(image_file.abspath, 'rb') as f:
+            tags = EXIF.process_file(f)
+
+        for k in tags.keys():
+            # don't set unwanted exif attributes
+            if any(tag in k for tag in unwanted_attrs):
+                continue
+            if tags[k]:
+                self.set("exif_" + k.replace(" ", "_"), utf8_decode_escape(str(tags[k])))
+        # iptc
+#        tags = lib.iptc.IPTC.get_iptc_values(image_file.abspath, lib.iptc.IPTC.get_wanted_iptc_tags())
+#         for k in tags.keys():
+#             self.attrs[k] = tags[k]
 
     def event_files_changed(self):
         """postprocess method for object type 'image'. called after object creation"""
@@ -490,8 +449,7 @@ class Image(Content):
             self._generate_thumbnails(files)
 
         # should we skip this sometimes? Do we want to overwrite everything?
-        self._extract_technical_metadata(files)
-        #self._extract_metadata(files)
+        self._extract_metadata(files)
 
         if int(self.get("width")) > Image.ZOOM_SIZE or int(self.get("height")) > Image.ZOOM_SIZE:
             self._generate_zoom_archive(files)
@@ -500,8 +458,8 @@ class Image(Content):
 
         db.session.commit()
 
-
-    def unwanted_attributes(self):
+    @classmethod
+    def get_unwanted_exif_attributes(cls):
         '''
         Returns a list of unwanted exif tags which are not to be extracted from uploaded images
         @return: list

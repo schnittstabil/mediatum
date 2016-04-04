@@ -161,7 +161,7 @@ class Video(Content):
         else:
             return format_date(make_date(0, 0, 0, int(duration) / 3600, duration / 60, int(duration % 60)), '%H:%M:%S')
 
-    def unwanted_attributes(self):
+    def get_unwanted_exif_attributes(self):
         '''
         Returns a list of unwanted attributes which are not to be extracted from uploaded videos
         @return: list

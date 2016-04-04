@@ -79,6 +79,16 @@ def test_create_zoom_archive():
         assert os.stat(tmpfile.name).st_size > 1000
 
 
+def test_image_extract_metadata(image):
+    # for svg, the alternative png format is needed for extraction
+    if image._test_mimetype == "image/svg+xml":
+        image._generate_image_formats()
+    image._extract_metadata()
+
+    # SVG does not support Exif, GIF and PNG are not supported by our ancient exif lib
+    if image._test_mimetype in ("image/tiff", "image/jpeg"):
+        assert image.get("exif_Image_XResolution") == "300"
+
 @pytest.mark.slow
 def test_image_generate_zoom_archive(image):
     image._generate_image_formats()
