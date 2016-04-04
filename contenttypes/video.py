@@ -56,7 +56,7 @@ class Video(Content):
 
     @classmethod
     def get_original_filetype(cls):
-        return "original"
+        return u"video"
 
     @classmethod
     def get_default_edit_menu_tabs(cls):
