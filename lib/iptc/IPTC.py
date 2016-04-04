@@ -28,6 +28,7 @@ import exiftool
 from utils.date import parse_date
 from utils.date import validateDate
 from utils.date import format_date
+from utils.strings import ensure_unicode
 from core import config
 import collections
 logger = logging.getLogger('editor')
@@ -113,7 +114,7 @@ def get_wanted_iptc_tags():
     }.items()))
 
 
-def get_iptc_values(image_path, tags=None):
+def get_iptc_tags(image_path, tags=None):
     """
         get the IPTC tags/values from a given
         image file
@@ -123,6 +124,9 @@ def get_iptc_values(image_path, tags=None):
         :param tags: dictionary with wanted iptc tags
         :return: dictionary with tag/value
     """
+    if tags == None:
+        tags = get_wanted_iptc_tags()
+
     if not isinstance(tags, dict):
         logger.info('No Tags to read.')
         return
@@ -140,29 +144,30 @@ def get_iptc_values(image_path, tags=None):
         return
 
     # fetch metadata dict from exiftool
-    exiftool_exe = config.get("external.exiftool")
+    exiftool_exe = config.get("external.exiftool", "exiftool")
     with exiftool.ExifTool(exiftool_exe) as et:
         iptc_metadata = et.get_metadata(image_path)
 
     ret = {}
 
-
     for iptc_tag in tags.keys():
         key = iptc_tag.replace('iptc_', 'IPTC:')
         tag = iptc_tag.split('iptc_')[-1]
         if key in iptc_metadata.keys():
-            ret[tag] = iptc_metadata[key]
+            value = iptc_metadata[key]
 
             # format dates for date fields
             if tag == 'DateCreated':
-                if validateDate(parse_date(ret[tag], format='%Y:%m:%d')):
-                    ret[tag] = format_date(parse_date(ret[tag], format='%Y:%m:%d'))
+                if validateDate(parse_date(value, format='%Y:%m:%d')):
+                    value = format_date(parse_date(value, format='%Y:%m:%d'))
                 else:
-                    logger.error('Could not validate: {}.'.format(ret['DateCreated']))
+                    logger.error('Could not validate: {} as date value.'.format(value))
 
             # join lists to strings
-            if isinstance (ret[tag], list):
-                ret[tag] = '; '.join(ret[tag])
+            if isinstance (value, list):
+                value = ';'.join(value)
+
+            ret[tag] = ensure_unicode(value, silent=True)
 
     logger.info('{} read from file.'.format(ret))
 
