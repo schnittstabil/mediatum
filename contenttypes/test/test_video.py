@@ -7,23 +7,16 @@ from __future__ import absolute_import
 import os
 import pytest
 
-from core import config, File
-from contenttypes.test import TEST_VIDEO_PATH, skip_if_video_missing, TEST_VIDEO_NAME
+from core import File
+from contenttypes.test import skip_if_video_missing, TEST_VIDEO_NAME
+from contenttypes.test.asserts import assert_thumbnails_ok
 
 
-def assert_thumbnails_and_video_ok(video):
-    files = video.files.order_by(File.filetype).all()
-    assert files[0].filetype == u"presentation"
-    assert files[0].mimetype == u"image/jpeg"
-    assert files[0].path == TEST_VIDEO_PATH.replace(u".mp4", u".presentation")
-    assert files[1].filetype == u"thumb"
-    assert files[1].mimetype == u"image/jpeg"
-    assert files[1].path == TEST_VIDEO_PATH.replace(u".mp4", u".thumb")
-    assert files[2].filetype == u"video"
-    assert files[2].mimetype == u"video/mp4"
-    for f in files:
-        assert os.path.isfile(f.abspath)
-        assert os.stat(f.abspath).st_size > 0
+def assert_video_ok(video):
+    video_file = video.files.filter_by(filetype=u"video").scalar()
+    assert video_file is not None
+    assert os.path.isfile(video_file.abspath)
+    assert os.stat(video_file.abspath).st_size > 0
 
 
 def test_prepareData_data_access(session, video, req):
@@ -51,7 +44,8 @@ def test_event_files_changed_new_video(video):
     video.system_attrs[u"thumbframe"] = None
     # event_files_changed should generate a small thumb and a larger thumb2, both jpegs
     video.event_files_changed()
-    assert_thumbnails_and_video_ok(video)
+    assert_thumbnails_ok(video)
+    assert_video_ok(video)
 
 
 @skip_if_video_missing
@@ -60,4 +54,5 @@ def test_event_files_changed_new_video_thumbframe(video):
     # event_files_changed should generate a small thumb and a larger thumb2, both jpegs
     video.system_attrs[u"thumbframe"] = 5
     video.event_files_changed()
-    assert_thumbnails_and_video_ok(video)
+    assert_thumbnails_ok(video)
+    assert_video_ok(video)
