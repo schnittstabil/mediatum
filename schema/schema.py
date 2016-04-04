@@ -667,7 +667,10 @@ class Metadatatype(Node):
 
     def getMasks(self, type=None, language=None):
         warn("use Metadatatype.filter_masks instead", DeprecationWarning)
-        return self.filter_masks(type, language).all()
+        masks = self.filter_masks(type, language).all()
+        if not masks and language:
+            masks = self.filter_masks(type, None).all()
+        return masks
 
 
 """ fields for metadata """
@@ -1490,7 +1493,7 @@ class SchemaMixin(object):
 
     def getMasks(self, type=None, language=None):
         warn("use Default.metadatatype.filter_masks instead", DeprecationWarning)
-        self.metadatatype.filter_masks(type, language).all()
+        return self.metadatatype.getMasks(type, language)
 
     @property
     def metadatatype(self):
