@@ -396,6 +396,7 @@ in {
       pkgs.ffmpeg
       imagemagick
       pkgs.graphviz-nox
+      pkgs.icu
       pkgs.perlPackages.ImageExifTool
       pkgs.poppler_utils
       pkgs.postgresql95
