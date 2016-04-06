@@ -10,6 +10,18 @@ from core.database.postgres.node import Node
 from core.database.postgres.attributes import Attributes, AttributesExpressionAdapter, PythonicJSONElement
 
 
+def test_attributes_init():
+    node = Node("a")
+    att = Attributes(node, "attrs")
+    assert att.getter() == node.attrs
+
+
+def test_attributes_init_persistent(some_node):
+    node = some_node
+    att = Attributes(node, "attrs")
+    assert att.getter() == node.attrs
+
+
 def test_a_object():
     node = Node("a")
     assert(isinstance(node.a, Attributes))
@@ -17,6 +29,15 @@ def test_a_object():
 
 def test_a_expression():
     assert(isinstance(Node.a, AttributesExpressionAdapter))
+
+
+def test_sys_object():
+    node = Node("a")
+    assert(isinstance(node.sys, Attributes))
+
+
+def test_sys_expression():
+    assert(isinstance(Node.sys, AttributesExpressionAdapter))
 
 
 def test_a_getattr():
@@ -77,3 +98,23 @@ def test_like_string():
     assert(expr.right.effective_value == '%spam%')
     assert(expr.operator == like_op)
     assert(expr.left.operator.opstring == '->>')
+
+
+def test_query_with_a(session, some_node):
+    node = some_node
+    node["testattr"] = "test"
+    assert session.query(Node).filter(Node.a.testattr == "test").scalar() == node
+
+
+def test_query_with_sys(session, some_node):
+    node = some_node
+    node.system_attrs["testattr"] = "test"
+    assert session.query(Node).filter(Node.sys.testattr == "test").scalar() == node
+
+
+def test_query_with_a_differs_from_sys(session, some_node):
+    node = some_node
+    node["testattr"] = "test"
+    node.system_attrs["testattr"] = "systest"
+    assert session.query(Node).filter(Node.a.testattr == "systest").scalar() is None
+    assert session.query(Node).filter(Node.sys.testattr == "test").scalar() is None

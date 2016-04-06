@@ -18,11 +18,11 @@ class Attributes(object):
     node.a.test == node.attrs["test"]
     """
 
-    def __init__(self, obj):
-        object.__setattr__(self, "obj", obj)
+    def __init__(self, obj, target_name):
+        object.__setattr__(self, "getter", lambda: getattr(obj, target_name))
 
     def __getattr__(self, attr):
-        return self.obj.attrs[attr]
+        return self.getter()[attr]
 
 
 class PythonicJSONElement(JSONElement):
@@ -106,13 +106,13 @@ class AttributesExpressionAdapter(object):
 
     """
 
-    def __init__(self, obj):
-        object.__setattr__(self, "obj", obj)
+    def __init__(self, obj, target_name):
+        object.__setattr__(self, "getter", lambda: getattr(obj, target_name))
 
     def __getattr__(self, attr):
-        return PythonicJSONElement(self.obj.attrs, attr)
+        return PythonicJSONElement(self.getter(), attr)
 
     def __getitem__(self, item):
         if hasattr(item, "__iter__"):
-            return PythonicJSONElement(self.obj.attrs, list(item))
-        return PythonicJSONElement(self.obj.attrs, item)
+            return PythonicJSONElement(self.getter(), list(item))
+        return PythonicJSONElement(self.getter(), item)

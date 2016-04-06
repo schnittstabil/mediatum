@@ -195,19 +195,39 @@ class Node(DeclarativeBase, NodeMixin):
     def a(self):
         """ see: Attributes"""
         if "_attributes_accessor" not in self.__dict__:
-            setattr(self, "_attributes_accessor", Attributes(self))
+            setattr(self, "_attributes_accessor", Attributes(self, "attrs"))
         return self._attributes_accessor
 
     @a.expression
     def a_expr(self):
         """ see: AttributesExpression"""
         if "_attributes_accessor" not in self.__dict__:
-            setattr(self, "_attributes_accessor", AttributesExpressionAdapter(self))
+            setattr(self, "_attributes_accessor", AttributesExpressionAdapter(self, "attrs"))
         return self._attributes_accessor
 
     @a.setter
     def a_set(self, value):
         raise NotImplementedError("immutable!")
+
+
+    @hybrid_property
+    def sys(self):
+        """ see: Attributes"""
+        if "_system_attributes_accessor" not in self.__dict__:
+            setattr(self, "_system_attributes_accessor", Attributes(self, "system_attrs"))
+        return self._system_attributes_accessor
+
+    @sys.expression
+    def sys_expr(self):
+        """ see: AttributesExpression"""
+        if "_system_attributes_accessor" not in self.__dict__:
+            setattr(self, "_system_attributes_accessor", AttributesExpressionAdapter(self, "system_attrs"))
+        return self._system_attributes_accessor
+
+    @a.setter
+    def sys_set(self, value):
+        raise NotImplementedError("immutable!")
+
 
     def __init__(self, name="", type="node", id=None, schema=None, attrs=None, system_attrs=None, orderpos=None):
         self.name = name
