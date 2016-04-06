@@ -256,8 +256,7 @@ class Image(Content):
             else:
                 archive_url = None
                 original_file = self.files.filter_by(filetype=u"original").scalar()
-                if original_file is not None:
-                    original_name = original_file.base_name
+                original_name = original_file.base_name if original_file is not None else None
 
         files, sum_size = filebrowser(self, req)
 
