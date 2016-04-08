@@ -106,6 +106,20 @@ def test_add_another_private_group(session, some_user):
         # flush to enforce constraints
         session.flush()
 
+def test_add_another_user_to_private_group(session, some_user):
+    """Private groups should never be created by hand (use Node.get_or_add_private_group).
+    But, if you actually do that, this will happen some day:
+    """
+    with raises(IntegrityError):
+        # ok, create and return user group for some_user
+        private_group = some_user.get_or_add_private_group()
+        # not ok, someone tries to add a second user
+        another_user = User(login_name=u"epic_fail")
+        group_assoc = UserToUserGroup(usergroup=private_group, private=True)
+        another_user.group_assocs.append(group_assoc)
+        # flush to enforce constraints
+        session.flush()
+
 def test_user_hidden_edit_functions(some_user, some_group):
     g1 = UserGroupFactory()
     g2 = UserGroupFactory(hidden_edit_functions=["func1", "func2"])

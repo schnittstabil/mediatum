@@ -226,6 +226,11 @@ class UserToUserGroup(DeclarativeBase, TimeStamp):
                           using="btree",
                           where="private = true",
                           name="only_one_private_group_per_user"),
+        ExcludeConstraint((usergroup_id, "="),
+                          using="btree",
+                          where="private = true",
+                          name="only_one_user_per_private_group"),
+        # XXX: missing constraint: groups cannot be used elsewhere if they are private
     )
 
 class OAuthUserCredentials(DeclarativeBase, TimeStamp):
