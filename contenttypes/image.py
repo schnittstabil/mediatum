@@ -38,10 +38,12 @@ from utils.compat import iteritems
 import lib.iptc.IPTC
 from lib.Exif import EXIF
 from utils.list import filter_scalar
+from utils.compat import iteritems
 import zipfile
 from contextlib import contextmanager
 from StringIO import StringIO
 from collections import defaultdict
+import humanize
 
 
 
@@ -219,6 +221,19 @@ class Image(Content):
         u"image/png": [u"image/png"]
     })
 
+    MIMETYPE_FOR_EXTENSION = {
+        u"jpg": u"image/jpeg",
+        u"jpeg": u"image/jpeg",
+        u"png": u"image/png",
+        u"tif": u"image/tiff",
+        u"tiff": u"image/tiff",
+        u"gif": u"image/gif",
+        u"svg": u"image/svg+xml",
+    }
+
+    # beware of duplicates!
+    EXTENSION_FOR_MIMETYPE = {v:k for k, v in iteritems(MIMETYPE_FOR_EXTENSION)}
+
     @classmethod
     def get_default_edit_menu_tabs(cls):
         return "menulayout(view);menumetadata(metadata;files;admin;lza);menuclasses(classes);menusecurity(acls)"
@@ -236,6 +251,14 @@ class Image(Content):
         zoom_file = self.files.filter_by(filetype=u"zoom").scalar()
         return zoom_file is not None
 
+    def image_url_for_mimetype(self, mimetype):
+        try:
+            file_ext = Image.EXTENSION_FOR_MIMETYPE[mimetype]
+        except KeyError:
+            raise ValueError("unsupported image mimetype " + mimetype)
+
+        return u"/image/{}.{}".format(self.id, file_ext)
+
     # prepare hash table with values for TAL-template
     def _prepareData(self, req):
         obj = super(Image, self)._prepareData(req)
@@ -244,37 +267,44 @@ class Image(Content):
             # rendering has been delegated to current version
             return obj
 
-        node = self
+        obj["highres_url"] = None
 
         can_see_original = self.has_data_access()
 
-        if can_see_original:
-            archive_path = self.system_attrs.get(u"archive_path")
-            if archive_path:
-                archive_state = int(self.system_attrs.get(u"archive_state"))
-                if archive_state != 2:
-                    archive_url = u"/archive/{}".format(node.id)
-                original_name = archive_path.strip(u"/")
-            else:
-                archive_url = None
-                original_file = self.files.filter_by(filetype=u"original").scalar()
-                original_name = original_file.base_name if original_file is not None else None
+        archive = get_archive_for_node(self)
+        if archive:
+            if can_see_original:
+                archive_state = archive.get_state(self)
+                if archive_state == Archive.NOT_PRESENT:
+                    obj['archive_fetch_url'] = u"/archive/{}".format(self.id)
+                elif archive_state == Archive.PRESENT:
+                    obj['highres_url'] = u"/file/{}/hurz.tif".format(self.id)
 
         files, sum_size = filebrowser(self, req)
 
+        obj['canseeoriginal'] = can_see_original
+        obj['preferred_image_url'] = u"/images/{}".format(self.id)
+        obj["image_formats"] = self.get_image_formats()
+        obj['zoom'] = self.zoom_available
         obj['attachment'] = files
         obj['sum_size'] = sum_size
-        obj['archive_url'] = archive_url
-        obj['original_url'] = u"/file/{}/{}".format(self.id, original_name) if original_name else None
-        obj['zoom'] = self.zoom_available
-        obj['tileurl'] = u"/tile/{}/".format(node.id)
-        obj['canseeoriginal'] = can_see_original
 
-        full_style = req.args.get("style", "full_standard")
+        full_style = req.args.get(u"style", u"full_standard")
         if full_style:
             obj['style'] = full_style
 
         return obj
+
+    def get_image_formats(self):
+        image_files = self.files.filter_by(filetype=u"image")
+        image_formats = {}
+        for img_file in image_files:
+            image_formats[img_file.mimetype] = {
+                "url": self.image_url_for_mimetype(img_file.mimetype),
+                "display_size": humanize.filesize.naturalsize(img_file.size)
+            }
+
+        return image_formats
 
     """ format big view with standard template """
     def show_node_big(self, req, template="", macro=""):
@@ -455,7 +485,8 @@ class Image(Content):
         if int(self.get("width")) > Image.ZOOM_SIZE or int(self.get("height")) > Image.ZOOM_SIZE:
             self._generate_zoom_archive(files)
 
-        self._writeback_iptc()
+        # XXX: IPTC writeback will be fixed in #782
+        # self._writeback_iptc()
 
         db.session.commit()
 
@@ -642,7 +673,9 @@ class Image(Content):
         return 0
 
     def event_metadata_changed(self):
-        self._writeback_iptc()
+        pass
+        # XXX: IPTC writeback will be fixed in #782
+        # self._writeback_iptc()
 
 
     def _writeback_iptc(self):

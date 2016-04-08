@@ -109,7 +109,7 @@ def send_image(req):
 
     if file_ext:
         # client wants a specific mimetype
-        mimetype = node.IMAGE_MIMETYPE_FOR_EXTENSION.get(file_ext)
+        mimetype = node.MIMETYPE_FOR_EXTENSION.get(file_ext)
         if not mimetype:
             return 404
 
