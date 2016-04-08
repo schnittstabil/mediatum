@@ -27,3 +27,16 @@ AFTER DELETE ON :search_path.node_to_access_ruleset
 FOR EACH ROW 
 EXECUTE PROCEDURE :search_path.on_node_to_access_ruleset_delete();
 
+
+DROP TRIGGER IF EXISTS access_ruleset_to_rule_insert on :search_path.access_ruleset_to_rule;
+CREATE TRIGGER access_ruleset_to_rule_insert
+AFTER INSERT ON :search_path.access_ruleset_to_rule
+FOR EACH ROW 
+EXECUTE PROCEDURE :search_path.on_access_ruleset_to_rule_insert_delete();
+
+
+DROP TRIGGER IF EXISTS access_ruleset_to_rule_delete on :search_path.access_ruleset_to_rule;
+CREATE TRIGGER access_ruleset_to_rule_delete
+AFTER DELETE ON :search_path.access_ruleset_to_rule
+FOR EACH ROW 
+EXECUTE PROCEDURE :search_path.on_access_ruleset_to_rule_insert_delete();

@@ -639,6 +639,38 @@ RETURN OLD;
 END;
 $f$;
 
+
+-- XXX: "cheap" solution: just remove the access ruleset and add it again. 
+-- XXX: No problem for special rulesets, but should be replaced by more intelligent code when we have a Access Rule Editor
+CREATE OR REPLACE FUNCTION on_access_ruleset_to_rule_insert_delete()
+    RETURNS trigger
+    LANGUAGE plpgsql
+    SET search_path TO :search_path
+    VOLATILE
+AS $f$
+DECLARE
+    rec access_ruleset_to_rule;
+BEGIN
+
+IF TG_OP = 'INSERT' THEN
+    rec = NEW;
+ELSE
+    rec = OLD;
+END IF;
+
+WITH del AS (DELETE FROM node_to_access_ruleset nar 
+             WHERE nar.ruleset_name=rec.ruleset_name 
+             RETURNING nar.nid, nar.ruletype)
+
+INSERT INTO node_to_access_ruleset 
+SELECT del.nid AS nid,
+       rec.ruleset_name AS ruleset_name,
+       del.ruletype AS ruletype
+FROM del;
+
+RETURN rec;
+END;
+$f$;
 ----
 -- maintenance functions
 ----
