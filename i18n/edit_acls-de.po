@@ -40,3 +40,13 @@ msgstr "Bearbeitung auf Benutzerebene"
 
 msgid "edit_acl_special_rule"
 msgstr "[Spezial-Benutzerregel]"
+
+msgid "internal:default: "
+msgstr "Intern: "
+
+msgid "edit_acls_filter_input_label"
+msgstr "Filter für Listeneinträge: "
+
+msgid "edit_acls_filter_input_tooltip"
+msgstr "hier Teilstring zum Filtern eingeben (ignoriert Groß- und Kleinschreibung, reguläre Ausdrücke möglich)"
+

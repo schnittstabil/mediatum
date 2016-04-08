@@ -24,50 +24,39 @@ from core import db
 q = db.query
 
 
-def makeList(req, name, rights, readonlyrights, overload=0, type=""):
+def makeList(req, name, not_inherited_ruleset_names, inherited_ruleset_names, additional_rules_inherited=[], additional_rules_not_inherited=[], overload=0, type=""):
     rightsmap = {}
     rorightsmap = {}
-    for r in rights:
-        rightsmap[r] = None
 
-    rulelist = q(AccessRuleset).all()
+    rulelist = q(AccessRuleset).order_by(AccessRuleset.name).all()
 
-    val_left = ""
-    val_right = ""
+    val_left = []
+    val_right = []
 
-    if not (len(rightsmap) > 0 and overload):
-        # inherited standard rules
-        for rule in rulelist:
-            if rule.name in readonlyrights:
-                if rule.description.startswith("{"):
-                    val_left += """<optgroup label="%s"></optgroup>""" % (translate("edit_acl_special_rule", lang(req)))
-                else:
-                    val_left += """<optgroup label="%s"></optgroup>""" % rule.description
-                rorightsmap[rule.name] = 1
+    # inherited rules
+    for rule_name in inherited_ruleset_names:
+        if rule_name not in rorightsmap:
+            val_left.append("""<optgroup label="%s"></optgroup>""" % rule_name)
+            rorightsmap[rule_name] = 1
 
-        # inherited implicit rules
-        for rule in readonlyrights:
-            if rule not in rorightsmap:
-                if rule.startswith("{"):
-                    val_left += """<optgroup label="%s"></optgroup>""" % (translate("edit_acl_special_rule", lang(req)))
-                else:
-                    val_left += """<optgroup label="%s"></optgroup>""" % rule
+    for r in additional_rules_inherited:
+        val_left.append("""<optgroup label="%s"></optgroup>""" % (translate("edit_acl_special_rule", lang(req))))
 
-    # node-level standard rules
-    for rule in rulelist:
-        if rule.name in rightsmap:
-            val_left += """<option value="%s">%s</option>""" % (rule.name, rule.description)
-            rightsmap[rule.name] = 1
+    # node level rules
+    for rule_name in not_inherited_ruleset_names:
+        if rule_name in rorightsmap and not overload:
+            continue
+        val_left.append("""<option value="%s">%s</option>""" % (rule_name, rule_name))
+        rightsmap[rule_name] = 1
 
-    # node-level implicit rules
-    for r in rightsmap.keys():
-        if not rightsmap[r] and r not in rorightsmap:
-            if r.startswith("{"):  # special rights not changeable in normal ACL area
-                val_left += """<option value="%s">%s</option>""" % (r, translate("edit_acl_special_rule", lang(req)))
-            else:
-                val_left += """<option value="%s">%s</option>""" % (r, r)
+    for r in additional_rules_not_inherited:
+        val_left.append("""<option value="__special_rule__">%s</option>""" % (translate("edit_acl_special_rule", lang(req)), ))
 
     for rule in rulelist:
-        if rule.name not in rightsmap and rule.name not in rorightsmap:
-            val_right += """<option value="%s">%s</option>""" % (rule.name, rule.description)
-    return {"name": name, "val_left": val_left, "val_right": val_right, "type": type}
+        rule_name = rule.name
+        if rule_name not in rightsmap and rule_name not in rorightsmap:
+            val_right.append("""<option value="%s">%s</option>""" % (rule_name, rule_name))
+
+    res = {"name": name, "val_left": "".join(val_left), "val_right": "".join(val_right), "type": type}
+
+    return res
