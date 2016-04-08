@@ -141,6 +141,9 @@ Node queries
     q(Data).get(816859)["description"]
     q(Data).get(816859).a.description
 
+    # find all image nodes that are archived
+    q(Image).filter(Image.sys.archive_type != None).count()
+
 '''
 from __future__ import division, absolute_import, print_function
 from collections import OrderedDict
