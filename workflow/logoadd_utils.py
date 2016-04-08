@@ -21,6 +21,7 @@
 """
 
 import os
+import subprocess
 import random
 import string
 import StringIO
@@ -44,7 +45,8 @@ def get_pdf_page_image(pdfpath, page, prefix="_PdfPageImage_%(testname)s_%(page)
     tmppng = tmppath + tmpname
 
     if not path_only:
-        os.system("convert -alpha off -colorspace RGB %s[%s] %s" % (pdfpath, page, tmppng))
+        subprocess.call(("convert", "-alpha", "off", "-colorspace", "RGB",
+                         "{}[{}]".format(pdfpath, page), tmppng))
     return tmppng
 
 
@@ -304,10 +306,7 @@ def build_logo_overlay_pdf(fn_matrix_pdf,
     output.write(outputStream)
 
     outputStream.close()
-    cmd = "pdftk %s multistamp %s output %s" % (fn_matrix_pdf, fn_logo_temp, fn_out)
-    p = os.popen(cmd)
-    s = p.read()
-    p.close()
+    subprocess.call(("pdftk", fn_matrix_pdf, "multistamp", fn_logo_temp, "output", fn_out))
     return
 
 

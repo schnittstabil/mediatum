@@ -18,6 +18,7 @@
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
+import shutil
 import json
 import logging
 import os
@@ -192,9 +193,8 @@ class Video(Content):
             if nfile.filetype == "video":
                 filename = nfile.abspath
                 path, ext = splitfilename(filename)
-                if os.sep == '/':
-                    os.system("cp %s %s" % (filename, dest))
-                else:
-                    cmd = "copy %s %s%s.%s" % (filename, dest, self.id, ext)
-                    os.system(cmd.replace('/', '\\'))
+                try:
+                    shutil.copy(filename, dest)
+                except:
+                    logg.exception("copying file")
         return 1

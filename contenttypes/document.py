@@ -22,6 +22,7 @@ import logging
 import core.config as config
 import core.acl as acl
 import os
+import shutil
 import codecs
 from utils.utils import splitfilename, u, OperationException, utf8_decode_escape
 from schema.schema import VIEW_HIDE_EMPTY
@@ -223,10 +224,8 @@ class Document(Content):
         for file in self.files:
             if file.filetype == "document":
                 filename = file.abspath
-                if os.sep == '/':
-                    cmd = "cp %s %s" % (filename, dest)
-                    ret = os.system(cmd)
-                else:
-                    cmd = "copy %s %s" % (filename, dest + self.id + ".pdf")
-                    ret = os.system(cmd.replace('/', '\\'))
+                try:
+                    shutil.copy(filename, dest)
+                except:
+                    logg.exception("while copying file")
         return 1

@@ -19,6 +19,7 @@
 """
 
 import os
+import subprocess
 import re
 import os.path
 import shutil
@@ -50,10 +51,8 @@ def register():
 
 
 def get_pdftk_fields_dump(path_to_pdf):
-    p = os.popen('pdftk %s dump_data_fields' % path_to_pdf)
-    s = p.read()
-    p.close()
-    return s
+    return subprocess.Popen(("pdftk", path_to_pdf, "dump_data_fileds"),
+                            stdout=subprocess.PIPE).communicate()[0]
 
 
 def parse_pdftk_fields_dump(s):
@@ -144,35 +143,30 @@ def fillPDFForm(formPdf, fields, outputPdf="filled.pdf", input_is_fullpath=False
         fill given pdf file with form fields with given attributes and store result in pdf file
     """
     # build data file
-    fdffilename = "{}infdata.fdf".format(str(random.random())[2:])
-    outputPdf = "{}filled.pdf".format(str(random.random())[2:])
+    fdffilename = "{}{}infdata.fdf".format(config.get('paths.tempdir'), str(random.random())[2:])
+    outputPdf = "{}{}filled.pdf".format(config.get('paths.tempdir'), str(random.random())[2:])
     try:
-        with open("{}{}".format(config.get('paths.tempdir'), fdffilename), 'wb') as fdf_file:
+        with open(fdffilename, 'wb') as fdf_file:
             fdf_file.write(forge_fdf(fdf_data_strings=fields))
 
         # fill data in form pdf and generate pdf
+        pdftkcmd = ["pdftk", formPdf, "fill_form", fdffilename, "output", outputPdf]
         if editable:
-            os.system('pdftk %s fill_form %s%s output %s%s' %
-                      (formPdf, config.get('paths.tempdir'), fdffilename, config.get('paths.tempdir'), outputPdf))
-        else:
-            os.system('pdftk %s fill_form %s%s output %s%s flatten' %
-                      (formPdf, config.get('paths.tempdir'), fdffilename, config.get('paths.tempdir'), outputPdf))
+            pdftkcmd.append("flatten")
+        subprocess.call(pdftkcmd)
 
-        if os.path.exists("{}{}".format(config.get('paths.tempdir'), fdffilename)):
-            os.remove("{}{}".format(config.get('paths.tempdir'), fdffilename))
+        if os.path.exists(fdffilename):
+            os.remove(fdffilename)
     except Exception:
         logg.exception("exception in workflow step addformpage, error while filling pdf form, ignoring")
 
-    if not os.path.exists(config.get('paths.tempdir') + outputPdf):  # check if file created
-        return ""
-    else:
-        return config.get('paths.tempdir') + outputPdf
+    return outputPdf if os.path.exists(outputPdf) else ""  # check if file created
 
 
 def addPagesToPDF(prefile, pdffile):
     outfile = pdffile[:-4] + "1.pdf"
     try:
-        os.system("pdftk %s %s output %s" % (prefile, pdffile, outfile))
+        subprocess.call(("pdftk", prefile, pdffile, "output", outfile))
         os.remove(prefile)
     except Exception:
         logg.exception("exception in workflow step addformpage, error while adding pages, ignoring")

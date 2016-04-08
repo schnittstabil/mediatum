@@ -41,7 +41,7 @@ from core import db
 
 import lib.iptc.IPTC
 import tempfile
-from subprocess import check_call
+from subprocess import call, check_call
 
 
 
@@ -147,7 +147,7 @@ def makeOriginalFormat(image, thumb):
     pic = PILImage.open(image)
     if pic.mode == "CMYK" and (image.endswith("jpg") or image.endswith("jpeg")) or pic.mode in ["P", "L"]:
         # if image.endswith("jpg") or image.endswith("jpeg"):
-        os.system("convert -quality 100 -draw \"rectangle 0,0 1,1\" %s %s" % (image, tmpjpg))
+        call(("convert", "-quality", "100", "-draw", "rectangle 0,0 1,1", image, tmpjpg))
         pic = PILImage.open(tmpjpg)
 
     try:
@@ -279,7 +279,7 @@ class Image(Content):
     """ make a copy of the svg file in png format """
     def svg_to_png(self, filename, imgfile):
         # convert svg to png (imagemagick + ghostview)
-        os.system("convert -alpha off -colorspace RGB %s -background white %s" % (filename, imgfile))
+        call(("convert", "-alpha", "off", "-colorspace", "RGB", filename, "-background", "white", imgfile))
 
     """ postprocess method for object type 'image'. called after object creation """
     def event_files_changed(self):

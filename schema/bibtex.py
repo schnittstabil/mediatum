@@ -30,6 +30,7 @@
 
 import re
 import os
+import shutil
 import sys
 import codecs
 import logging
@@ -127,14 +128,7 @@ def save_import_file(filename):
     _filename_only = filename.split("/")[-1]
     destname = os.path.join(temppath, "bibtex_import_saved_" + getNow() + "_" + _filename_only)
     logg.info("bibtex import: going to copy/save import file %s -> %s", filename, destname)
-    if os.sep == '/':
-        ret = os.system("cp %s %s" % (filename, destname))
-    else:
-        cmd = "copy %s %s" % (filename, destname)
-        ret = os.system(cmd.replace('/', '\\'))
-
-    if ret & 0xff00:
-        raise IOError("Couldn't copy %s to %s (error: %s)" % (filename, destname, ustr(ret)))
+    shutil.copyfile(filename, destname)
 
     return
 

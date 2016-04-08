@@ -18,7 +18,8 @@
 """
 
 import logging
-import os
+import shutil
+import subprocess
 from PIL import Image, ImageDraw
 import core.acl as acl
 from contenttypes.data import Content
@@ -39,8 +40,8 @@ def makeAudioThumb(self, audiofile):
     ret = None
     path, ext = splitfilename(audiofile.abspath)
     if not audiofile.abspath.endswith(".mp3"):
-        os.system("lame -V 4 -q %s %s" % (audiofile.abspath, path + ".mp3"))
         ret = path + ".mp3"
+        subprocess.call(("lame", "-V", "4", "-q", audiofile.abspath, ret))
     self.files.append(File(path + ".mp3", "mp3", "audio/mpeg"))
     return ret
 
@@ -226,11 +227,10 @@ class Audio(Content):
             if file.getType() == "audio":
                 filename = file.abspath
                 path, ext = splitfilename(filename)
-                if os.sep == '/':
-                    ret = os.system("cp %s %s" % (filename, dest))
-                else:
-                    cmd = "copy %s %s%s.%s" % (filename, dest, self.id, ext)
-                    ret = os.system(cmd.replace('/', '\\'))
+                try:
+                    shutil.copy(filename, dest)
+                except:
+                    logg.exception("file copy")
         return 1
 
 
