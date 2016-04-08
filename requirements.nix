@@ -300,6 +300,7 @@ let
   ### test /devel deps
 
   inherit (self)
+  ipykernel
   mock
   munch
   py
@@ -404,6 +405,7 @@ in {
 
     devel = [
       factory-boy
+      ipykernel
       mock
       munch
       pytest
