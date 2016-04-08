@@ -26,6 +26,7 @@ import tempfile
 from PIL import Image as PILImage, ImageDraw
 
 from core import config, File, db
+from core.archive import Archive, get_archive_for_node
 from core.attachment import filebrowser
 from core.translation import t
 from core.styles import getContentStyles

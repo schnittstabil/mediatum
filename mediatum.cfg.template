@@ -1,11 +1,6 @@
 [admin]
 pageitems=10
 
-[archive]
-activate=false
-class=#
-interval=3600
-
 [auth]
 authenticator_order=internal|default # ,ldap|server1
 

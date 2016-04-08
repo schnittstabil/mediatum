@@ -18,71 +18,53 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import sys
-import thread
-import time
 import logging
-import core.config as config
-from utils.utils import splitpath, intersection, union
-from utils.date import parse_date, now, format_date
 
 
 logg = logging.getLogger(__name__)
 
+archives = {}
 
-class Archive:
 
-    def __init__(self):
-        self.lock = thread.allocate_lock()
+class Archive(object):
 
-    def acquire(self):
-        self.lock.acquire()
+    NOT_PRESENT = 0
+    PENDING = 1
+    PRESENT = 2
 
-    def release(self):
-        self.lock.release()
+    archive_type = None
 
-    def getLockState(self):
-        return self.lock
+    def get_archive_path(self, node):
+        return node.system_attrs[u"archive_path"]
 
-    def actionArchive(self, nodes):
+    def fetch_file_from_archive(self, node):
         None
 
-    def getArchivedFile(self, node):
+    def get_local_filepath(self, node):
+        """Returns the path to the real file on disk."""
         None
 
-    def getArchivedFileStream(self, filename):
-        None
+    def get_state(self, node):
+        pass
 
-    def deleteFromArchive(self, filename):
-        None
-
-    def writelog(self, message="", level="info"):
-        logg.log(level, message)
-
-    def info(self):
-        self.version = "0.1"
-        return "no description of archive manager found"
+    def get_mimetype(self, node):
+        pass
 
 
-class ArchiveManager:
+def register_archive(archive):
+    """XXX: we could support more archives of the same type, see Authenticators"""
+    archives[archive.archive_type] = archive
 
-    def __init__(self):
-        self.manager = {}
-        if config.get("archive.activate", "").lower() == "true":
-            logg.info("Initializing archive manager")
-            for paths in config.get("archive.class", "").split(";"):
-                path, manager = splitpath(paths)
-                self.manager[manager] = paths
+    logg.info("registered archive %s", archive.archive_type)
 
-        logg.debug("archivemanager init done %s", len(self.manager))
 
-    def getManager(self, name=""):
-        if name == "":
-            return self.manager
+def get_archive_for_node(node):
+    archive_type = node.system_attrs.get("archive_type")
+    if not archive_type:
+        return
 
-        if name in self.manager.keys():
-            path, manager = splitpath(self.manager[name])
-            if path and path not in sys.path:
-                sys.path += [path]
-            return __import__(manager).__dict__[manager]()
-        return None
+    manager = archives.get(archive_type)
+    if manager:
+        return manager
+
+    logg.warn("archive manager {} for node {} not loaded".format(archive_type, node.id))

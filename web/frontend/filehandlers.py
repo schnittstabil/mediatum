@@ -13,7 +13,7 @@ from core import db
 from core import Node, File
 import core.config as config
 import core.athana as athana
-from core.archive import archivemanager
+from core.archive import get_archive_for_node
 from contenttypes import Container
 from contenttypes import Content
 from contenttypes.data import Data
@@ -147,13 +147,10 @@ def send_file(req):
         if f.base_name == filename:
             return _send_attachment(f.abspath, f.mimetype)
 
-    archive_type = node.system_attrs.get("archive_type")
-
-    if archive_type:
-        am = archivemanager.getManager(archive_type)
-        archive_path = node.system_attrs.get("archive_path", "")
-        filepath = am.getArchivedFileStream(archive_path)
-        mimetype, _ = getMimeType(archive_path)
+    archive = get_archive_for_node(node)
+    if archive:
+        filepath = archive.get_local_filepath(node)
+        mimetype, _ = getMimeType(filepath)
         return _send_attachment(filepath, mimetype)
 
     else:
@@ -205,10 +202,13 @@ def send_attfile(req):
             or isinstance(node, Content) and not node.has_data_access()):
         return 404
 
-    fileobj = [fo for fo in node.files if fo.abspath in ["/".join(parts[1:]), "/".join(parts[1:-1])]]
+    paths = ["/".join(parts[1:]), "/".join(parts[1:-1])]
+    fileobjs = [fo for fo in node.files if fo.path in paths]
 
-    if fileobj is None:
+    if not fileobjs:
         return 404
+
+    fileobj = fileobjs[0]
 
     if (fileobj.size > 16 * 1048576):
         req.reply_headers["Content-Disposition"] = u'attachment; filename="{}"'.format(fileobj.base_name).encode('utf8')
@@ -216,7 +216,7 @@ def send_attfile(req):
     return req.sendFile(fileobj.abspath, fileobj.mimetype)
 
 
-def get_archived(req):
+def fetch_archived(req):
     try:
         nid = node_id_from_req_path(req)
     except ValueError:
@@ -224,14 +224,12 @@ def get_archived(req):
 
     node = q(Content).get(nid)
 
-    am = archivemanager and archivemanager.getManager(node.system_attrs.get("archive_type", ""))
-    if am:
-        am.getArchivedFile(id)
-        node.system_attrs["archive_state"] = "2"
+    archive = get_archive_for_node(node)
+    if archive:
+        archive.fetch_file_from_archive(node)
         req.write('done')
-        db.session.commit()
     else:
-        msg = "-archive manager not found-" if archivemanager else "-no archive module loaded-"
+        msg = "archive for node not found"
         req.setStatus(404)
         req.write(msg)
         logg.warn(msg)

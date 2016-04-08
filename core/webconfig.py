@@ -161,7 +161,7 @@ def initContexts():
     handler.addPattern("/download/.*")
     file.addHandler("send_attachment").addPattern("/attachment/.*")
     file.addHandler("send_attfile").addPattern("/attfile/.*")
-    file.addHandler("get_archived").addPattern("/archive/.*")
+    file.addHandler("fetch_archived").addPattern("/archive/.*")
     file.addHandler("send_from_webroot").addPattern("/[a-z,0-9,-]*\.[a-z]*")  # root directory added /web/root (only files with extensions)
 
     file = context.addFile("web/frontend/zoom.py")

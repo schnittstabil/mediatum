@@ -17,6 +17,7 @@ from core.init import load_system_types, load_types, init_fulltext_search, init_
 from core.database.postgres.user import AuthenticatorInfo, create_special_user_dirs
 from sqlalchemy import event
 from core.database.postgres.alchemyext import truncate_tables
+from core.archive import Archive
 logg = logging.getLogger(__name__)
 
 
@@ -344,3 +345,30 @@ def content_node_versioned_with_alias_id(session, content_node):
 def internal_authenticator():
     from core.auth import InternalAuthenticator, INTERNAL_AUTHENTICATOR_KEY
     return InternalAuthenticator(INTERNAL_AUTHENTICATOR_KEY[1])
+
+
+@fixture
+def fake_archive():
+    from core.archive import register_archive
+
+    class FakeArchive(Archive):
+
+        archive_type = "test"
+
+        def __init__(self):
+            self.loaded_node_paths = set()
+
+        def get_local_filepath(self, node):
+            os.path.join("/teststorage/", self.get_archive_path(node))
+
+        def fetch_file_from_archive(self, node):
+            self.loaded_node_paths.add(self.get_archive_path(node))
+
+        def get_state(self, node):
+            if self.get_archive_path(node) in self.loaded_node_paths:
+                return Archive.PRESENT
+            return Archive.NOT_PRESENT
+
+    archive = FakeArchive()
+    register_archive(archive)
+    return archive

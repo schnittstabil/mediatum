@@ -83,17 +83,6 @@ def register_workflow():
     workflow.register()
 
 
-def init_archivemanager():
-    # load archive manager
-    global archivemanager
-    archivemanager = None
-    try:
-        import core.archive as archive
-        archive.archivemanager = archive.ArchiveManager()
-    except ImportError:
-        logg.error("error while initialization of archive manager", exc_info=1)
-
-
 def tal_setup():
     from mediatumtal import tal
     tal.set_base(config.basedir)
@@ -313,7 +302,6 @@ def _additional_init():
     check_undefined_nodeclasses()
     update_nodetypes_in_db()
     init_fulltext_search()
-    init_archivemanager()
     tal_setup()
 
 
