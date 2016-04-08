@@ -18,7 +18,7 @@ from contenttypes import Container
 from contenttypes import Content
 from contenttypes.data import Data
 from schema.schema import existMetaField
-from web.frontend.filehelpers import sendZipFile, splitpath, build_transferzip, node_id_from_req_path
+from web.frontend.filehelpers import sendZipFile, splitpath, build_transferzip, node_id_from_req_path, split_image_path
 from utils import userinput
 import utils.utils
 from utils.utils import getMimeType
@@ -86,7 +86,64 @@ def _send_file_with_type(filetype, mimetype, req):
 
 
 send_doc = partial(_send_file_with_type, u"document", None)
-send_jpeg = partial(_send_file_with_type, u"image", u"image/jpeg")
+
+
+def send_image(req):
+    try:
+        nid, file_ext = split_image_path(req.path)
+    except ValueError:
+        return 400
+
+    node = q(Content).get(nid)
+    if node is None or not node.has_data_access():
+        return 404
+
+    image_files_by_mimetype = {f.mimetype: f for f in node.files.filter_by(filetype=u"image")}
+
+    if not image_files_by_mimetype:
+        # no image files? forget it...
+        return 404
+
+    def _send(fileobj):
+        return req.sendFile(fileobj.abspath, fileobj.mimetype)
+
+    if file_ext:
+        # client wants a specific mimetype
+        mimetype = node.IMAGE_MIMETYPE_FOR_EXTENSION.get(file_ext)
+        if not mimetype:
+            return 404
+
+        image_file = image_files_by_mimetype.get(mimetype)
+        if image_file:
+            return _send(image_file)
+        else:
+            return 404
+
+    # TODO: check Accept header
+
+    # well, the client doesn't seem to have any preferences, figure out what we want to send
+
+    if len(image_files_by_mimetype) == 1:
+        # no choices, send it
+        return _send(image_files_by_mimetype.values()[0])
+
+    preferred_mimetype = node.system_attrs.get(u"preferred_mimetype")
+
+    if preferred_mimetype:
+        mimetype = preferred_mimetype
+    else:
+        # send image file with same type as original file
+        original_file = node.files.filter_by(filetype=u"original").scalar()
+        mimetype = original_file.mimetype
+
+    image_file = image_files_by_mimetype.get(mimetype)
+    if image_file:
+        return _send(image_file)
+
+    # XXX: still no matches, just serve the first one ;)
+    return _send(image_files_by_mimetype.values()[0])
+
+    return 404
 
 
 def send_original_file(req):

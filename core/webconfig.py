@@ -155,7 +155,7 @@ def initContexts():
     file.addHandler("send_thumbnail").addPattern("/thumbs/.*")
     file.addHandler("send_thumbnail2").addPattern("/thumb2/.*")
     file.addHandler("send_doc").addPattern("/doc/.*")
-    file.addHandler("send_jpeg").addPattern("/images/.*")
+    file.addHandler("send_image").addPattern("/image/.*")
     handler = file.addHandler("send_file")
     handler.addPattern("/file/.*")
     handler.addPattern("/download/.*")

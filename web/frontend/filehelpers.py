@@ -15,14 +15,25 @@ from utils.utils import getMimeType, get_filesize
 from utils import userinput
 
 
-IMGNAME = re.compile("/?(attachment|doc|images|thumbs|thumb2|file|download|archive)/([^/]*)(/(.*))?$")
+FILEHANDLER_RE = re.compile("/?(attachment|doc|images|thumbs|thumb2|file|download|archive)/([^/]*)(/(.*))?$")
+IMAGE_HANDLER_RE = re.compile("^/?image/(\d+)(?:\.(.{1,5}))?$")
 
 logg = logging.getLogger(__name__)
 
 q = db.query
 
+
+def split_image_path(path):
+    m  = IMAGE_HANDLER_RE.match(path)
+    if not m:
+        raise ValueError("invalid image path")
+
+    node_id, ext = m.groups()
+    return node_id, ext
+
+
 def splitpath(path):
-    m = IMGNAME.match(path)
+    m = FILEHANDLER_RE.match(path)
     if m is None:
         return path
     try:
