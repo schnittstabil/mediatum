@@ -16,9 +16,17 @@ def test_add_rules_to_node_special_ruleset(session, some_node):
     srs.rule_assocs.append(AccessRulesetToRule(rule=r1))
     assert node.access_rule_assocs.first().rule is r1
     r2 = AccessRule(group_ids=[2])
-    srs.rule_assocs.append(AccessRulesetToRule(rule=r2))
-    session.flush()
-    assert node.access_rule_assocs[1].rule is r2
+    srs.rule_assocs.append(AccessRulesetToRule(rule=r2, blocking=True, invert=True))
+    # check ruleset association
+    nar2 = node.access_ruleset_assocs.first()
+    assert nar2.ruleset is srs
+    assert nar2.private == True
+    # check rule association
+    arr2 = node.access_rule_assocs[1]
+    assert arr2.rule is r2
+    assert arr2.ruletype == u"read"
+    assert arr2.blocking == True
+    assert arr2.invert == True
 
 
 def test_delete_rule_from_node_special_ruleset(session, some_node):

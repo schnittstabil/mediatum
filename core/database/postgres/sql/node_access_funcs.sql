@@ -660,12 +660,15 @@ END IF;
 
 WITH del AS (DELETE FROM node_to_access_ruleset nar 
              WHERE nar.ruleset_name=rec.ruleset_name 
-             RETURNING nar.nid, nar.ruletype)
+             RETURNING *)
 
 INSERT INTO node_to_access_ruleset 
 SELECT del.nid AS nid,
        rec.ruleset_name AS ruleset_name,
-       del.ruletype AS ruletype
+       del.ruletype AS ruletype,
+       del.invert AS invert,
+       del.blocking AS blocking,
+       del.private AS private
 FROM del;
 
 RETURN rec;
