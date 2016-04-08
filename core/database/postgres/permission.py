@@ -54,8 +54,8 @@ class AccessRulesetToRule(DeclarativeBase):
     __tablename__ = "access_ruleset_to_rule"
     __versioned__ = {}
 
-    rule_id = C(FK(AccessRule.id), primary_key=True)
-    ruleset_name = C(FK(AccessRuleset.name, ondelete="CASCADE", onupdate="CASCADE"), primary_key=True)
+    rule_id = C(FK(AccessRule.id, ondelete="CASCADE"), primary_key=True, nullable=False)
+    ruleset_name = C(FK(AccessRuleset.name, ondelete="CASCADE", onupdate="CASCADE"), primary_key=True, nullable=False)
     invert = C(Boolean, server_default="false", index=True)
     blocking = C(Boolean, server_default="false", index=True)
 
@@ -151,4 +151,4 @@ def _effective_access_ruleset_assocs(self):
 
 Node.effective_access_ruleset_assocs = property(_effective_access_ruleset_assocs)
 
-AccessRuleset.rule_assocs = rel(AccessRulesetToRule, backref="ruleset")
+AccessRuleset.rule_assocs = rel(AccessRulesetToRule, backref="ruleset", cascade="all, delete-orphan", passive_deletes=True)
