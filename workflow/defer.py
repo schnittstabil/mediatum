@@ -26,7 +26,7 @@ from .workflow import WorkflowStep, registerStep
 from core.translation import t, addLabels
 from core import db
 from schema.schema import Metafield
-from core.database.postgres.permission import AccessRule, NodeToAccessRule
+from core.database.postgres.permission import AccessRule, AccessRulesetToRule
 from psycopg2._range import DateRange
 import datetime
 
@@ -70,9 +70,9 @@ class WorkflowStep_Defer(WorkflowStep):
                     for item in self.get('accesstype').split(';'):
                         rule = AccessRule()
                         db.session.add(rule)
-                        node.access_rule_assocs.append(NodeToAccessRule(rule=rule, ruletype=item))
-                        db.session.commit()
-                        q(AccessRule).get(rule.id).dateranges = dateranges
+                        special_access_ruleset = node.get_or_add_special_access_ruleset(ruletype=item)
+                        special_access_ruleset.rule_assocs.append(AccessRulesetToRule(rule=rule))
+                        rule.dateranges = dateranges
                         db.session.commit()
 
                     node.getLocalRead()

@@ -19,7 +19,7 @@
 """
 from .workflow import WorkflowStep, registerStep
 from core import db
-from core.database.postgres.permission import AccessRule
+from core.database.postgres.permission import AccessRule, AccessRulesetToRule
 from core import UserGroup
 q = db.query
 
@@ -32,16 +32,15 @@ def register():
 class WorkflowStep_Publish(WorkflowStep):
 
     def runAction(self, node, op=""):
-
         ugid = q(UserGroup).filter_by(name=u'Workflow').one().id
 
         # remove access rule with 'Workflow' user group id
-        for e in node.access_rule_assocs.filter_by(ruletype=u'read'):
+        special_access_ruleset = node.get_special_access_ruleset(ruletype=u'read')
+        for e in special_access_ruleset.rule_assocs:
             ar = q(AccessRule).get(e.rule_id)
-            if ar and ar.group_ids and (ugid in ar.group_ids):
-                node.access_rule_assocs.filter_by(rule_id=ar.id).delete()
-                db.session.delete(ar)
-
+            if ar is not None and ar.group_ids is not None and (ugid in ar.group_ids):
+                q(AccessRulesetToRule).filter_by(rule_id=ar.id).delete()
+                q(AccessRule).filter_by(id=e.rule_id).delete()
         db.session.commit()
 
         self.forward(node, True)
