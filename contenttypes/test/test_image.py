@@ -118,10 +118,10 @@ def test_event_files_changed_gif(image_gif):
 
 
 @pytest.mark.slow
-def test_event_files_changed_jpeg(image_jpeg, patch_get_iptc_tags):
+def test_event_files_changed_jpeg(image_jpeg):
     _test_event_files_changed(image_jpeg)
 
 
 @pytest.mark.slow
-def test_event_files_changed_tiff(image_tiff, patch_get_iptc_tags):
+def test_event_files_changed_tiff(image_tiff):
     _test_event_files_changed(image_tiff)

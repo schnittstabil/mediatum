@@ -15,12 +15,6 @@ from contenttypes.test import TEST_IMAGE_PATHS, TEST_VIDEO_PATH
 from core.config import resolve_datadir_path
 
 
-@fixture
-def patch_get_iptc_tags(monkeypatch):
-    import lib.iptc.IPTC
-    monkeypatch.setattr(lib.iptc.IPTC, "get_iptc_values", lambda *a, **k: {})
-
-
 def _image_fixture_proto(mime_subtype, session):
     img_path = TEST_IMAGE_PATHS[mime_subtype]
     img_fullpath = resolve_datadir_path(img_path)
