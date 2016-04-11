@@ -324,7 +324,7 @@ def importBibTeX(infile, node=None, req=None):
                     except AttributeError as e:
                         msg = "bibtex import docid='{}': field error for bibtex mask for type {} and bibtex-type '{}': {}"
                         msg = msg.format(docid_utf8, metatype, mytype, e)
-                        log.error(msg)
+                        logg.error(msg)
                     else:
                         fieldnames[_bib_name] = _med_name
 

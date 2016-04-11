@@ -21,12 +21,14 @@ import logging
 import os.path
 import codecs
 from mediatumtal import tal
+from core import Node, db
 from utils.utils import esc
 from core.metatype import Metatype, Context
 
 
 logg = logging.getLogger(__name__)
 
+q = db.query
 
 class m_mlist(Metatype):
 
