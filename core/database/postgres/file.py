@@ -26,6 +26,10 @@ class File(DeclarativeBase, FileMixin):
         "base_classes": (FileMixin, DeclarativeBase)
     }
 
+    #: True means: physical file should be deleted when database object is deleted
+    unlink_after_deletion = False
+
+
     def __init__(self, path, filetype, mimetype, node=None, **kwargs):
         # legacy stuff
         datadir = config.settings["paths.datadir"]
@@ -40,8 +44,6 @@ class File(DeclarativeBase, FileMixin):
         self.path = path
         self.filetype = filetype
         self.mimetype = mimetype
-        #: True means: physical file should be deleted when database object is deleted
-        self.unlink_after_deletion = False
         if node is not None:
             self.node = node
 
