@@ -168,12 +168,6 @@ def validate(req, op):
             elif key.startswith("masks_"):
                 return showMaskList(req, key[6:-2])
 
-            # reindex search index for current schema
-            elif key.startswith("indexupdate_") and "cancel" not in req.params.keys():
-                schema = q(Node).get(key[12:])
-                searcher.reindex(schema.getAllItems())
-                break
-
         # save schema
         if "form_op" in req.params.keys():
             if req.params.get("form_op", "") == "cancel":
@@ -414,12 +408,6 @@ def view(req):
             mtypes.sort(lambda x, y: cmp(x.getActive(), y.getActive()))
         elif int(order[0:1]) == 4:
             mtypes.sort(lambda x, y: cmp(x.getDatatypeString().lower(), y.getDatatypeString().lower()))
-        # elif int(order[0:1]) == 5:
-            # mtypes.sort(lambda x, y: cmp(x.metadatatype.getAccess("read"), y.metadatatype.getAccess("read")))
-        elif int(order[0:1]) == 6:
-            mtypes.sort(lambda x, y: cmp(x.searchIndexCorrupt(), y.searchIndexCorrupt()))
-        elif int(order[0:1]) == 7:
-            mtypes.sort(lambda x, y: cmp(len(x.getAllItems()), len(y.getAllItems())))
         if int(order[1:]) == 1:
             mtypes.reverse()
     else:

@@ -669,30 +669,6 @@ class Metadatatype(Node):
         warn("use Metadatatype.filter_masks instead", DeprecationWarning)
         return self.filter_masks(type, language).all()
 
-    def searchIndexCorrupt(self):
-        try:
-            from core.tree import searcher
-            search_def = []
-            for node in self.getSearchFields():
-                search_def.append(node.getName())
-            search_def = set(search_def)
-
-            index_def = searcher.getDefForSchema(self.name)
-            index_def = set(index_def.values())
-            if len(search_def) > len(index_def) and len(self.getAllItems()) > 0:
-                return True
-            else:
-                if search_def.union(index_def) == set([]) or index_def.difference(search_def) == set([]):
-                    return False
-            return True
-        except:
-            logg.exception("error in searchIndexCorrupt")
-            return False
-
-    def getAllItems(self):
-        node_ids = tree.db.get_nids_by_type_suffix(self.getName())
-        return tree.NodeList(node_ids)
-
 
 """ fields for metadata """
 
