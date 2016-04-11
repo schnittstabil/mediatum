@@ -29,7 +29,7 @@ from core.systemtypes import Metadatatypes
 from core import Node
 from core import db
 from schema.schema import Metafield
-from core.database.postgres.permission import AccessRule, NodeToAccessRule
+from core.database.postgres.permission import AccessRule, AccessRulesetToRule
 from core import UserGroup
 
 q = db.query
@@ -63,10 +63,17 @@ class WorkflowStep_Start(WorkflowStep):
             node = content_class(name=u'', schema=req.params.get('selected_schema').split('/')[1])
             self.children.append(node)
 
+            # create user group named 'Workflow' if it doesn't exist
+            if q(UserGroup).filter_by(name=u'Workflow').first() is None:
+                workflow_group = UserGroup(name=u'Workflow')
+                db.session.add(workflow_group)
+
             # create access rule with 'Workflow' user group
             rule = AccessRule(group_ids=set([q(UserGroup).filter_by(name=u'Workflow').one().id]))
             db.session.add(rule)
-            node.access_rule_assocs.append(NodeToAccessRule(rule=rule, ruletype=u'read'))
+
+            special_access_ruleset = node.get_or_add_special_access_ruleset(ruletype=u'read')
+            special_access_ruleset.rule_assocs.append(AccessRulesetToRule(rule=rule))
 
             node.set("creator", "workflow-" + self.parents[0].name)
             node.set("creationtime", date.format_date())
