@@ -919,22 +919,6 @@ class Template(object):
             return s
 
 
-def fixXMLString(s, i=100):
-    if i == 0:  # loop check
-        return s
-    parser = xml.parsers.expat.ParserCreate()
-    try:
-        parser.Parse(s)
-        return s
-
-    except xml.parsers.expat.ExpatError as err:
-        # remove error char
-        s2 = s.split('\n')
-        s2[err.lineno - 1] = s2[err.lineno - 1][:(err.offset)] + s2[err.lineno - 1][(err.offset + 2):]
-        return fixXMLString("\n".join(s2), i - 1)
-    return s
-
-
 def checkXMLString(s):
     try:
         etree.fromstring(s.encode('utf-8'))

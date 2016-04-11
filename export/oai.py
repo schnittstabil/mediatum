@@ -33,7 +33,7 @@ from .oaisearchparser import OAISearchParser as OAISearchParser
 from . import oaisets
 import utils.date as date
 import core.xmlnode
-from utils.utils import esc, fixXMLString
+from utils.utils import esc
 from schema.schema import getMetaType
 from utils.pathutils import isDescendantOf
 from threading import Lock
@@ -350,10 +350,8 @@ def writeRecord(req, node, metadataformat):
                 (ustr(
                     node.id),
                     metadataformat))
-        try:
-            req.write(fixXMLString(mask.getViewHTML([node], flags=8)))  # fix xml errors
-        except:
-            req.write(mask.getViewHTML([node], flags=8))
+        # XXX: fixXMLString is gone, do we need to sanitize XML here?
+        req.write(mask.getViewHTML([node], flags=8))
         if DEBUG:
             timetable_update(
                 req,
