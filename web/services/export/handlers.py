@@ -973,12 +973,9 @@ def get_cachestatus(req, path, params, data):
     d['timetable'] = timetable
     req.reply_headers['Content-Type'] = "text/plain" + "; charset=utf-8"
 
-    s = 'searchcache content: %s\r\n' % cache_date2string(time.time(), '%04d-%02d-%02d-%02d-%02d-%02d')
-    s += searchcache.report()
-    d['timetable'].append(["retrieved report for searchcache", time.time() - atime])
     atime = time.time()
 
-    s += '\r\n\r\nresultcache content: %s\r\n' % cache_date2string(time.time(), '%04d-%02d-%02d-%02d-%02d-%02d')
+    s = '\r\n\r\nresultcache content: %s\r\n' % cache_date2string(time.time(), '%04d-%02d-%02d-%02d-%02d-%02d')
     s += resultcache.report()
     d['timetable'].append(["retrieved report for resultcache", time.time() - atime])
     atime = time.time()
