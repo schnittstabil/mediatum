@@ -44,7 +44,7 @@ def ruleset_is_private_to_node(ruleset):
 
 
 def makeList(req, name, not_inherited_ruleset_names, inherited_ruleset_names, additional_rules_inherited=[],
-             additional_rules_not_inherited=[], type=""):
+             additional_rules_not_inherited=[], rule_type=""):
     rightsmap = {}
     rorightsmap = {}
 
@@ -86,6 +86,6 @@ def makeList(req, name, not_inherited_ruleset_names, inherited_ruleset_names, ad
         if rulesetname not in rightsmap and rulesetname not in rorightsmap:
             val_right.append("""<option value="%s">%s</option>""" % (rulesetname, rulesetname))
 
-    res = {"name": name, "val_left": "".join(val_left), "val_right": "".join(val_right), "type": type}
+    res = {"name": name, "val_left": "".join(val_left), "val_right": "".join(val_right), "type": rule_type}
 
     return res

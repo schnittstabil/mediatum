@@ -209,7 +209,7 @@ def getContent(req, ids):
                                           inherited_ruleset_names[rule_type],  # readonlyrights
                                           additional_rules_inherited[rule_type],
                                           additional_rules_not_inherited[rule_type],
-                                          type=rule_type),  #type
+                                          rule_type=rule_type),
                                  macro="edit_acls_selectbox")
 
     if action == 'get_userlist':  # load additional rights by ajax
@@ -223,7 +223,7 @@ def getContent(req, ids):
                                                inherited_ruleset_names[rule_type],
                                                additional_rules_inherited[rule_type],
                                                additional_rules_not_inherited[rule_type],
-                                               type=rule_type),
+                                               rule_type=rule_type),
                                   macro="edit_acls_userselectbox")
         req.write(retuser)
         return ""
