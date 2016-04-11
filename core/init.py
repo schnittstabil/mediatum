@@ -269,13 +269,13 @@ def update_nodetypes_in_db():
     for cls in Content.get_all_subclasses():
         typename = cls.__mapper__.polymorphic_identity
         if typename not in db_nodetypes:
-            s.add(NodeType(name=typename, is_container=False))
+            s.add(NodeType(name=unicode(typename), is_container=False))
             logg.debug("added new content type '%s' to DB", typename)
 
     for cls in Container.get_all_subclasses():
         typename = cls.__mapper__.polymorphic_identity
         if typename not in db_nodetypes:
-            s.add(NodeType(name=typename, is_container=True))
+            s.add(NodeType(name=unicode(typename), is_container=True))
             logg.debug("added new container type '%s' to DB", typename)
 
     s.commit()

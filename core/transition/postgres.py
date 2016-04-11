@@ -33,7 +33,7 @@ def check_type_arg_with_schema(cls):
         clsname = self.__class__.__name__
 
         if type is None:
-            type = clsname.lower()
+            type = unicode(clsname.lower())
         else:
             warn("type param is deprecated for " + clsname + " instances", DeprecationWarning)
             if not type.startswith(clsname.lower()):

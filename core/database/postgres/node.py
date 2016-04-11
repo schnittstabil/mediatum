@@ -9,7 +9,7 @@ from json import dumps
 from warnings import warn
 
 import pyaml
-from sqlalchemy import (Table, Sequence, Integer, Unicode, Text, Boolean, sql, text, select, func)
+from sqlalchemy import (Table, Sequence, Integer, Unicode, Boolean, sql, text, select, func)
 from sqlalchemy.orm import deferred, object_session
 from sqlalchemy.orm.dynamic import AppenderQuery, AppenderMixin
 from sqlalchemy.dialects.postgresql import JSONB
@@ -39,7 +39,7 @@ class NodeType(DeclarativeBase):
 
     __tablename__ = "nodetype"
 
-    name = C(Text, primary_key=True)
+    name = C(Unicode, primary_key=True)
     # does this type act as a container type? Other types are "content types".
     is_container = C(Boolean, index=True)
 
@@ -175,11 +175,11 @@ class Node(DeclarativeBase, NodeMixin):
     }
 
     id = C(Integer, node_id_seq, server_default=node_id_seq.next_value(), primary_key=True)
-    type = C(Text, index=True)
+    type = C(Unicode, index=True)
     schema = C(Unicode, index=True)
     name = C(Unicode, index=True)
     orderpos = C(Integer, default=1, index=True)
-    fulltext = deferred(C(Text))
+    fulltext = deferred(C(Unicode))
     # indicate that this node is a subnode of a content type node
     # subnode exists just for performance reasons and is updated by the database
     # unversioned
@@ -229,11 +229,15 @@ class Node(DeclarativeBase, NodeMixin):
         raise NotImplementedError("immutable!")
 
 
-    def __init__(self, name="", type="node", id=None, schema=None, attrs=None, system_attrs=None, orderpos=None):
+    def __init__(self, name=u"", type=u"node", id=None, schema=None, attrs=None, system_attrs=None, orderpos=None):
         self.name = name
+        if not isinstance(type, unicode):
+            warn("type arg of Node should be unicode (hint: don't create nodes with Node(type='{}')!)".format(type), DeprecationWarning)
+
         if "/" in type:
             warn("use separate type and schema parameters instead of 'type/schema'", DeprecationWarning)
             type, schema = type.split("/")
+
         self.type = type
         self.attrs = MutableDict()
         self.system_attrs = MutableDict()
@@ -563,6 +567,6 @@ class NodeAlias(DeclarativeBase):
 
     alias = C(Unicode, primary_key=True)
     nid = integer_fk(Node.id)
-    description = C(Text)
+    description = C(Unicode)
 
     node = rel(Node)

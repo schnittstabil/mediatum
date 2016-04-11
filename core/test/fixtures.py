@@ -160,7 +160,7 @@ def some_user(session, internal_authenticator_info):
 @fixture
 def user_with_home_dir(some_user, home_root):
     from contenttypes import Directory
-    home = Directory(name="Arbeitsverzeichnis (test)")
+    home = Directory(name=u"Arbeitsverzeichnis (test)")
     home.children.extend(create_special_user_dirs())
     home_root.children.append(home)
     some_user.home_dir = home
@@ -200,7 +200,7 @@ def guest_user(internal_authenticator_info):
 @fixture
 def internal_user(some_user, internal_authenticator_info):
     some_user.authenticator_info = internal_authenticator_info
-    some_user.login_name = "testuser"
+    some_user.login_name = u"testuser"
     some_user.can_change_password = True
     return some_user
 
