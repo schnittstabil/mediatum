@@ -17,7 +17,7 @@
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-from schema.schema import getMetadataType, getAllMetaFields, VIEW_DATA_ONLY
+from schema.schema import getMetadataType, getAllMetaFields, VIEW_DATA_ONLY, Maskitem
 from core.translation import lang
 from core.metatype import Metatype
 from core import Node, db
@@ -111,7 +111,7 @@ class m_vgroup(Metatype):
         else:
             pid = item.getParents()[0].id
 
-        if ustr(req.params.get("edit")) == ustr("None"):
+        if req.params.get("edit") == "None":
             item = Maskitem(name="", type="maskitem")
             item.set("type", "vgroup")
 
