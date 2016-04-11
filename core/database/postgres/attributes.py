@@ -53,9 +53,7 @@ class PythonicJSONElement(JSONElement):
         if len(other) == 1:
             # this is just a optimization for special cases to avoid calling the JSON dump function; the final return is sufficient
             other = other[0]
-            if isinstance(other, basestring):
-                return super(JSONElement, self).operate(op, '"' + other + '"')
-            elif isinstance(other, bool):
+            if isinstance(other, bool):
                 return super(JSONElement, self).operate(op, str(other).lower())
             elif isinstance(other, (int, long)):
                 return super(JSONElement, self).operate(op, str(other))
