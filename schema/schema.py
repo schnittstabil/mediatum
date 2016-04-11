@@ -649,13 +649,6 @@ class Metadatatype(Node):
                     fields.append(item)
         return fields
 
-    def getMetaField(self, name):
-        try:
-            return self.getChild(name)
-        except tree.NoSuchNodeError:
-            # *shrug*
-            return None
-
     def filter_masks(self, masktype=None, language=None):
         masks = self.masks
         if masktype:
@@ -1547,16 +1540,6 @@ class SchemaMixin(object):
         except AttributeError:
             pass
         return l
-
-    def getMetaField(self, name):
-        if self.getSchema():
-            try:
-                metadatatype = getMetaType(self.getSchema())
-                return getMetaType(self.getSchema()).getMetaField(name)
-            except AttributeError:
-                return None
-        else:
-            return None
 
     def getSearchFields(self):
         sfields = []
