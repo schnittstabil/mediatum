@@ -18,44 +18,75 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 from core.translation import translate, lang
-from core.database.postgres.permission import AccessRuleset
+from core.database.postgres.permission import AccessRuleset, NodeToAccessRuleset
 from core import db
+import logging
 
+logg = logging.getLogger(__name__)
 q = db.query
+
+
+def ruleset_is_private_to_node(ruleset):
+    """If this ruleset is the exclusive private ruleset for node n
+    n.id is returned,
+    otherwise None is returned
+    """
+    nids = q(NodeToAccessRuleset.nid).filter_by(ruleset_name=ruleset.name).filter_by(private=True).all()
+    if not nids:
+        return None
+    elif len(nids) == 1:
+        return nids[0][0]
+    else:
+        msg = u"data integrity error (?): ruleset %r is 'private' to more than one (%d) node" % (ruleset.name,
+                                                                                                 len(nids))
+        logg.warning(msg)
+        raise ValueError(msg)
 
 
 def makeList(req, name, not_inherited_ruleset_names, inherited_ruleset_names, additional_rules_inherited=[], additional_rules_not_inherited=[], overload=0, type=""):
     rightsmap = {}
     rorightsmap = {}
 
-    rulelist = q(AccessRuleset).order_by(AccessRuleset.name).all()
+    # for filling val_right
+    rulesetnamelist = [t[0] for t in q(AccessRuleset.name).order_by(AccessRuleset.name).all()]
+    private_rulset_names = [t[0] for t in q(NodeToAccessRuleset.ruleset_name).filter_by(private=True).all()]
+    #rulesetlist = [ruleset for ruleset in rulesetlist if not ruleset_is_private_to_node(ruleset)]
+    rulesetnamelist = [rulesetname for rulesetname in rulesetnamelist if not rulesetname in private_rulset_names]
 
     val_left = []
     val_right = []
 
     # inherited rules
-    for rule_name in inherited_ruleset_names:
-        if rule_name not in rorightsmap:
-            val_left.append("""<optgroup label="%s"></optgroup>""" % rule_name)
-            rorightsmap[rule_name] = 1
+    for rulesetname in inherited_ruleset_names:
+        if rulesetname not in rorightsmap:
+            if rulesetname in private_rulset_names:
+                val_left.append(
+                    """<optgroup label="%s"></optgroup>""" % (translate("edit_acl_special_rule", lang(req))))
+            else:
+                val_left.append("""<optgroup label="%s"></optgroup>""" % rulesetname)
+            rorightsmap[rulesetname] = 1
 
     for r in additional_rules_inherited:
         val_left.append("""<optgroup label="%s"></optgroup>""" % (translate("edit_acl_special_rule", lang(req))))
 
     # node level rules
-    for rule_name in not_inherited_ruleset_names:
-        if rule_name in rorightsmap and not overload:
+    for rulesetname in not_inherited_ruleset_names:
+        if rulesetname in rorightsmap and not overload:
             continue
-        val_left.append("""<option value="%s">%s</option>""" % (rule_name, rule_name))
-        rightsmap[rule_name] = 1
+        if rulesetname in private_rulset_names:
+            entry_text = translate("edit_acl_special_rule", lang(req))
+            val_left.append(
+                """<option value="__special_rule__">%s</optgroup>""" % (entry_text, ))
+        else:
+            val_left.append("""<option value="%s">%s</option>""" % (rulesetname, rulesetname))
+        rightsmap[rulesetname] = 1
 
     for r in additional_rules_not_inherited:
         val_left.append("""<option value="__special_rule__">%s</option>""" % (translate("edit_acl_special_rule", lang(req)), ))
 
-    for rule in rulelist:
-        rule_name = rule.name
-        if rule_name not in rightsmap and rule_name not in rorightsmap:
-            val_right.append("""<option value="%s">%s</option>""" % (rule_name, rule_name))
+    for rulesetname in rulesetnamelist:
+        if rulesetname not in rightsmap and rulesetname not in rorightsmap:
+            val_right.append("""<option value="%s">%s</option>""" % (rulesetname, rulesetname))
 
     res = {"name": name, "val_left": "".join(val_left), "val_right": "".join(val_right), "type": type}
 
