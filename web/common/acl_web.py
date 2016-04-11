@@ -43,20 +43,20 @@ def ruleset_is_private_to_node(ruleset):
         raise ValueError(msg)
 
 
-def makeList(req, name, not_inherited_ruleset_names, inherited_ruleset_names, additional_rules_inherited=[], additional_rules_not_inherited=[], overload=0, type=""):
+def makeList(req, name, not_inherited_ruleset_names, inherited_ruleset_names, additional_rules_inherited=[],
+             additional_rules_not_inherited=[], overload=0, type=""):
     rightsmap = {}
     rorightsmap = {}
 
     # for filling val_right
     rulesetnamelist = [t[0] for t in q(AccessRuleset.name).order_by(AccessRuleset.name).all()]
     private_rulset_names = [t[0] for t in q(NodeToAccessRuleset.ruleset_name).filter_by(private=True).all()]
-    #rulesetlist = [ruleset for ruleset in rulesetlist if not ruleset_is_private_to_node(ruleset)]
     rulesetnamelist = [rulesetname for rulesetname in rulesetnamelist if not rulesetname in private_rulset_names]
 
     val_left = []
     val_right = []
 
-    # inherited rules
+    # inherited rulesets
     for rulesetname in inherited_ruleset_names:
         if rulesetname not in rorightsmap:
             if rulesetname in private_rulset_names:
@@ -69,10 +69,8 @@ def makeList(req, name, not_inherited_ruleset_names, inherited_ruleset_names, ad
     for r in additional_rules_inherited:
         val_left.append("""<optgroup label="%s"></optgroup>""" % (translate("edit_acl_special_rule", lang(req))))
 
-    # node level rules
+    # node level rulesets
     for rulesetname in not_inherited_ruleset_names:
-        if rulesetname in rorightsmap and not overload:
-            continue
         if rulesetname in private_rulset_names:
             entry_text = translate("edit_acl_special_rule", lang(req))
             val_left.append(
