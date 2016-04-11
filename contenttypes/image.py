@@ -33,6 +33,7 @@ from core.styles import getContentStyles
 from core.transition.postgres import check_type_arg_with_schema
 from contenttypes.data import Content
 from utils.utils import isnewer, iso2utf8, utf8_decode_escape
+from utils.compat import iteritems
 
 import lib.iptc.IPTC
 from lib.Exif import EXIF
@@ -421,10 +422,10 @@ class Image(Content):
                 continue
             if tags[k]:
                 self.set("exif_" + k.replace(" ", "_"), utf8_decode_escape(str(tags[k])))
-        # iptc
-#        tags = lib.iptc.IPTC.get_iptc_values(image_file.abspath, lib.iptc.IPTC.get_wanted_iptc_tags())
-#         for k in tags.keys():
-#             self.attrs[k] = tags[k]
+
+        # IPTC
+        for k, v in iteritems(lib.iptc.IPTC.get_iptc_tags(image_file.abspath)):
+            self.set('iptc_' + k, v)
 
     def event_files_changed(self):
         """postprocess method for object type 'image'. called after object creation"""
