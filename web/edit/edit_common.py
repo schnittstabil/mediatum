@@ -311,7 +311,7 @@ def send_nodefile_tal(req):
 
 @dec_entry_log
 def upload_for_html(req):
-    user = user_from_session(req.session)
+    user = current_user
     datatype = req.params.get("datatype", "image")
 
     id = req.params.get("id")
