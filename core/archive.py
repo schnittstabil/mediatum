@@ -70,7 +70,7 @@ class ArchiveManager:
         self.manager = {}
         if config.get("archive.activate", "").lower() == "true":
             logg.info("Initializing archive manager")
-            for paths in config.get("archive.class").split(";"):
+            for paths in config.get("archive.class", "").split(";"):
                 path, manager = splitpath(paths)
                 self.manager[manager] = paths
 
