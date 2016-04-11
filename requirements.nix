@@ -328,13 +328,15 @@ let
     buildInputs = with self; [mock];
   };
 
-  pytest-capturelog = self.buildPythonPackage {
-    name = "pytest-capturelog-0.7";
-    src = fetchurl {
-      url = "https://pypi.python.org/packages/source/p/pytest-capturelog/pytest-capturelog-0.7.tar.gz";
-      md5 = "cfeac23d8ed254deaeb50a8c0aa141e9";
+  pytest-catchlog = self.buildPythonPackage rec {
+    name = "pytest-catchlog-${version}";
+    version = "1.2.2";
+    src = fetchgit {
+      url = https://github.com/eisensheng/pytest-catchlog;
+      rev = "e829f07d74b703397a07157fe919a8fd34014fa7";
+      sha256 = "61b350cf890112b874d7ecb87cff62facd20101e856d348e3edbfd5514fb7ab0";
     };
-    propagatedBuildInputs = with self; [py];
+    propagatedBuildInputs = with self; [py pytest];
   };
 
   redis-collections = self.buildPythonPackage {
@@ -409,7 +411,7 @@ in {
       mock
       munch
       pytest
-      pytest-capturelog
+      pytest-catchlog
       redis-collections
       pkgs.redis
     ];
