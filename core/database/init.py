@@ -48,10 +48,8 @@ def init_database_values(s, default_admin_password=None):
     collections.access_rule_assocs.append(NodeToAccessRule(ruletype=u"read", rule=everybody_rule))
     home = Home(u"home", u"home", 11)
     searchmasks = Searchmasks(u"searchmasks", u"searchmasks", 15)
-    schedules = Schedules(u"schedules", u"schedules", 16)
 
-
-    root.children.extend([metadatatypes, workflows, mappings, collections, home, searchmasks, schedules])
+    root.children.extend([metadatatypes, workflows, mappings, collections, home, searchmasks])
 
     # finally, add node tree. All nodes will be added automatically
     s.add(root)

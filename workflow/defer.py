@@ -21,7 +21,6 @@
 """
 import logging
 import utils.date as date
-import core.schedules as schedules
 from .workflow import WorkflowStep, registerStep
 from core.translation import t, addLabels
 from core import db
@@ -75,16 +74,6 @@ class WorkflowStep_Defer(WorkflowStep):
 
                     db.session.commit()
 
-                    node.getLocalRead()
-
-                    if self.get('recipient'):  # if the recipient-email was entered, create a scheduler
-                        attr_dict = {'single_trigger': l_date, 'function': "test_sendmail01",
-                                     'nodelist': list(node.id), 'attr_recipient': self.get('recipient'),
-                                     'attr_subject': u"{} ID: {}".format(self.get('subject'),
-                                                                         node.id),
-                                     'attr_body': self.get('body')}
-
-                        schedules.create_schedule("WorkflowStep_Defer", attr_dict)
                 except ValueError:
                     logg.exception("exception in workflow step defer, runAction failed")
 

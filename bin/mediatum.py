@@ -97,13 +97,6 @@ def run(host=None, http_port=None, redis_sessions=False, force_test_db=None, log
         from core import db
         db.session.close()
 
-    # scheduler thread
-    # import core.schedules
-    # try:
-    #     core.schedules.startThread()
-    # except:
-    #     logg.exception("Error starting scheduler thread")
-
     # start main web server, Z.39.50 and FTP, if configured
     if config.get('z3950.activate', '').lower() == 'true':
         z3950port = int(config.get("z3950.port", "2021"))
