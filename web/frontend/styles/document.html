@@ -9,7 +9,6 @@
 
 <div style="width:100%;text-align:right">
     <img tal:condition="python:node.get('metis_url')!=''" tal:attributes="src python:node.get('metis_url')" width="1" height="1" alt="" />
-    <img i18n:attributes="title view_list_add_shoppingbag" tal:attributes="onclick python:u'javascript:shoppingBag(\'{}\')'.format(node.id)" border="0" src="/img/favourite_add.png" style="cursor:pointer"/>
     <a tal:condition="print_url" tal:attributes="href python:print_url" i18n:attributes="title printview" target="_blank"><img src="/img/print_icon.gif" style="margin-top:-5px"/></a>
 </div>
 <div id="object_main">

@@ -179,10 +179,6 @@ def initContexts():
     file.addHandler("show_attachmentbrowser").addPattern("/attachmentbrowser")
     file.addHandler("show_printview").addPattern("/print/.*")
 
-    # XXX: shoppingbag will be fixed later, see #516
-    #file = context.addFile("web/frontend/shoppingbag.py")
-    #file.addHandler("shoppingbag_action").addPattern("/shoppingbag")
-
     file = context.addFile("web/frontend/login.py")
     file.addHandler("login").addPattern("/login")
     file.addHandler("logout").addPattern("/logout")

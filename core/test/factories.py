@@ -62,10 +62,6 @@ class UserFactory(SQLAFactory):
     telephone = FuzzyText(length=12, chars=string.digits)
     organisation = FuzzyText(length=6, chars=string.lowercase)
     can_change_password = FuzzyChoice([True, False])
-    can_edit_shoppingbag = FuzzyChoice([True, False])
-
-    # TODO: attribute
-#     userkey = fuzzy.FuzzyText(length=6, chars=string.lowercase)
 
 
 class UserGroupFactory(SQLAFactory):

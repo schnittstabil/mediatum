@@ -72,10 +72,6 @@ class SingleFile(object):
         warn("SingleFile.getLink() is deprecated, use SingleFile.link", DeprecationWarning)
         return self.link
 
-    def getShoppingBagLink(self):
-        warn("SingleFile.getShoppingBagLink() is deprecated, use SingleFile.shopping_bag_link", DeprecationWarning)
-        return self.shopping_bag_link
-
     def getMetadata(self, separator=".", language=None):
         return self.node.show_node_text(separator=separator, language=language)
 

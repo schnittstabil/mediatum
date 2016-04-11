@@ -86,10 +86,10 @@ class UserMixin(object):
         return id in self.group_ids
 
     def getOption(self):
-        raise NotImplementedError("obsolete, use User.can_change_password or User.can_edit_shoppingbag instead")
+        raise NotImplementedError("obsolete, use User.can_change_password")
 
     def setOption(self, o):
-        raise NotImplementedError("obsolete, use User.can_change_password or User.can_edit_shoppingbag instead")
+        raise NotImplementedError("obsolete, use User.can_change_password")
 
     def isGuest(self):
         return self.name == config.get("user.guestecser")
@@ -135,24 +135,6 @@ class UserMixin(object):
         else:
             from core.users import authenticators
             return authenticators[self.getUserType()].canChangePWD()
-
-    def getShoppingBag(self, name=u""):
-        raise NotImplementedError("later!")
-        warn("deprecated, use User.shoppingbags instead", DeprecationWarning)
-        ret = []
-        for c in self.getChildren():
-            if c.getContentType() == "shoppingbag":
-                if unicode(c.id) == name or c.getName() == name:
-                    return [c]
-                else:
-                    ret.append(c)
-        return ret
-
-    def addShoppingBag(self, name, items=[]):
-        raise NotImplementedError("later!")
-        sb = Node(name, type="shoppingbag")
-        sb.setItems(items)
-        self.addChild(sb)
 
     def getUserID(self):
         warn("deprecated, use User.id instead", DeprecationWarning)

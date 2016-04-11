@@ -398,7 +398,6 @@ def edit_tree(req):
                 nodes = [home_dir]
     else:
         nodes = q(Data).get(req.params.get('key')).container_children.sort_by_orderpos()
-        # filter out shoppingbags etc.
         nodes = [n for n in nodes if n.isContainer()]
 
     data = []

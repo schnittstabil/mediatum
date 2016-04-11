@@ -34,24 +34,6 @@ function fullSizePopup(id, width, height)
     return win1;
 }
 
-function shoppingbag(shoppingbag_width, shoppingbag_height)
-{
-    openPopup('/shoppingbag', 'bag', shoppingbag_width, shoppingbag_height, 'yes');
-}
-
-function shoppingBag(nodeid)
-{
-    $.get('/shoppingbag?files='+nodeid+'&action=add', function(data) {
-      alert(unescape(data));
-    });
-    return false;
-}
-
-function addDirToShoppingBag(nodeid)
-{
-    openPopup('put_dir_into_shoppingbag?dir='+nodeid, 'move', 150,100, 'no');
-}
-
 function openPopup(url, name, width, height, scroll)
 {
     var win1 = window.open(url,name,'width='+width+',height='+height+',screenX=50,screenY=50,directories=no,location=no,menubar=no,scrollbars='+scroll+',status=no,toolbar=no,resizable=yes');

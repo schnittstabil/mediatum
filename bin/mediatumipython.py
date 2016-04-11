@@ -205,7 +205,7 @@ initmodule.check_undefined_nodeclasses(stub_undefined_nodetypes=True)
 logging.getLogger("core.init").setLevel(_core_init_loglevel)
 
 from core import db, Node, File
-from core import User, UserGroup, AuthenticatorInfo, ShoppingBag
+from core import User, UserGroup, AuthenticatorInfo
 from core import AccessRule, AccessRuleset, NodeToAccessRule, NodeToAccessRuleset
 from core import Fts, Setting
 

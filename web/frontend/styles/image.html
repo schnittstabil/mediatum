@@ -5,8 +5,6 @@
 <metal:macro use-macro="web/frontend/styles/macros.html/deleted"/>
 
 <div style="width: 100%; text-align:right">
-    <a tal:attributes="href python:u'javascript:shoppingBag(\'{}\')'.format(node.id)">
-        <img i18n:attributes="title view_list_add_shoppingbag" border="0" src="/img/favourite_add.png"/></a>
     <a tal:attributes="href python:u'/print/{}'.format(node.id)" i18n:attributes="title printview" target="_blank"><img src="/img/print_icon.gif"/></a>
 </div>
 <div id="object_image" tal:condition="python:canseeoriginal">
@@ -51,7 +49,7 @@
 <p tal:condition="python:node.get('license')!='' and ', http' in node.get('license')" style="text-align:right" class="licenseicon">
     <a tal:attributes="href python:node.get('license').split(',')[1]" target="_blank"><img tal:attributes="src python:u'/img/{}.png'.format(node.get('license').split(',')[0])" style="width:80px;"/></a>
 </p>
-    
+
 <div style="clear:both"/>
 <metal:macro use-macro="web/frontend/styles/macros.html/bothView"/>
 <div style="clear:both"/>

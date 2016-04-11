@@ -32,8 +32,6 @@ def upgrade():
                existing_type=sa.INTEGER(),
                nullable=True)
     op.create_foreign_key(None, 'oauth_user_credentials', 'user', ['user_id'], ['id'], source_schema='mediatum', referent_schema='mediatum')
-    op.create_foreign_key(None, 'shoppingbag_to_user', 'node', ['shoppingbag_id'], ['id'], source_schema='mediatum', referent_schema='mediatum')
-    op.create_foreign_key(None, 'shoppingbag_to_user', 'user', ['user_id'], ['id'], source_schema='mediatum', referent_schema='mediatum')
     op.create_foreign_key(None, 'transaction', 'user', ['user_id'], ['id'], source_schema='mediatum', referent_schema='mediatum')
     op.create_foreign_key(None, 'user', 'usergroup', ['private_group_id'], ['id'], source_schema='mediatum', referent_schema='mediatum')
     op.create_foreign_key(None, 'user', 'authenticator', ['authenticator_id'], ['id'], source_schema='mediatum', referent_schema='mediatum')
@@ -51,8 +49,6 @@ def downgrade():
     op.drop_constraint(None, 'user', schema='mediatum', type_='foreignkey')
     op.drop_constraint(None, 'user', schema='mediatum', type_='foreignkey')
     op.drop_constraint(None, 'transaction', schema='mediatum', type_='foreignkey')
-    op.drop_constraint(None, 'shoppingbag_to_user', schema='mediatum', type_='foreignkey')
-    op.drop_constraint(None, 'shoppingbag_to_user', schema='mediatum', type_='foreignkey')
     op.drop_constraint(None, 'oauth_user_credentials', schema='mediatum', type_='foreignkey')
     op.alter_column('oauth_user_credentials', 'user_id',
                existing_type=sa.INTEGER(),

@@ -219,7 +219,6 @@ class PostgresSQLAConnector(object):
         from core.database.postgres.file import File
         from core.database.postgres.node import NodeType, Node, NodeAlias
         from core.database.postgres.user import User, UserGroup, UserToUserGroup, AuthenticatorInfo, OAuthUserCredentials
-        from core.database.postgres.shoppingbag import ShoppingBag
         from core.database.postgres.permission import AccessRule, AccessRuleset, NodeToAccessRule, NodeToAccessRuleset
         from core.database.postgres.setting import Setting
         from core.database.postgres.search import Fts
@@ -231,7 +230,6 @@ class PostgresSQLAConnector(object):
             UserToUserGroup,
             AuthenticatorInfo,
             OAuthUserCredentials,
-            ShoppingBag,
             AccessRule,
             AccessRuleset,
             NodeToAccessRule,

@@ -40,12 +40,6 @@ msgstr "mediaTUM - digital collection management at TUM"
 msgid "bib_link_title"
 msgstr "to the library portal"
 
-msgid "header_shoppingbag_alt"
-msgstr "List of favourites"
-
-msgid "header_shoppingbag_title"
-msgstr "List of favourites"
-
 msgid "sub_header_user"
 msgstr "User"
 
@@ -322,12 +316,6 @@ msgstr "Collection"
 msgid "Root"
 msgstr "root node (system type)"
 
-msgid "view_list_add_shoppingbag"
-msgstr "Add object to list of favourites"
-
-msgid "view_lists_add_shoppingbag"
-msgstr "Add listed objects to the favourites list"
-
 msgid "view_list_att_title"
 msgstr "document has an attachment"
 
@@ -417,144 +405,6 @@ msgstr "Creation Options:"
 
 msgid "mysql_comment"
 msgstr "Comment:"
-
-msgid "shoppingbag_object_added"
-msgstr "Object added to favourites."
-
-msgid "shoppingbag_objects_added"
-msgstr "Objects added to favourites."
-
-msgid "shoppingbag_object_still_added"
-msgstr "Object is already in favourites."
-
-msgid "shoppingbag_objects_still_added"
-msgstr "Objects are already in favourites."
-
-msgid "popup_shoppingbag_img_title"
-msgstr "Pictures can be exported via Drag&Drop into most applications (e.g. Powerpoint):"
-
-msgid "popup_shoppingbag_doc_title"
-msgstr "Documents can be opened:"
-
-msgid "popup_shoppingbag_media_title"
-msgstr "Multimedia files can be opened:"
-
-msgid "popup_shoppingbag_no_items"
-msgstr "No objects in your favourites"
-
-msgid "popup_shoppingbag_delete_title"
-msgstr "clear favourites"
-
-msgid "popup_shoppingbag_delete"
-msgstr "clear favourites"
-
-msgid "popup_shoppingbag_movefiles"
-msgstr "Objects will be moved..."
-
-msgid "popup_shoppingbag_add_msg"
-msgstr "Object was added to favourites."
-
-msgid "popup_shoppingbag_title"
-msgstr "Favourites"
-
-msgid "popup_shoppingbag_items_filtered"
-msgstr "Favourites were filtered, your user account has no rights to see some objects."
-
-msgid "shoppingbag_clear_item"
-msgstr "remove from list"
-
-msgid "popup_shoppingbag_object_delete"
-msgstr "Remove object from list?"
-
-msgid "popup_shoppingbag_export"
-msgstr "Export..."
-
-msgid "popup_shoppingbag_metadata"
-msgstr "metadata:"
-
-msgid "popup_shoppingbag_imageonly"
-msgstr "only images"
-
-msgid "popup_shoppingbag_imagemeta"
-msgstr "images and metadata"
-
-msgid "popup_shoppingbag_metaonly"
-msgstr "only metadata"
-
-msgid "popup_shoppingbag_size"
-msgstr "size:"
-
-msgid "popup_shoppingbag_imagesize"
-msgstr "image dimensions:"
-
-msgid "popup_shoppingbag_or"
-msgstr "or"
-
-msgid "popup_shoppingbag_maximgsize"
-msgstr "max. length:"
-
-msgid "popup_shoppingbag_stdsize"
-msgstr "std. size:"
-
-msgid "popup_shoppingbag_format"
-msgstr "format:"
-
-msgid "popup_shoppingbag_ziptitle"
-msgstr "export as zip file"
-
-msgid "popup_shoppingbag_doconly"
-msgstr "only documents"
-
-msgid "popup_shoppingbag_docmeta"
-msgstr "docuemtns and metadata"
-
-msgid "popup_shoppingbag_mediaonly"
-msgstr "only objects"
-
-msgid "popup_shoppingbag_mediameta"
-msgstr "objects and metadata"
-
-msgid "popup_shoppingbag_ownbags"
-msgstr "Own favourites:"
-
-msgid "popup_shoppingbag_private"
-msgstr "private favourites (not shared)"
-
-msgid "popup_shoppingbag_share_bag"
-msgstr "toggle favourites public/private"
-
-msgid "popup_shoppingbag_delete_bag"
-msgstr "clear favourites"
-
-msgid "popup_shoppingbag_load_bag"
-msgstr "load objects from favourites"
-
-msgid "popup_shoppingbag_privateinfo"
-msgstr "private favourites"
-
-msgid "popup_shoppingbag_savebag"
-msgstr "Save favourites:"
-
-msgid "popup_shoppingbag_name"
-msgstr "Name:"
-
-msgid "popup_shoppingbag_save"
-msgstr "Save"
-
-msgid "popup_shoppingbag_loadbag"
-msgstr "Load external favourites (by key):"
-
-msgid "popup_shoppingbag_key"
-msgstr "Key:"
-
-msgid "popup_shoppingbag_load"
-msgstr "load"
-
-msgid "popup_shoppingbag_markall"
-msgstr "Mark all objects"
-
-msgid "popup_shoppingbag_unmarkall"
-msgstr "Unmark selection"
 
 msgid "popup_help_title"
 msgstr "Help for metadata field "

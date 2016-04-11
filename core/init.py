@@ -72,7 +72,6 @@ def load_system_types():
     from core.systemtypes import *
     from schema.searchmask import SearchMaskItem, SearchMask
     from schema.mapping import Mapping, MappingField
-    from core import ShoppingBag
 
 
 def load_types():

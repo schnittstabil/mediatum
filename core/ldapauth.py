@@ -147,7 +147,7 @@ class LDAPAuthenticator(Authenticator):
         :returns: User or None if user was not added."""
         s = db.session
         user_data = self.get_user_data(data)
-        user = User(can_change_password=False, can_edit_shoppingbag=True, active=True, authenticator_info=authenticator_info, **user_data)
+        user = User(can_change_password=False, active=True, authenticator_info=authenticator_info, **user_data)
 
         if not user.display_name:
             if user.lastname and user.firstname:

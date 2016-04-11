@@ -7,7 +7,7 @@
 from pytest import fixture, raises
 from sqlalchemy.exc import IntegrityError
 from core.test.asserts import assert_deprecation_warning
-from core import config, db, User, UserGroup, ShoppingBag
+from core import config, db, User, UserGroup
 from core.test.factories import UserGroupFactory
 from contenttypes import Directory
 from core.database.postgres.user import UserToUserGroup
@@ -32,13 +32,6 @@ def legacy_getter(request):
 
 def test_legacy_getter_deprecation(some_user, legacy_getter):
     assert_deprecation_warning(legacy_getter, some_user)
-
-
-def test_add_shoppingbag(some_user):
-    shopping_bag = ShoppingBag("test")
-    some_user.shoppingbags["test"] = shopping_bag
-    user = db.session.query(User).filter(User.shoppingbags.contains(shopping_bag)).one()
-    assert len(user.shoppingbags) == 1
 
 
 def test_admin_user(admin_user):

@@ -31,13 +31,13 @@
                     }
                     window.close();
                 }
-                        
+
                 function getValue(value)
                 {
                     if (window.opener && !window.opener.closed){
                         doc = window.opener.document;
                         arr = doc.getElementById(value);
-                        
+
                         if (arr){
                             arr = arr.value.split(";");
                             selObj = document.getElementById('values');
@@ -82,7 +82,7 @@
                             }
                         }
                     }
-                    
+
                     for (i=0; i<old_id.length; i++){
                         found = false;
                         for(j=0; j<x.length; j++){
@@ -95,8 +95,8 @@
                             old_id.splice(i,1);
                         }
                     }
-                    
-                    
+
+
                     for (i=0; i<selObj.length; i++) {
                         if (selObj.options[i].selected){
                             c++;
@@ -119,7 +119,7 @@
                         alert(txt);
                     }
                 }
-                
+
                 function clearSelection()
                 {
                     selObj = document.getElementById('values');
@@ -159,26 +159,10 @@
                             <button tal:attributes="onclick python:u'pick(\'{}\')'.format(fieldname)" i18n:translate="popup_ok" type="button">TEXT</button> <button i18n:translate="popup_cancel" type="button" onclick="window.close()">TEXT</button>
                         </td>
                     </tr>
-                    
+
                 </table>
-                
+
             </form>
-        </body>
-    </html>
-</metal:block>
-
-
-
-
-<metal:block metal:define-macro="shoppingbag_error">
-    <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "DTD/xhtml1-transitional.dtd">
-    <html tal:omit-tag xmlns:tal="http://xml.zope.org/namespaces/tal" xmlns:metal="http://xml.zope.org/namespaces/metal">
-        <body>
-            <script language="javascript">
-                window.close();
-                opener.reloadPage();
-            </script>
-            <p i18n:translate="popup_shoppingbag_movefiles">TEXT</p>
         </body>
     </html>
 </metal:block>
@@ -235,7 +219,7 @@
 
                     <tal:block tal:repeat="file files">
                         <tr tal:define="cssclass python:files.index(file)%2 and 'norm' or 'silver'">
-                            
+
                             <tal:block tal:condition="python:file['type']=='dir' or file['type']=='back'">
                                 <td tal:attributes="class cssclass" align="center">
                                     <a tal:attributes="href python:u'/attachmentbrowser?id={}&path={}'.format(id, file['req_path'])">

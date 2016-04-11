@@ -55,7 +55,6 @@ def getTypes(datatypes):
                 'mask',
                 'searchmaskitem',
                 'mappingfield',
-                'shoppingbag',
                 'maskitem'] and not dtype.__name__.lower().startswith("workflow"):
             res.append(dtype)
     return res
