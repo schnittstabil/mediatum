@@ -47,7 +47,7 @@ class AccessRuleset(DeclarativeBase, TimeStamp):
     __versioned__ = {}
 
     name = C(Unicode, primary_key=True)
-    description = C(Unicode, server_default="''")
+    description = C(Unicode, server_default=u"")
 
 
 class AccessRulesetToRule(DeclarativeBase):
@@ -105,7 +105,7 @@ Node.access_ruleset_assocs = dynamic_rel(NodeToAccessRuleset, backref="node", ca
 
 
 def _create_private_ruleset_assoc_for_nid(nid, ruletype):
-    ruleset = AccessRuleset(name=u"_{}_{}".format(ruletype, unicode(nid)))
+    ruleset = AccessRuleset(name=u"_{}_{}".format(ruletype, unicode(nid)), description=u"auto-generated")
     ruleset_assoc = NodeToAccessRuleset(nid=nid, ruletype=ruletype, ruleset=ruleset, private=True)
     return ruleset_assoc
 

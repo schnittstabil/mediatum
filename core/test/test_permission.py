@@ -62,6 +62,7 @@ def test_access_rule_inheritance_write(some_node_with_two_parents):
 
 def test_get_or_add_special_access_ruleset(some_node):
     read_ruleset = some_node.get_or_add_special_access_ruleset(u"read")
+    assert read_ruleset.description == u"auto-generated"
     assert isinstance(read_ruleset, AccessRuleset)
     assert some_node.access_ruleset_assocs.one().private
 
