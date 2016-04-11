@@ -890,6 +890,10 @@ class Mask(Node):
     def masktype(self):
         return self.get("masktype")
 
+    @property
+    def language(self):
+        return self.get("language")
+
     @hybrid_property
     def metadatatype(self):
         return self._metadatatypes.scalar()
