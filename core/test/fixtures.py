@@ -264,7 +264,7 @@ def other_container_node(session):
 
 
 @fixture
-def some_node(content_node, container_node, some_file):
+def some_node(content_node, container_node):
     attrs = {
         u"testattr": u"testvalue"
     }
@@ -275,9 +275,13 @@ def some_node(content_node, container_node, some_file):
     parent = DirectoryFactory(name=u"parent")
     parent.children.append(some_node)
     some_node.children.extend([container_node, content_node])
-    some_node.files.append(some_file)
     return some_node
 
+@fixture
+def some_node_with_file(some_node):
+    some_file = FileFactory()
+    some_node.files.append(some_file)
+    return some_node
 
 @fixture
 def some_node_with_sort_children(some_node, other_container_node, other_content_node):

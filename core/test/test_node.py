@@ -66,9 +66,9 @@ def test_getParents(some_node):
     assert len(parents) == 1
 
 
-def test_getFiles(some_node):
-    assert len(some_node.getFiles()) == 1
-    assert some_node.files[0].path == "testfilename"
+def test_getFiles(some_node_with_file):
+    node = some_node_with_file
+    assert len(node.getFiles()) == 1
 
 
 def test_get(some_node):
