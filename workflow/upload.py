@@ -46,7 +46,7 @@ class WorkflowStep_Upload(WorkflowStep):
                 filename = key[7:-2]
                 all = 0
                 for file in node.files:
-                    if file.name == filename:
+                    if file.base_name == filename:
                         if file.type in ['document', 'image']:  # original -> delete all
                             all = 1
                         node.files.remove(file)
