@@ -131,9 +131,9 @@ def modifyItem(req, node, type, id):
     files = []
     content_file = node.files.filter_by(filetype=u"content").scalar()
     if content_file is not None:
-        startpage_descriptor = node.system_attrs.get("startpagedescr.html/" + file.name)
+        startpage_descriptor = node.system_attrs.get("startpagedescr.html/" + content_file.base_name)
         if startpage_descriptor:
-            files.append((file, startpage_descriptor))
+            files.append((content_file, startpage_descriptor))
 
     db.session.commit()
 
