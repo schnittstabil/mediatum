@@ -278,23 +278,6 @@ class async_chat (asyncore.dispatcher):
             self.producer_fifo.pop()
 
 
-class simple_producer:
-
-    def __init__(self, data, buffer_size=512):
-        self.data = data
-        self.buffer_size = buffer_size
-
-    def more(self):
-        if len(self.data) > self.buffer_size:
-            result = self.data[:self.buffer_size]
-            self.data = self.data[self.buffer_size:]
-            return result
-        else:
-            result = self.data
-            self.data = ''
-            return result
-
-
 class fifo:
 
     def __init__(self, list=None):
@@ -4578,11 +4561,6 @@ def stop_testrun():
     global _test_running
     _test_running = False
     _test_thread.join()
-
-
-def setTempDir(path):
-    global GLOBAL_TEMP_DIR
-    GLOBAL_TEMP_DIR = path
 
 
 # COMPAT: added functions
