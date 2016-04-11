@@ -247,7 +247,7 @@ def adminNavigation():
 
     if admin_configuration == "":
         # no confguration found -> use default
-        admin_configuration = "menumain();menuuser(usergroup;user);menuacl(acls);menudata(metatype;mapping);menuworkflow(workflows);menusystem(logfile;flush;settings;settingsmenu)"
+        admin_configuration = "menumain();menudata(metatype;mapping);menuworkflow(workflows);menusystem(settingsmenu)"
         root.system_attrs["admin.menu"] = admin_configuration
 
     return parseMenuString(admin_configuration[:-1])
