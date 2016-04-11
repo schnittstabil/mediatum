@@ -53,8 +53,6 @@ q = db.query
 logg = logging.getLogger(__name__)
 
 ESCAPE_BIBTEX_KEY = False
-VERBOSE = True
-
 
 def normchar(char_descriptor):
     return unicodedata.lookup(char_descriptor).lower()
@@ -276,7 +274,6 @@ def importBibTeX(infile, node=None, req=None):
     bibtextypes = getbibtexmappings()
     result = []
     entries = []
-    shortcut = {}
 
     if isinstance(infile, list):
         entries = infile
@@ -348,17 +345,6 @@ def importBibTeX(infile, node=None, req=None):
                 logg.exception("bibtex exception")
                 raise ValueError()
 
-            if VERBOSE:
-                try:
-                    logg.info("bibtex import: done  processing %s: %s, %s --> type=%s, id=%s",
-                        count+1, doctype, docid, child_type, child_id)
-                except Exception:
-                    try:
-                        logg.info("bibtex import: done  processing %s: %s, %s --> type=%s, id=%s",
-                            count+1, doctype, docid.decode("utf8", "replace"), child_type, child_id)
-                    except Exception:
-                        logg.info("bibtex import: done  processing %s: %s, %s --> type=%s, id=%s",
-                            ustr(count+1), doctype, "'not printable bibtex key'", child_type, child_id)
     logg.debug("bibtex import: finished import")
     print msg
 
