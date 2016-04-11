@@ -176,17 +176,12 @@ def getContent(req, ids):
     additional_rules = {}
     additional_rules_inherited = {}
     additional_rules_not_inherited = {}
-    overload_flag = {}  # not needed anymore
     for rule_type in rule_types:
         inherited_ruleset_names[rule_type] = []
         additional_rules[rule_type] = {}
-        overload_flag[rule_type] = 0
 
         runsubmit += "\tmark(document.myform.left" + rule_type + ");\n"
         runsubmit += "\tmark(document.myform.leftuser" + rule_type + ");\n"
-
-        if rule_type in ("read", "data"):
-            overload_flag[rule_type] = 1
 
         for node in nodes:
             rules_info_dict = make_access_rules_info_dict(node, rule_type)
@@ -214,7 +209,6 @@ def getContent(req, ids):
                                           inherited_ruleset_names[rule_type],  # readonlyrights
                                           additional_rules_inherited[rule_type],
                                           additional_rules_not_inherited[rule_type],
-                                          overload=overload_flag[rule_type], #  overload
                                           type=rule_type),  #type
                                  macro="edit_acls_selectbox")
 
@@ -229,7 +223,6 @@ def getContent(req, ids):
                                                inherited_ruleset_names[rule_type],
                                                additional_rules_inherited[rule_type],
                                                additional_rules_not_inherited[rule_type],
-                                               overload=overload_flag[rule_type],
                                                type=rule_type),
                                   macro="edit_acls_userselectbox")
         req.write(retuser)

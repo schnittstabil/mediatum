@@ -44,7 +44,7 @@ def ruleset_is_private_to_node(ruleset):
 
 
 def makeList(req, name, not_inherited_ruleset_names, inherited_ruleset_names, additional_rules_inherited=[],
-             additional_rules_not_inherited=[], overload=0, type=""):
+             additional_rules_not_inherited=[], type=""):
     rightsmap = {}
     rorightsmap = {}
 
