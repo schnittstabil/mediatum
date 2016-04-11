@@ -9,11 +9,11 @@ from warnings import warn
 def check_type_arg(cls):
     from core.database.postgres.node import Node
 
-    def init(self, name="", type=None, id=None, attrs=None, system_attrs=None, orderpos=None):
+    def init(self, name=u"", type=None, id=None, attrs=None, system_attrs=None, orderpos=None):
         clsname = self.__class__.__name__
 
         if type is None:
-            type = clsname.lower()
+            type = unicode(clsname.lower())
         else:
             warn("type param is deprecated for " + clsname + " instances", DeprecationWarning)
             if not type == clsname.lower():
@@ -29,7 +29,7 @@ def check_type_arg_with_schema(cls):
     from core.database.postgres.node import Node
 
 
-    def init(self, name="", type=None, id=None, schema=None, attrs=None, system_attrs=None, orderpos=None):
+    def init(self, name=u"", type=None, id=None, schema=None, attrs=None, system_attrs=None, orderpos=None):
         clsname = self.__class__.__name__
 
         if type is None:
