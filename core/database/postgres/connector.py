@@ -427,7 +427,8 @@ class PostgresSQLAConnector(object):
     # test helpers
 
     def disable_session_for_test(self):
-        """Disables db.Session, preventing all session operations using db.session. Used for unit tests."""
+        """Disables db.Session and closes the current session, preventing all session operations using db.session. Used for unit tests."""
+        self.Session.remove()
         self._Session = self.Session
         self.Session = disabled_scoped_session
 
