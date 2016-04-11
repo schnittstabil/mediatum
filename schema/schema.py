@@ -759,11 +759,12 @@ class Metafield(Node):
         return dateoption[0]
 
     def getValue(self, node):
+        logg.warn("who uses getValue?")
         if self.get("fieldtype") == "date":
             d = self.getSystemFormat(ustr(self.fieldvalues))
             v = node.get(self.name)
             try:
-                value = date.format_date(date.parse_date(v), d.getValue())
+                value = format_date(parse_date(v), d.getValue())
             except ValueError:
                 value = v
         else:
