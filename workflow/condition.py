@@ -55,7 +55,7 @@ class WorkflowStep_Condition(WorkflowStep):
                         gotoFalse = 0
                         break
                 if len(hlp) == 2:  # file itself
-                    if f.name == condition[8:]:
+                    if f.base_name == condition[8:]:
                         gotoFalse = 0
                         break
         elif condition == "hasfile":  # just test if there is file at all
