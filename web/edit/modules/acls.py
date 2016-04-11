@@ -30,21 +30,6 @@ def get_user_for_login_name(login_name):
     return cand
 
 
-def get_private_usergroup_for_uid(uid):
-    cand = q(UserGroup).filter(UserGroup.name.like(unicode(uid) + u'_%'), UserGroup.description.like(u'private user group for %')).scalar()
-    return cand
-
-
-def get_access_rules_with_private_group_for_uid(uid, single_gid=False):
-    private_usergroup = get_private_usergroup_for_uid(uid)
-    pgid = private_usergroup.id
-    if single_gid:
-        access_rules = q(AccessRule).filter(AccessRule.group_ids.all(pgid), AccessRule.invert_group==False, AccessRule.subnets==None).all()
-    else:
-        access_rules = q(AccessRule).filter(AccessRule.group_ids.any(pgid), AccessRule.invert_group==False, AccessRule.subnets==None).all()
-    return access_rules
-
-
 # from bin/mediatumipython.py (make_info_producer_access_rules)
 def make_access_rules_info_dict(node, ruletype):
     rule_assocs = node.access_rule_assocs.filter_by(ruletype=ruletype).all()
@@ -67,11 +52,15 @@ def make_access_rules_info_dict(node, ruletype):
         return [a for a in assocs if _f(a)]
 
     remaining_rule_assocs = assoc_filter(rule_assocs, rule_assocs_in_rulesets)
+    special_ruleset = node.get_special_access_ruleset(ruletype)
+    special_rule_assocs = special_ruleset.rule_assocs if special_ruleset else []
 
     res_dict = {
         'rulesets_not_inherited': [rs.to_dict() for rs in own_ruleset_assocs],
         'rulesets_inherited': [rs.to_dict() for rs in inherited_ruleset_assocs],
         'additional_rules': [r.to_dict() for r in remaining_rule_assocs],
+        'special_ruleset': special_ruleset,
+        'special_rule_assocs': special_rule_assocs,
     }
 
     return res_dict
@@ -116,12 +105,18 @@ def getContent(req, ids):
                     to_be_removed_rulesets = set(ruleset_names_not_inherited) - set(ruleset_names_from_request)
                     to_be_added_rulesets = set(ruleset_names_from_request) - set(ruleset_names_not_inherited) - {'__special_rule__'}
 
-                    for ruleset_name in to_be_removed_rulesets:
-                        node.access_ruleset_assocs.filter_by(ruleset_name=ruleset_name,
-                                                             ruletype=rule_type).delete()
+                    if to_be_removed_rulesets:
+                        msg = "node %r: %r removing rulesets %r" % (node, rule_type, to_be_removed_rulesets)
+                        logg.info(msg)
+                        for ruleset_name in to_be_removed_rulesets:
+                            node.access_ruleset_assocs.filter_by(ruleset_name=ruleset_name,
+                                                                 ruletype=rule_type).delete()
 
-                    for ruleset_name in to_be_added_rulesets:
-                        node.access_ruleset_assocs.append(NodeToAccessRuleset(ruleset_name=ruleset_name, ruletype=rule_type))
+                    if to_be_added_rulesets:
+                        msg = "node %r: %r adding rulesets %r" % (node, rule_type, to_be_added_rulesets)
+                        logg.info(msg)
+                        for ruleset_name in to_be_added_rulesets:
+                            node.access_ruleset_assocs.append(NodeToAccessRuleset(ruleset_name=ruleset_name, ruletype=rule_type))
 
             db.session.commit()
 
@@ -181,7 +176,7 @@ def getContent(req, ids):
     additional_rules = {}
     additional_rules_inherited = {}
     additional_rules_not_inherited = {}
-    overload_flag = {}
+    overload_flag = {}  # not needed anymore
     for rule_type in rule_types:
         inherited_ruleset_names[rule_type] = []
         additional_rules[rule_type] = {}
