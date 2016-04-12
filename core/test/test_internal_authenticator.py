@@ -82,8 +82,8 @@ def test_change_user_password_oldpw_wrong(internal_authenticator, internal_user)
 
 
 def test_create_user(internal_authenticator, internal_authenticator_info):
-    name = "created_testuser"
-    password = "password"
+    name = u"created_testuser"
+    password = u"password"
     user = internal_authenticator.create_user(name, password)
     assert user.login_name == name
     assert internal_authenticator.authenticate_user_credentials(name, password, {}) is user

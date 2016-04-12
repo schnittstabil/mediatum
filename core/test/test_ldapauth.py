@@ -86,8 +86,8 @@ def test_ldap_config_fail():
 
 @fixture
 def ldap_groups():
-    resource = UserGroupFactory(name="RESOURCE")
-    testgroup = UserGroupFactory(name="TESTGROUP")
+    resource = UserGroupFactory(name=u"RESOURCE")
+    testgroup = UserGroupFactory(name=u"TESTGROUP")
     return [resource, testgroup]
 
 
@@ -109,7 +109,7 @@ def test_authenticate_credentials_unknown(fake_ldap_record, ldap_authenticator, 
 
 def test_get_ldap_group_names(fake_ldap_record, ldap_authenticator):
     group_names = ldap_authenticator.get_ldap_group_names(USER_DATA)
-    assert group_names == set(["RESOURCE", "TESTGROUP"])
+    assert group_names == set([u"RESOURCE", u"TESTGROUP"])
 
 
 def test_update_groups_from_ldap(ldap_authenticator, ldap_user, ldap_groups):
@@ -133,9 +133,9 @@ def test_update_groups_from_ldap_manually_added_group(ldap_authenticator, ldap_u
 def test_update_groups_from_ldap_remove_managed_group(session, ldap_authenticator, ldap_user):
     from core import UserToUserGroup
     # group TOBEREMOVED is not found in LDAP, must be removed
-    toberemoved = UserGroupFactory(name="TOBEREMOVED")
+    toberemoved = UserGroupFactory(name=u"TOBEREMOVED")
     # group RESOURCE is found in LDAP, must stay
-    resource = UserGroupFactory(name="RESOURCE")
+    resource = UserGroupFactory(name=u"RESOURCE")
     ldap_user.group_assocs.append(UserToUserGroup(usergroup=toberemoved, managed_by_authenticator=True))
     ldap_user.group_assocs.append(UserToUserGroup(usergroup=resource, managed_by_authenticator=True))
     ldap_authenticator.update_groups_from_ldap(ldap_user, USER_DATA)

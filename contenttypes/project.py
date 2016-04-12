@@ -19,8 +19,10 @@
 """
 
 from contenttypes.container import Directory
+from core.transition.postgres import check_type_arg_with_schema
 
 
+@check_type_arg_with_schema
 class Project(Directory):
 
     @classmethod

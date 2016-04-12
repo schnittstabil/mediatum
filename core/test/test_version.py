@@ -9,6 +9,7 @@ from sqlalchemy_continuum.utils import version_class
 from core import db, Node, File
 from core.database.postgres.alchemyext import truncate_tables
 from contenttypes import Directory
+from core.test.factories import DirectoryFactory
 
 
 @yield_fixture
@@ -34,12 +35,12 @@ def test_plain(content_node):
 
 def test_add_child(container_node):
     node = container_node
-    d = Directory("d")
+    d = DirectoryFactory()
     # Note: sqlalchemy-continuum creates versions only if the node itself changes. Adding a relationship doesn't create a new version!
     db.session.commit()
     node.children.append(d)
     # set attr to force a new version
-    node["changed"] = "new_child"
+    node[u"changed"] = u"new_child"
     db.session.commit()
     assert container_node.versions[0].children.count() == 0
     assert container_node.versions[1].children.count() == 1
@@ -47,11 +48,11 @@ def test_add_child(container_node):
 
 def test_remove_child(container_node):
     node = container_node
-    d = Directory("d")
+    d = DirectoryFactory()
     node.children.append(d)
     db.session.commit()
     node.children = []
-    node["changed"] = "removed_child"
+    node[u"changed"] = u"removed_child"
     db.session.commit()
     assert container_node.versions[0].children.count() == 1
     assert container_node.versions[1].children.count() == 0
@@ -60,9 +61,9 @@ def test_remove_child(container_node):
 def test_add_file(container_node):
     node = container_node
     db.session.commit()
-    d = File(path="test", filetype="test", mimetype="test")
+    d = File(path=u"test", filetype=u"test", mimetype=u"test")
     node.files.append(d)
-    node["changed"] = "new_file"
+    node[u"changed"] = u"new_file"
     db.session.commit()
     assert node.versions[0].files.count() == 0
     assert node.versions[1].files.count() == 1
@@ -70,11 +71,11 @@ def test_add_file(container_node):
 
 def test_remove_file(container_node):
     node = container_node
-    d = File(path="test", filetype="test", mimetype="test")
+    d = File(path=u"test", filetype=u"test", mimetype=u"test")
     node.files.append(d)
     db.session.commit()
     node.files = []
-    node["changed"] = "removed_file"
+    node[u"changed"] = u"removed_file"
     db.session.commit()
     assert node.versions[0].files.count() == 1
     assert node.versions[1].files.count() == 0
@@ -84,71 +85,71 @@ def test_replace_file(container_node):
     from core import File
     node = container_node
     db.session.commit()
-    d = File(path="test", filetype="test", mimetype="test")
+    d = File(path=u"test", filetype=u"test", mimetype=u"test")
     node.files.append(d)
-    node["testattr"] = "test"
+    node[u"testattr"] = u"test"
     db.session.commit()
-    d = File(path="replaced", filetype="test", mimetype="test")
+    d = File(path=u"replaced", filetype=u"test", mimetype=u"test")
     node.files = [d]
-    node["testattr"] = "replaced"
+    node[u"testattr"] = u"replaced"
     db.session.commit()
-    assert node.versions[1].files.one().path == "test"
-    assert node.versions[2].files.one().path == "replaced"
+    assert node.versions[1].files.one().path == u"test"
+    assert node.versions[2].files.one().path == u"replaced"
 
 
 def test_change_file(container_node):
     from core import File
     node = container_node
-    d = File(path="test", filetype="test", mimetype="test")
+    d = File(path=u"test", filetype=u"test", mimetype=u"test")
     node.files.append(d)
     db.session.commit()
-    d.path = "changed"
+    d.path = u"changed"
     db.session.commit()
     # Changing the current file affects only the current node's File, not the node version's File.
-    assert node.versions[0].files.one().path == "test"
-    assert node.files.one().path == "changed"
+    assert node.versions[0].files.one().path == u"test"
+    assert node.files.one().path == u"changed"
 
 
 def test_change_attr(content_node):
     s = db.session
     node = content_node
     s.commit()
-    node["attr"] = "test"
+    node[u"attr"] = u"test"
     s.commit()
-    node["attr"] = "test_changed"
+    node[u"attr"] = u"test_changed"
     s.commit()
     assert node.versions.count() == 3
-    assert node.versions[1].get("attr") == "test"
+    assert node.versions[1].get(u"attr") == u"test"
 
 
 def test_delete_attr(content_node):
     s = db.session
     node = content_node
-    node["attr"] = "to_delete"
+    node[u"attr"] = u"to_delete"
     s.commit()
-    del node["attr"]
+    del node[u"attr"]
     s.commit()
     assert node.versions.count() == 2
-    assert "attr" not in node.versions[1]
+    assert u"attr" not in node.versions[1]
 
 
 def test_revert_attrs(content_node):
     s = db.session
     s.commit()
     node = content_node
-    node["attr"] = "test"
+    node[u"attr"] = u"test"
     s.commit()
-    node["attr"] = "test_changed"
+    node[u"attr"] = u"test_changed"
     s.commit()
     assert node.versions.count() == 3
-    assert node.versions[2]["attr"] == "test_changed"
+    assert node.versions[2][u"attr"] == u"test_changed"
     node.versions[0].revert()
     s.commit()
-    assert "attr" not in node
+    assert u"attr" not in node
 
 
 def test_call_nodeclass_method(content_node):
-    assert content_node.versions[0].getSchema() == "testschema"
+    assert content_node.versions[0].getSchema() == u"testschema"
 
 
 def test_use_node_property(content_node):
@@ -161,7 +162,7 @@ def test_use_content_property(content_node):
     # XXX: maybe find a better test subject than metadatatype which doesn't fail ;)
     with raises(Exception) as e:
         vers.metadatatype
-    assert "testschema" in e.value.message
+    assert u"testschema" in e.value.message
 
 # legacy versioning support
 

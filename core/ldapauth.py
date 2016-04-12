@@ -204,7 +204,7 @@ class LDAPAuthenticator(Authenticator):
 
         if login_result_data[0][0] == user_dn:
             user = q(User).filter_by(
-                login_name=dir_id).join(AuthenticatorInfo).filter_by(
+                login_name=dir_id.decode("utf8")).join(AuthenticatorInfo).filter_by(
                 name=self.name,
                 auth_type=LDAPAuthenticator.auth_type).scalar()
 

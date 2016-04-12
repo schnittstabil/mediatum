@@ -42,7 +42,7 @@ class FuzzyEmail(FuzzyText):
     def fuzz(self):
         local = "".join(random.choice(self.chars) for _ in range(self.length))
         domain = "".join(random.choice(self.chars) for _ in range(self.length)) + ".org"
-        return "{}{}@{}{}".format(self.prefix, local, domain, self.suffix)
+        return u"{}{}@{}{}".format(self.prefix, local, domain, self.suffix)
 
 
 class UserFactory(SQLAFactory):

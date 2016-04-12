@@ -115,7 +115,7 @@ class BaseNodeMeta(DeclarativeMeta):
         """Add mapper args with a default polymorphic_identity
         of classname in lowercase if not defined.
         """
-        args = dict(polymorphic_identity=cls.__name__.lower())
+        args = dict(polymorphic_identity=unicode(cls.__name__.lower()))
         if "__mapper_args__" not in cls.__dict__:
             logg.debug("poly identity %s", args)
             cls.__mapper_args__ = args
@@ -409,7 +409,7 @@ class Node(DeclarativeBase, NodeMixin):
                     tx.user = user
 
                 if tag:
-                    tx.meta["tag"] = tag
+                    tx.meta[u"tag"] = tag
                 else:
                     NodeVersion = version_class(node.__class__)
                     # in case you were wondering: order_by(None) resets the default order_by
@@ -420,14 +420,14 @@ class Node(DeclarativeBase, NodeMixin):
                         node.versions[-1].tag = u"1"
                         next_version = 2
 
-                    tx.meta["tag"] = unicode(next_version)
+                    tx.meta[u"tag"] = unicode(next_version)
 
                 if comment:
-                    tx.meta["comment"] = comment
+                    tx.meta[u"comment"] = comment
 
                 # XXX: Actually, we could use the transaction time instead of writing an update time.
                 # But this is the old way, keep it because the application expects it.
-                node["updatetime"] = datetime.datetime.now().isoformat()
+                node[u"updatetime"] = datetime.datetime.now().isoformat()
                 return tx
 
             def __exit__(self, exc_type, exc_value, traceback):

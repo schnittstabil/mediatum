@@ -67,7 +67,7 @@ class NodeMixin(object):
 
     def getChild(self, name):
         warn("deprecated, use Node.children.filter_by(name=name).one() instead", DeprecationWarning)
-        return self.children.filter_by(name=name).one()
+        return self.children.filter_by(name=unicode(name)).one()
 
     def addChild(self, child):
         warn("deprecated, use Node.children.append() instead", DeprecationWarning)

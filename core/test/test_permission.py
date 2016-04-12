@@ -22,8 +22,8 @@ def test_access_rules_query(some_node):
 
 def test_access_get_inherited_access_ruleset_assocs(some_node_with_two_parents):
     node = some_node_with_two_parents
-    rs1 = AccessRuleset(name="test", description="fake")
-    rs2 = AccessRuleset(name="test2", description="fake2")
+    rs1 = AccessRuleset(name=u"test", description=u"fake")
+    rs2 = AccessRuleset(name=u"test2", description=u"fake2")
     node.parents[0].access_ruleset_assocs.append(NodeToAccessRuleset(ruleset=rs1, ruletype="read"))
     node.parents[1].access_ruleset_assocs.append(NodeToAccessRuleset(ruleset=rs2, ruletype="read"))
     effective_rulesets = [assoc.ruleset for assoc in node.effective_access_ruleset_assocs]

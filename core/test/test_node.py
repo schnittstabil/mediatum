@@ -48,13 +48,13 @@ def test_attributes(some_node):
 
 
 def test_getChild(some_node):
-    content_child = some_node.getChild("content")
+    content_child = some_node.getChild(u"content")
     assert content_child.name == "content"
     assert content_child.parents[0] is some_node
 
 
 def test_addChild(some_node):
-    new_child = NodeFactory(name="new_child")
+    new_child = NodeFactory(name=u"new_child")
     num_children = some_node.children.count()
     new_child_returned = assert_deprecation_warning(some_node.addChild, new_child)
     assert new_child is new_child_returned
