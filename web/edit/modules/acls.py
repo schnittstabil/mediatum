@@ -115,7 +115,7 @@ def getContent(req, ids):
 
     if len(ids) != 1:  # should not happen
         req.setStatus(httpstatus.HTTP_FORBIDDEN)
-        return req.getTAL("web/edit/edit.html", {}, macro="access_error")
+        return req.getTAL("web/edit/modules/acls.html", {}, macro="acl_editor_error")
 
     # check write access to node
     idstr = ids[0]
