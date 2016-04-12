@@ -39,15 +39,15 @@ def init_database_values(s, default_admin_password=None):
     s.add(everybody_rule)
 
     # node tree setup
-    root = Root(u"root", u"root", 1)
-    metadatatypes = Metadatatypes(u"metadatatypes", u"metadatatypes", 3)
-    workflows = Workflows(u"workflows", u"workflows", 4)
-    mappings = Mappings(u"mappings", u"mappings", 9)
-    collections = Collections(u"collections", u"collections", schema=u"collection", id=10)
+    root = Root(u"root", id=1)
+    metadatatypes = Metadatatypes(u"metadatatypes", id=3)
+    workflows = Workflows(u"workflows", id=4)
+    mappings = Mappings(u"mappings", id=9)
+    collections = Collections(u"collections", schema=u"collection", id=10)
     collections.attrs[u"label"] = u"Collections"
     collections.access_rule_assocs.append(NodeToAccessRule(ruletype=u"read", rule=everybody_rule))
-    home = Home(u"home", u"home", 11)
-    searchmasks = Searchmasks(u"searchmasks", u"searchmasks", 15)
+    home = Home(u"home", id=11)
+    searchmasks = Searchmasks(u"searchmasks", id=15)
 
     root.children.extend([metadatatypes, workflows, mappings, collections, home, searchmasks])
 

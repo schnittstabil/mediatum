@@ -31,6 +31,7 @@ import utils.date as date
 from core.translation import t, lang, addLabels, getDefaultLanguage, switch_language
 from core.users import get_guest_user
 from core.transition import current_user
+from core.transition.postgres import check_type_arg
 from core.database.postgres.permission import NodeToAccessRuleset
 
 import thread
@@ -277,6 +278,7 @@ def importWorkflow(filename):
     db.session.commit()
 
 
+@check_type_arg
 class Workflows(Node):
 
     def show_node_big(node, req, template="workflow/workflow.html", macro="workflowlist"):
