@@ -17,7 +17,7 @@
     <div class="breadcrumbs" style="clear:left;">
        <div id="nodeid_" style="position:absolute;top:2px;right:5px">
        ID:
-            <a tal:condition="python:len(ids)==1" tal:attributes="href python: node_url(ids[0])" tal:content='python:ids[0]'></a>
+            <a target="_blank" tal:condition="python:len(ids)==1" tal:attributes="href python: node_url(ids[0])" tal:content='python:ids[0]'></a>
             <span tal:condition="python:1 < len(ids) <= 5" tal:replace="python:u', '.join(ids)"/>
             <span tal:condition="python:len(ids)>=5" tal:replace="python:u'{}...'.format(u', '.join(ids[:5]))"/>
        </div>
