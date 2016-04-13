@@ -107,19 +107,19 @@ def test_login_no_referer(req):
 
 
 def test_login_from_login_page(req):
-    req.header.append("Referer: /login")
+    req.headers["Referer"] = "/login"
     assert login.login(req) == 200
     assert req.session["return_after_login"] is False
 
 
 def test_login_login_from_edit(req):
-    req.header.append("Referer: /edit/edit_content?id=604993")
+    req.headers["Referer"] = "/edit/edit_content?id=604993"
     assert login.login(req) == 200
     assert req.session["return_after_login"] == "/edit"
 
 
 def test_login_from_other(req):
     ref = "http://localhost:8081/justatest"
-    req.header.append("Referer: " + ref)
+    req.headers["Referer"] = ref
     assert login.login(req) == 200
     assert req.session["return_after_login"] == ref

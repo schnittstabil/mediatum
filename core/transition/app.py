@@ -28,10 +28,28 @@ class AthanaTestRequest(athana_http.http_request):
 
     def __init__(self, params=None, uri="/", headers=None):
         headers = headers or {}
+        if "Accept" not in headers:
+            headers["Accept"] = "*/*"
+
         super(AthanaTestRequest, self).__init__(None, None, None, uri, 0, headers)
-        self.request_headers = headers
+        self.request_headers = self.headers = headers
         self.params = params or {}
         self.ip = "127.0.0.1"
+        self.session = {}
+        self.params = {}
+        self.form = {}
+        self.args = {}
+        self.path = "/"
+        self.request = {}
+        self.sent_files_with_mimetype = []
+
+    def get_header(self, header):
+        return self.headers.get(header.capitalize())
+
+    def sendFile(self, filepath, mimetype):
+        if not path.exists(filepath):
+            raise ValueError("cannot send, file not found: " + filepath)
+        self.sent_files_with_mimetype.append((filepath, mimetype))
 
     @property
     def text(self):

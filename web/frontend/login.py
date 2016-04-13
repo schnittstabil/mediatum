@@ -77,7 +77,7 @@ def _handle_login_submit(req):
 
 
 def _set_return_after_login(req):
-    referer = next((h.split(":", 1)[1].strip() for h in req.header if h.startswith("Referer:")), None)
+    referer = req.get_header("Referer")
 
     if referer is None or any(uri in referer for uri in ('/login', '/logout', '/pwdforgotten', '/pwdchange', '/pnode')):
         req.session['return_after_login'] = False
