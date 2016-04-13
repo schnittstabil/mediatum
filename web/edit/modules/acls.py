@@ -203,8 +203,7 @@ def getContent(req, ids):
 
             db.session.commit()
 
-    runsubmit = "\nfunction runsubmit(){\n"
-    retacl = ""
+
     not_inherited_ruleset_names = {}
     inherited_ruleset_names = {}
     additional_rules = {}
@@ -213,9 +212,6 @@ def getContent(req, ids):
     for rule_type in rule_types:
         inherited_ruleset_names[rule_type] = []
         additional_rules[rule_type] = {}
-
-        runsubmit += "\tmark(document.myform.left" + rule_type + ");\n"
-        runsubmit += "\tmark(document.myform.leftuser" + rule_type + ");\n"
 
         rules_info_dict = make_access_rules_info_dict(node, rule_type)
         logg.debug("node: %r, rule_type: %r, info_dict: %r" % (node, rule_type, rules_info_dict))
@@ -234,6 +230,7 @@ def getContent(req, ids):
 
     if not action:
 
+        retacl = ""
         for rule_type in rule_types:
             retacl += req.getTAL("web/edit/modules/acls.html",
                                  makeList(req,
@@ -259,9 +256,15 @@ def getContent(req, ids):
         req.write(retuser)
         return ""
 
+    runsubmit = "\nfunction runsubmit(){\n"
+    for rule_type in rule_types:
+        runsubmit += "\tmark(document.myform.left" + rule_type + ");\n"
+        runsubmit += "\tmark(document.myform.leftuser" + rule_type + ");\n"
     runsubmit += "\tdocument.myform.submit();\n}\n"
 
-    return req.getTAL("web/edit/modules/acls.html", {"runsubmit": runsubmit, "idstr": idstr,
-                                                     "contentacl": retacl, "adminuser": current_user.is_admin}, macro="edit_acls")
+    return req.getTAL("web/edit/modules/acls.html",
+                      {"runsubmit": runsubmit, "idstr": idstr, "contentacl": retacl,
+                       "adminuser": current_user.is_admin},
+                      macro="edit_acls")
 
 
