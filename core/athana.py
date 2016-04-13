@@ -19,6 +19,8 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 from werkzeug._compat import wsgi_encoding_dance
+from werkzeug.http import parse_accept_header
+from werkzeug.utils import cached_property
 
 #===============================================================
 #
@@ -37,7 +39,7 @@ import string
 from functools import partial
 from itertools import chain
 import logging
-from werkzeug.datastructures import ImmutableMultiDict
+from werkzeug.datastructures import ImmutableMultiDict, MIMEAccept
 from mediatumtal import tal
 
 
@@ -928,6 +930,11 @@ class http_request(object):
             return None
         else:
             return hc[header]
+
+    @cached_property
+    def accept_mimetypes(self):
+        accept = parse_accept_header(self.get_header("ACCEPT"), MIMEAccept)
+        return accept
 
     # --------------------------------------------------
     # user data
