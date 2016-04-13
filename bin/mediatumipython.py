@@ -161,6 +161,9 @@ from sqlalchemy.orm.exc import NoResultFound
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 import core.init as initmodule
+import core.config as config
+import filecmp
+import magic
 from utils.compat import *
 
 # log settings #
@@ -378,6 +381,154 @@ def needs_init(min_state):
         return _inner
 
     return _needs_init
+
+
+def cmp_filelist(file_list):
+    """ returns the number of equal files in a list """
+    rc = 1
+    errtxt = ""
+    if not file_list:
+        return 0
+    l = 0
+    for fname1 in file_list[:-1]:
+        l += 1
+        if not os.path.isfile(fname1):
+            continue
+        for fname2 in file_list[l:]:
+            if not os.path.isfile(fname2):
+                continue
+            try:
+                if filecmp.cmp(fname1, fname2):
+                    rc += 1
+            except OSError as e:
+                errtxt = str(e)
+
+    return rc, errtxt
+
+
+def chk_mimetype(fname, mimetype, m):
+    """ checks the fname extension versus mimetype """
+    err_txt = ""
+    type_relations = {'jpg': ['image/jpeg', 'inode/file'],
+                      'jpeg' : ['image/jpeg'],
+                      'thumb' : ['image/jpeg'],
+                      'thumb2' : ['image/jpeg'],
+                      'tif' : ['image/tiff', 'inode/file'],
+                      'tiff' : ['image/tiff'],
+                      'png' : ['image/png'],
+                      'gif' : ['image/gif'],
+                      'bmp' : ['image/bmp', 'image/x-ms-bmp', 'inode/file'],
+                      'svg' : ['image/svg+xml'],
+                      'zip' : ['application/zip', 'inode/file'],
+                      'pdf' : ['application/pdf', 'inode/file'],
+                      'hpgl' : ['inode/file'],
+                      'psd' : ['inode/file'],
+                      'eps' : ['inode/file'],
+                      'dxf' : ['inode/file'],
+                      'dwg' : ['inode/file'],
+                      'db' : ['other'],
+                      'graphml' : ['inode/file', 'other'],
+                      'mov' : ['other'],
+                      'mp4' : ['other'],
+                      'm4v' : ['other'],
+                      'nef' : ['other'],
+                      'gephi' : ['other'],
+                      'html' : ['text/html'],
+                      'xml' : ['application/xml'],
+                     }
+    fname_ext = fname[fname.rfind('.') + 1:].lower()
+    if fname_ext in type_relations.keys() and not mimetype in type_relations[fname_ext]:
+        err_txt = "wrong mimetype %s for %s " % (mimetype, fname)
+
+        if not os.path.isfile(fname):
+            err_txt += "%s does not exist " % fname;
+            mimetype_from_file = ""
+        else:
+            mimetype_from_file = m.from_file(fname)
+
+        if mimetype_from_file and fname_ext in type_relations.keys() and not mimetype_from_file in type_relations[fname_ext]:
+            err_txt += "wrong mimetype_from_file %s for %s " % (mimetype_from_file, fname)
+
+    elif not os.path.isfile(fname):
+        err_txt += "%s does not exist " % fname;
+
+    if fname_ext not in type_relations.keys():
+        err_txt += "extension: %s not found" % fname_ext
+
+    return err_txt
+
+
+def db_check_image(node):
+    warn_str = ""
+    original_list = []
+    image_list = []
+    thumb_list = []
+    presentation_list = []
+    image_mimetype = ""
+    original_mimetype = ""
+    archive_avail = False
+    m = magic.Magic(mimetype=True)
+    if hasattr(node.sys, "archive_type") and hasattr(node.sys, "archive_path"):
+        archive_avail = True
+    for f in node.files:
+        fpath = os.path.join(config.get("paths.datadir"), f.path)
+        if f.filetype == 'image':
+            image_list += [fpath]
+            image_mimetype = f.mimetype
+        elif f.filetype == 'original':
+            original_list += [fpath]
+            original_mimetype = f.mimetype
+        elif f.filetype == 'presentation':
+            presentation_list += [fpath]
+        elif f.filetype == 'thumb':
+            thumb_list += [fpath]
+        err_txt = chk_mimetype(fpath, f.mimetype, m)
+        if err_txt:
+            warn_str += "warning: %d: %s\n" % (node.id, err_txt)
+
+    # multiple images
+    if len(image_list) > 1:
+        errtxt = ""
+        equals, errtxt = cmp_filelist(image_list)
+        warn_str += "warning: %d: more than one image files (%d, equal: %d)\n" % \
+                    (node.id, len(image_list), equals)
+        if errtxt:
+            warn_str += "warning: %d: %s\n" % (node.id, errtxt)
+    # must not have multiple files with type = 'original'
+    if len(original_list) > 1:
+        warn_str += "warning: %d: too many original files (%d, equal: %d)\n" % \
+                    (node.id, len(original_list), cmp_filelist(original_list)[0])
+    # either original or archiv
+    if original_list and archive_avail:
+        warn_str += "warning: %d: original and archive files\n" % node.id
+    # must have an 'original' file or a system attribute archive_type + archive_path
+    # if it has a file with type 'image'
+    if image_list and not original_list and not archive_avail:
+        warn_str += "warning: %d: image files but no original or archive files\n" % node.id
+    # files with type 'image' must have a 'thumbnail' and 'presentation' file
+    if image_list and (not thumb_list or not presentation_list):
+        warn_str += "warning: %d: image without thumb or presentation\n" % node.id
+    # files must have no duplicate 'thumbnail' or 'presentation' files
+    if len(thumb_list) > 1 or len(presentation_list) > 1:
+        warn_str += "warning: %d: multiple thumb (%d, equal: %d) or presentation (%d, equal: %d) files\n" % \
+                    (node.id, len(thumb_list), cmp_filelist(thumb_list)[0],
+                     len(presentation_list), cmp_filelist(presentation_list)[0])
+    # files with type 'image' or 'original' must have a mimetype like 'image/%'
+    if image_list and not image_mimetype.startswith("image/"):
+        warn_str += "warning: %d: image has no mimetype like 'image/%%'\n" % node.id
+    if original_list and not original_mimetype.startswith("image/"):
+        warn_str += "warning: %d: original has no mimetype like 'image/%%'\n" % node.id
+    # TIFF: file with type 'original' must have mimetype = 'image/tiff'
+    #       and type 'image' must have mimetype = 'image/png'
+    if original_mimetype == "image/tiff" and not image_mimetype == "image/png":
+        warn_str += "warning: %d: tiff-original has no png-image\n" % node.id
+
+    if warn_str:
+        print(warn_str)
+        for f in node.files:
+            print(f.path + ' ' + f.filetype + ' ' + f.mimetype)
+
+    return warn_str
 
 
 @magics_class
