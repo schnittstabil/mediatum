@@ -18,11 +18,15 @@ from contenttypes import Container
 from contenttypes import Content
 from contenttypes.data import Data
 from schema.schema import existMetaField
-from web.frontend.filehelpers import sendZipFile, splitpath, build_transferzip, node_id_from_req_path, split_image_path
+from web.frontend.filehelpers import sendZipFile, splitpath, build_transferzip, node_id_from_req_path, split_image_path,\
+    preference_sorted_image_mimetypes
 from utils import userinput
 import utils.utils
 from utils.utils import getMimeType
 import tempfile
+from werkzeug.http import parse_accept_header
+from utils.compat import iterkeys
+from core.transition import httpstatus
 
 
 logg = logging.getLogger(__name__)
@@ -107,41 +111,36 @@ def send_image(req):
     def _send(fileobj):
         return req.sendFile(fileobj.abspath, fileobj.mimetype)
 
+    client_mimetype = None
+
     if file_ext:
         # client wants a specific mimetype
-        mimetype = node.MIMETYPE_FOR_EXTENSION.get(file_ext)
-        if not mimetype:
-            return 404
+        client_mimetype = node.MIMETYPE_FOR_EXTENSION.get(file_ext)
+        if not client_mimetype:
+            return httpstatus.HTTP_NOT_ACCEPTABLE
 
-        image_file = image_files_by_mimetype.get(mimetype)
+        image_file = image_files_by_mimetype.get(client_mimetype)
         if image_file:
             return _send(image_file)
         else:
-            return 404
+            return httpstatus.HTTP_NOT_ACCEPTABLE
 
-    # TODO: check Accept header
+    # figure out what we want to send, in that order:
+    server_preferred_mimetypes = preference_sorted_image_mimetypes(node, iterkeys(image_files_by_mimetype))
 
-    # well, the client doesn't seem to have any preferences, figure out what we want to send
+    accept_mimetypes = req.accept_mimetypes
 
-    if len(image_files_by_mimetype) == 1:
-        # no choices, send it
-        return _send(image_files_by_mimetype.values()[0])
-
-    preferred_mimetype = node.system_attrs.get(u"preferred_mimetype")
-
-    if preferred_mimetype:
-        mimetype = preferred_mimetype
+    if accept_mimetypes:
+        client_mimetype = req.accept_mimetypes.best_match(server_preferred_mimetypes)
+        if client_mimetype:
+            # file for mimetype must exist here
+            image_file = image_files_by_mimetype[client_mimetype]
+            return _send(image_file)
+        else:
+            return httpstatus.HTTP_NOT_ACCEPTABLE
     else:
-        # send image file with same type as original file
-        original_file = node.files.filter_by(filetype=u"original").scalar()
-        mimetype = original_file.mimetype
-
-    image_file = image_files_by_mimetype.get(mimetype)
-    if image_file:
-        return _send(image_file)
-
-    # XXX: still no matches, just serve the first one ;)
-    return _send(image_files_by_mimetype.values()[0])
+        # client doesn't have any preferences, send our choice
+        return _send(image_files_by_mimetype[server_preferred_mimetypes[0]])
 
     return 404
 

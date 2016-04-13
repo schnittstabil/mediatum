@@ -173,3 +173,17 @@ def build_transferzip(dest_file, node):
         logg.warn("transfer zip requested for node %s with too many children, limited to 100 children", nid)
 
     return count_files_written
+
+
+def preference_sorted_image_mimetypes(image, mimetypes):
+    preferred_mimetype = image.system_attrs.get("preferred_mimetype")
+    original_file = image.files.filter_by(filetype=u"original").scalar()
+
+    def _score(mimetype):
+        if mimetype == preferred_mimetype:
+            return 2
+        if mimetype == original_file.mimetype:
+            return 1
+        return 0
+
+    return sorted(mimetypes, key=_score, reverse=True)
