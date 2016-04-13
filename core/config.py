@@ -39,6 +39,10 @@ settings = None
 languages = None
 
 
+class ConfigException(Exception):
+    pass
+
+
 def get_default_data_dir():
     home = os.path.expanduser("~")
     default_data_dir = os.path.join(home, "mediatum_data")
@@ -68,6 +72,19 @@ def get_config_filepath():
 
 def get(key, default=None):
     return settings.get(key, default)
+
+
+def get_bool(key, default=None):
+    val = get(key)
+    if not val:
+        return default
+
+    if val in ("true", "True", "yes", "Yes"):
+        return True
+    elif val in ("false", "False", "no", "No"):
+        return False
+    else:
+        raise ConfigException("boolean config value must be true|false, True|False, yes|no or Yes|No")
 
 
 def getsubset(prefix):
