@@ -43,47 +43,44 @@ def ruleset_is_private_to_node(ruleset):
         raise ValueError(msg)
 
 
-def makeList(req, not_inherited_ruleset_names, inherited_ruleset_names, additional_rules_inherited=[],
-             additional_rules_not_inherited=[], rule_type=""):
-    rightsmap = {}
-    rorightsmap = {}
+def makeList(req, own_ruleset_assocs, inherited_ruleset_assocs, special_ruleset, special_rule_assocs,
+             rulesetnamelist, private_ruleset_names, rule_type=''):
+
+    #            (req, not_inherited_ruleset_names, inherited_ruleset_names, additional_rules_inherited=[],
+    #         additional_rules_not_inherited=[], rule_type=""):
+    already_shown_left = {}  # ruleset names in left handside lists will not be shown on the right side
 
     # for filling val_right
-    rulesetnamelist = [t[0] for t in q(AccessRuleset.name).order_by(AccessRuleset.name).all()]
-    private_rulset_names = [t[0] for t in q(NodeToAccessRuleset.ruleset_name).filter_by(private=True).all()]
-    rulesetnamelist = [rulesetname for rulesetname in rulesetnamelist if not rulesetname in private_rulset_names]
+    #rulesetnamelist = [t[0] for t in q(AccessRuleset.name).order_by(AccessRuleset.name).all()]
+    #private_rulset_names = [t[0] for t in q(NodeToAccessRuleset.ruleset_name).filter_by(private=True).all()]
+    #rulesetnamelist = [rulesetname for rulesetname in rulesetnamelist if not rulesetname in private_rulset_names]
 
     val_left = []
     val_right = []
 
     # inherited rulesets
+    inherited_ruleset_names = [r.ruleset_name for r in inherited_ruleset_assocs]
     for rulesetname in inherited_ruleset_names:
-        if rulesetname not in rorightsmap:
-            if rulesetname in private_rulset_names:
-                val_left.append(
-                    """<optgroup label="%s"></optgroup>""" % (translate("edit_acl_special_rule", lang(req))))
-            else:
-                val_left.append("""<optgroup label="%s"></optgroup>""" % rulesetname)
-            rorightsmap[rulesetname] = 1
+        if rulesetname in private_ruleset_names:
+            val_left.append(
+                """<optgroup label="%s"></optgroup>""" % (translate("edit_acl_special_rule", lang(req))))
+        else:
+            val_left.append("""<optgroup label="%s"></optgroup>""" % rulesetname)
+            already_shown_left[rulesetname] = 1
 
-    for r in additional_rules_inherited:
-        val_left.append("""<optgroup label="%s"></optgroup>""" % (translate("edit_acl_special_rule", lang(req))))
-
-    # node level rulesets
-    for rulesetname in not_inherited_ruleset_names:
-        if rulesetname in private_rulset_names:
+    # node level rulesets (not inherited)
+    own_ruleset_names = [r.ruleset_name for r in own_ruleset_assocs]
+    for rulesetname in own_ruleset_names:
+        if rulesetname in private_ruleset_names:
             entry_text = translate("edit_acl_special_rule", lang(req))
             val_left.append(
                 """<option value="__special_rule__">%s</optgroup>""" % (entry_text, ))
         else:
             val_left.append("""<option value="%s">%s</option>""" % (rulesetname, rulesetname))
-        rightsmap[rulesetname] = 1
-
-    for r in additional_rules_not_inherited:
-        val_left.append("""<option value="__special_rule__">%s</option>""" % (translate("edit_acl_special_rule", lang(req)), ))
+            already_shown_left[rulesetname] = 1
 
     for rulesetname in rulesetnamelist:
-        if rulesetname not in rightsmap and rulesetname not in rorightsmap:
+        if rulesetname not in already_shown_left:
             val_right.append("""<option value="%s">%s</option>""" % (rulesetname, rulesetname))
 
     res = {"name": rule_type, "val_left": "".join(val_left), "val_right": "".join(val_right), "type": rule_type}
