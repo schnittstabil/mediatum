@@ -44,6 +44,7 @@ from contextlib import contextmanager
 from StringIO import StringIO
 from collections import defaultdict
 import humanize
+from werkzeug.utils import cached_property
 
 
 
@@ -246,10 +247,22 @@ class Image(Content):
     def get_upload_filetype(cls):
         return u"original"
 
+    @cached_property
+    def svg_image(self):
+        return self.files.filter_by(filetype=u"image", mimetype=u"image/svg+xml").scalar()
+
     @property
     def zoom_available(self):
         zoom_file = self.files.filter_by(filetype=u"zoom").scalar()
         return zoom_file is not None
+
+    @property
+    def should_use_zoom(self):
+        # svg should never use the flash zoom
+        if self.svg_image is not None:
+            return False
+
+        return int(self.get("width") or 0) > Image.ZOOM_SIZE or int(self.get("height") or 0) > Image.ZOOM_SIZE
 
     def image_url_for_mimetype(self, mimetype):
         try:
@@ -283,7 +296,7 @@ class Image(Content):
         files, sum_size = filebrowser(self, req)
 
         obj['canseeoriginal'] = can_see_original
-        obj['preferred_image_url'] = u"/images/{}".format(self.id)
+        obj['preferred_image_url'] = self.preferred_image_url
         obj["image_formats"] = self.get_image_formats()
         obj['zoom'] = self.zoom_available
         obj['attachment'] = files
@@ -294,6 +307,10 @@ class Image(Content):
             obj['style'] = full_style
 
         return obj
+
+    @property
+    def preferred_image_url(self):
+        return u"/image/" + unicode(self.id)
 
     def get_image_formats(self):
         image_files = self.files.filter_by(filetype=u"image")
@@ -484,7 +501,7 @@ class Image(Content):
         # should we skip this sometimes? Do we want to overwrite everything?
         self._extract_metadata(files)
 
-        if int(self.get("width")) > Image.ZOOM_SIZE or int(self.get("height")) > Image.ZOOM_SIZE:
+        if self.should_use_zoom:
             self._generate_zoom_archive(files)
 
         # XXX: IPTC writeback will be fixed in #782
@@ -592,19 +609,22 @@ class Image(Content):
 
     """ fullsize popup-window for image node """
     def popup_fullsize(self, req):
-        d = {}
-        svg = 0
-        if not self.zoom_available or not self.has_data_access() or not self.has_read_access():
-            req.write(t(req, "permission_denied"))
-            return
+        if not self.has_data_access() or not self.has_read_access():
+            return 404
 
-        d["svg"] = svg
-        d["width"] = self.get("origwidth")
-        d["height"] = self.get("origheight")
-        d["key"] = req.params.get("id", "")
+        use_zoom = config.get_bool("image.use_flash_zoom", True) and self.should_use_zoom
+
+        if use_zoom and not self.zoom_available:
+            return 404
+
+        d = {}
+        d["flash"] = use_zoom
+        d["svg"] = self.svg_image is not None
+        d["width"] = self.get("width")
         # we assume that width==origwidth, height==origheight
         # XXX: ^ wrong!
-        d['flash'] = True
+        d["height"] = self.get("height")
+        d["image_url"] = self.preferred_image_url
         d['tileurl'] = "/tile/{}/".format(self.id)
         req.writeTAL("contenttypes/image.html", d, macro="imageviewer")
 
