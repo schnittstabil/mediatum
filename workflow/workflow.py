@@ -300,8 +300,8 @@ class Workflows(Node):
     def isSystemType(node):
         return 1
 
-    def getLabel(node):
-        return node.name
+    def getLabel(self, lang=None):
+        return self.name
 
 
 class Workflow(Node):
@@ -331,6 +331,9 @@ class Workflow(Node):
     def show_node_text(node, words=None):
         return ""
 
+    def getLabel(self, lang=None):
+        return self.name
+
     @classmethod
     def isContainer(cls):
         return 1
@@ -350,9 +353,6 @@ class Workflow(Node):
         if node.get('languages') != '':
             return node.get('languages').split(';')
         return []
-
-    def getLabel(node):
-        return node.name
 
     def getDescription(self):
         return self.get("description")
@@ -525,11 +525,11 @@ class WorkflowStep(Node):
     def show_node_text(node, req, context):
         return ""
 
+    def getLabel(self, lang=None):
+        return self.name
+
     def getLink(self):
         return "/mask?id=" + unicode(self.id)
-
-    def getLabel(node):
-        return node.name
 
     def isAdminStep(self):
         if self.get("adminstep") == "1":
