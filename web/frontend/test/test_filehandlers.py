@@ -122,10 +122,10 @@ def test_send_image_svg(public_image_svg, req_for_svg_image):
 def test_send_image_svg_client_anything(public_image_svg, req_for_svg_image):
     image = public_image_svg
     req = req_for_svg_image
+    # client accepts everything, Chrome does this, for example
     req.request_headers["Accept"] = "*/*"
     error = send_image(req)
-    # client accepts everything
-    assert_image_file_sent(image, u"image/svg+xml", req, error)
+    assert_image_file_sent(image, u"image/png", req, error)
 
 
 @pytest.mark.slow

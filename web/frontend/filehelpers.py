@@ -181,6 +181,9 @@ def preference_sorted_image_mimetypes(image, mimetypes):
 
     def _score(mimetype):
         if mimetype == preferred_mimetype:
+            return 3
+        if mimetype == "image/png":
+            # because png is cool (and supported by all reasonable browsers) ;)
             return 2
         if mimetype == original_file.mimetype:
             return 1
