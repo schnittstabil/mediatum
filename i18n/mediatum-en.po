@@ -322,6 +322,9 @@ msgstr "document has an attachment"
 msgid "image_high_res_title"
 msgstr "download high resolution version"
 
+msgid "image_available_formats"
+msgstr "Verfügbare Bildformate"
+
 msgid "image_high_res_load"
 msgstr "  File being loaded..."
 

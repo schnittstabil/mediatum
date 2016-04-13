@@ -333,6 +333,9 @@ msgstr "Attachment zu Dokument vorhanden"
 msgid "image_high_res_title"
 msgstr "Hochaufgelöste Version herunterladen"
 
+msgid "image_available_formats"
+msgstr "Verfügbare Bildformate"
+
 msgid "image_high_res_load"
 msgstr "  Datei wird geladen..."
 

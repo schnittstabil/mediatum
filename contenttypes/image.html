@@ -31,8 +31,8 @@
                 getSize();
                 img = new Image();
                 img.src=("images/" + image);
-                imageW = img.width;	
-                imageH = img.height; 
+                imageW = img.width;
+                imageH = img.height;
                 delete img;
 
                 if (winW < imageW || winH < imageH){
@@ -60,18 +60,18 @@
                 }
                 h = Math.floor(imageH * factor * (percentage / 100));
                 w = Math.floor(imageW * factor * (percentage / 100));
-            
+
                 document.getElementById('myimage').style.width = w;
                 document.getElementById('myimage').style.height = h;
 
                 document.getElementById('zoom_val').innerHTML = percentage + " %";
                 document.getElementById('nav').style.width = Math.floor((offsetW + w+2)/percentage*100-30)+"px";
-                
+
                 if (offsetW + w + 2 < screen.width && offsetH + h + 2 < screen.height){
                     self.resizeTo(offsetW + w+2, offsetH + h+2);
                     document.getElementById('nav').style.width = (offsetW + w+2-30) + "px"
                 }
-                
+
                 self.moveTo(0,0);
             }
 
@@ -93,7 +93,7 @@
 
         </script>
     </head>
-        
+
     <body tal:condition="python:not flash and svg"
           tal:attributes="onload python:u'load_svg(\'{}\', \'{}\')'.format(width, height)" style="padding: 0px; border: 0px; margin: 0px;">
         <div id="nav" align="left" name="nav" style="position:absolute; width: 300px; height:200px; margin:5px;">
@@ -121,16 +121,16 @@
         </div>
     </body>
     <body tal:condition="python:flash">
-        <object classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" 
+        <object classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000"
                 codebase="http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=6,0,40,0"
                 width="100%" height="100%" id="theMovie">
-          <param name="FlashVars" 
+          <param name="FlashVars"
                  tal:attributes="value python:u'zoomifyImagePath={}'.format(tileurl)">
           <param name="MENU" value="FALSE">
           <param name="SRC" value="/img/zoom.swf">
           <embed tal:attributes="FlashVars python:u'zoomifyImagePath={}'.format(tileurl)"
-                 src="/img/zoom.swf" 
-                 menu="false" 
+                 src="/img/zoom.swf"
+                 menu="false"
                  pluginspage="http://www.macromedia.com/shockwave/download/index.cgi?P1_Prod_Version=ShockwaveFlash"
                  width="100%" height="100%" name="theMovie">
           </embed>
@@ -155,69 +155,3 @@
         <img tal:attributes="src filename"/>
     </body>
 </html>
-
-<html metal:define-macro="upload_help">
-    <head>
-        <META http-equiv="Content-Type" content="text/html; charset=UTF-8">
-        <meta content="text/html;charset=UTF-8" http-equiv="content-type">
-        <title>Hilfe</title>
-        <link rel="stylesheet" href="/css/mediatum.css"/>
-        <link rel="stylesheet" href="/css/admin.css"/>
-        <style type="text/css">
-            table.main{
-                margin: 5px;
-                padding: 0px;
-                height: 100%;
-                width: 350px;
-                font-size: 10px;
-            }
-        </style>
-    </head>
-    <body>
-        <table class="main">
-            <tr>
-                <td height="20px">
-                    <h3>Hilfe zum Upload von Objekten</h3>
-                <td>
-            </tr>
-            <tr>
-                <td>
-                    <b>Folgende Dateitypen unterst&uuml;tzt mediatum:</b><br/>
-                    <dl>
-                        <dt><b>1. Dokumente</b></dt>
-                        <dt>&nbsp;&nbsp;&nbsp;empfohlen:</dt>
-                        <dd><b>PDF/A</b> ".pdf"</dd>
-                        <dt>&nbsp;&nbsp;&nbsp;sonstige unterst&uuml;tzte Formate:</dt>
-                        <dd><b>PDF</b> ".pdf"</dd>
-                        <dt><b>2. Bildobjekte</b></dt>
-                        <dt>&nbsp;&nbsp;&nbsp;empfohlen:</dt>
-                        <dd><b>TIFF</b> ".tiff", ".tif"</dd>
-                        <dt>&nbsp;&nbsp;&nbsp;sonstige unterst&uuml;tzte Formate:</dt>
-                        <dd><b>BMP</b> ".bmp", ".dib"</dd>
-                        <dd><b>GIF</b> ".gif"</dd>
-                        <dd><b>IM</b> ".im"</dd>
-                        <dd><b>JPEG</b> ".jpg", ".jpe", ".jpeg"</dd>
-                        <dd><b>MSP</b> ".msp"</dd>
-                        <dd><b>PCX</b> ".pcx"</dd>
-                        <dd><b>PNG</b> ".png"</dd>
-                        <dd><b>PPM</b> ".pbm", ".pgm", ".ppm"</dd>
-                        <dd><b>XBM</b> ".xbm"</dd>
-                    </dl>
-                </td>
-            </tr>
-            <tr>
-                <td width="350px">
-                    G&auml;ngige Browser k&ouml;nnen nicht alle der obenstehenden Bildformate anzeigen.
-                    Aus diesem Grund werden aus den Eingabeformaten immer Web-f&auml;hige Formate (jpg) generiert,
-                    damit die Vorschau der Bilder auch funktioniert.
-                </td>
-            </tr>
-            <tr>
-                <td height="30px" align="center">
-                    <button type="button" onclick="self.close()">Fenster schlie&szlig;en</button>
-                </td>
-            </tr>
-        </table>
-    </body>
-</html>
-

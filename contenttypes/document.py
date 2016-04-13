@@ -143,7 +143,7 @@ class Document(Content):
                     self.files.remove(f)
 
         #fetch unwanted tags to be omitted
-        unwanted_attrs = self.unwanted_attributes()
+        unwanted_attrs = self.get_unwanted_exif_attributes()
 
         if doc:
             path, ext = splitfilename(doc.abspath)
@@ -174,7 +174,7 @@ class Document(Content):
 
         db.session.commit()
 
-    def unwanted_attributes(self):
+    def get_unwanted_exif_attributes(self):
             '''
             Returns a list of unwanted attributes which are not to be extracted from uploaded documents
             @return: list

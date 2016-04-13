@@ -6,7 +6,16 @@
 from __future__ import absolute_import
 
 from contenttypes.video import Video
+from contenttypes.image import Image
 from core.test.factories import NodeFactory
+
+
+class ImageFactory(NodeFactory):
+
+    class Meta:
+        model = Image
+
+    schema = u"test"
 
 
 class VideoFactory(NodeFactory):

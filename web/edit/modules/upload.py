@@ -143,7 +143,8 @@ def getContent(req, ids):
                         basenode.children.append(node)
                         node.set("creator", user.login_name)
                         node.set("creationtime",  unicode(time.strftime('%Y-%m-%dT%H:%M:%S', time.localtime(time.time()))))
-
+                        # set filetype for uploaded file as requested by the content class
+                        f.filetype = content_class.get_upload_filetype()
                         node.files.append(f)
                         node.event_files_changed()
                         newnodes.append(node.id)
@@ -186,9 +187,10 @@ def getContent(req, ids):
 
                                     # clones to a file with random name
                                     cloned_file = importFileRandom(f.abspath)
+                                    # set filetype for uploaded file as requested by the content class
+                                    cloned_file.filetype = content_class.get_upload_filetype()
                                     node.files.append(cloned_file)
-                                    if hasattr(node, 'event_files_changed'):
-                                        node.event_files_changed()
+                                    node.event_files_changed()
                                     newnodes.append(node.id)
                                     basenodefiles_processed.append(f)
 
@@ -310,7 +312,7 @@ def getContent(req, ids):
                 proceed_to_uploadcomplete = True
 
             realname = realname.replace(' ', '_')
-            # check this: import to realnamne or random name ?
+            # XXX: check this: import to realnamne or random name ?
             f = importFileToRealname(realname, tempname)
             node = q(Node).get(req.params.get('id'))
             node.files.append(f)

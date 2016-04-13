@@ -16,6 +16,23 @@ from schema.test.factories import MetadatatypeFactory
 
 
 # must be relative to datadir
+
+# mime subtype -> path relative to datadir
+TEST_IMAGE_PATHS = {
+    "tiff": "test/tiff.tif",
+    "jpeg": "test/jpeg.jpg",
+    "png": "test/png.png",
+    "svg+xml": "test/svg+xml.svg",
+    "gif": "test/gif.gif",
+}
+
+
+def fullpath_to_test_image(mimetype):
+    relpath = TEST_IMAGE_PATHS[mimetype]
+    return resolve_datadir_path(relpath)
+
+
+# must be relative to datadir
 TEST_VIDEO_NAME = u"test_video.mp4"
 TEST_VIDEO_PATH = u"test/" + TEST_VIDEO_NAME
 

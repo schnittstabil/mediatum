@@ -167,10 +167,7 @@ class WorkflowStep_AddPic2Pdf(WorkflowStep):
                     node.files.remove(p_document_file)
                     node.files.append(new_document_file)
                     db.session.commit()
-                    if hasattr(node, "event_files_changed"):
-                        node.event_files_changed()
-                    else:
-                        pass
+                    node.event_files_changed()
 
                 del req.params['gotrue']
                 return self.forwardAndShow(node, True, req)

@@ -26,7 +26,7 @@ import core.users as users
 import logging
 from utils.utils import getMimeType, get_user_id
 from utils.fileutils import importFile, getImportDir, importFileIntoDir
-from contenttypes.image import makeThumbNail, makePresentationFormat
+from contenttypes.image import make_thumbnail_image, make_presentation_image
 from core.transition import httpstatus, current_user
 from core.translation import t
 from core import Node
@@ -48,6 +48,7 @@ def _finish_change(node, change_file, user, uploadfile, req):
 
     if change_file in ["yes", "no"]:
         file = importFile(uploadfile.filename, uploadfile.tempname)  # add new file
+        file.filetype = node.get_upload_filetype()
         node.files.append(file)
         logg.info("%s changed file of node %s to %s (%s)", user.login_name, node.id, uploadfile.filename, uploadfile.tempname)
 
@@ -254,8 +255,8 @@ def getContent(req, ids):
                 thumbname = os.path.join(getImportDir(), hashlib.md5(ustr(random.random())).hexdigest()[0:8]) + ".thumb"
 
                 file = importFile(thumbname, uploadfile.tempname)  # add new file
-                makeThumbNail(file.abspath, thumbname)
-                makePresentationFormat(file.abspath, thumbname + "2")
+                make_thumbnail_image(file.abspath, thumbname)
+                make_presentation_image(file.abspath, thumbname + "2")
 
                 if os.path.exists(file.abspath):  # remove uploaded original
                     os.remove(file.abspath)
@@ -271,7 +272,6 @@ def getContent(req, ids):
                 logg.info("%s changed thumbnail of node %s", user.login_name, node.id)
 
         elif op == "postprocess":
-            if hasattr(node, "event_files_changed"):
                 try:
                     node.event_files_changed()
                     logg.info("%s postprocesses node %s", user.login_name, node.id)
