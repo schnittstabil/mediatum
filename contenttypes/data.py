@@ -144,69 +144,6 @@ class Data(Node):
         """
         return "view"
 
-    def getDetailsCondition(self):
-        '''checks if 'details' should be displayed
-           or not
-
-           :return: boolean
-        '''
-        if self.children.count() > 0:
-            return True
-        else:
-            return len(self.children.all()) > 0 in self.children.all()
-
-    def getFurtherDetailsCondition(self, req):
-        '''checks if 'further details'
-           should be displayed or not
-
-           :return: boolean
-        '''
-        s = object_session(self)
-        q = s.query
-
-        if q(Node).get((req.params.get('pid', self.id))).children.count() == 1:
-            return False
-        if self.parents.first() is not None:
-            return True
-        else:
-            return len(self.children.all()) > 0 in self.children.all()
-
-    def getParentInformation(self, req):
-        '''sets diffrent used Information
-           to a dict object
-
-           :param req: request object
-           :return: dict parentInformation
-        '''
-        s = object_session(self)
-        q = s.query
-
-        parentInformation = {}
-        pid = req.params.get('pid', self.id)
-        parentInformation['parent_node_id'] = pid
-        from contenttypes.container import Container
-
-        if self.children.count() > 0 and not isinstance(self, Container):
-            parentInformation['children_list'] = self.children.all()
-        else:
-            parentInformation['children_list'] = []
-        if len([sib.id for sib in self.parents.filter_by(id=req.params.get('pid', self.id)).all()]) != 0:
-            parentInformation['parent_condition'] = True
-            parentInformation['siblings_list'] = q(Node).get(pid).children.filter(Node.id is not self.id).all()
-        else:
-            parentInformation['parent_condition'] = False
-            if len([p for p in self.parents]) > 0:
-                parentInformation['siblings_list'] = self.parents.first().children.all()
-            else:
-                parentInformation['siblings_list'] = []
-
-        parentInformation['display_siblings'] = pid != self.id
-        parentInformation['parent_is_container'] = self.parents.filter(isinstance(self, Container)).all()
-        parentInformation['details_condition'] = self.getDetailsCondition()
-        parentInformation['further_details'] = self.getFurtherDetailsCondition(req)
-
-        return parentInformation
-
     def show_node_big(self, req, template="", macro=""):
         mask = self.getFullView(lang(req))
 
@@ -441,6 +378,20 @@ class Data(Node):
         return self.name
 
 
+def child_node_url(child_id, **kwargs):
+    """XXX: this shouldn't be here, child display should not be a responsibility of content types!"""
+    from core.webconfig import node_url
+    from core.transition import request
+    params = {k: v for k, v in request.args.items()}
+    if "show_id" in params:
+        params["show_id"] = child_id
+    else:
+        params["id"] = child_id
+
+    params.update(kwargs)
+    return node_url(**params)
+
+
 class Content(Data, SchemaMixin):
 
     """(Abstract) base class for all content node types.
@@ -473,7 +424,9 @@ class Content(Data, SchemaMixin):
         data["deleted"] = False
         data["metadata"] = self._get_metadata_html(req)
         data['node'] = self
-        data['parentInformation'] = self.getParentInformation(req)
+        data['children'] = self.children.filter_read_access().all()
+        # XXX: this is a hack, remove child display from contenttypes!
+        data['child_node_url'] = child_node_url
         data['path'] = req.params.get("path", "")
         return data
 
@@ -481,4 +434,3 @@ class Content(Data, SchemaMixin):
 @check_type_arg_with_schema
 class Other(Content):
     pass
-
