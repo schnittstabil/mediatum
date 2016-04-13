@@ -122,8 +122,16 @@ def node_url(nid=None, version=None, **kwargs):
         return "/" + str(nid)
 
 
+def current_node_url(**kwargs):
+    """Builds a new node URL from the current request params with values replaced by `kwargs`"""
+    from core.transition import request
+    params = {k: v for k, v in request.args.items()}
+    params.update(kwargs)
+    return node_url(**params)
+
+
 def tal_add_template_globals():
-    tal.add_template_globals(node_url=node_url)
+    tal.add_template_globals(node_url=node_url, current_node_url=current_node_url)
 
 
 def initContexts():
