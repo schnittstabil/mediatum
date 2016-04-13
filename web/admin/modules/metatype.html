@@ -5,7 +5,7 @@
             popup = window.open(url, "popup", "resizable=1,width=700,height=450,scrollbars");
             popup.focus();
         }
-        
+
         function showInfo(){
             document.getElementById("message").style.display="block";
         }
@@ -47,7 +47,7 @@
                         <button tal:content="structure python:col.label" tal:attributes="title python:col.title; name python:u'sortcol_{}'.format(col.link)" class="admin_sortcol" type="submit" value="">TEXT</button>
                     </th>
                     <th>&nbsp;</th>
-                    
+
                     <th>
                         <a i18n:attributes="title admin_meta_exportall_title" href="/admin/export/metatype/all" target="_blank">
                                 <img src="/img/export.png" border="0"/>
@@ -62,7 +62,7 @@
                 <tr tal:condition="python:len(metadatatypes)==0">
                     <td colspan="10"><small i18n:translate="admin_meta_nometa">TEXT</small></td>
                 </tr>
-                
+
                 <tal:block tal:repeat="metadatatype python:metadatatypes[pages.getStart():pages.getEnd()]">
                 <tr tal:define="cssclass python:metadatatypes.index(metadatatype)%2 and 'norm' or 'silver'" tal:attributes="class cssclass">
                     <td tal:content="python:u'{}.'.format(metadatatypes.index(metadatatype)+1)"/>
@@ -91,7 +91,7 @@
                         <a tal:attributes="href python:u'./metatype/{}/overview?style=popup'.format(metadatatype.getName())" i18n:attributes="title admin_meta_fieldoverview_title" target="_blank">
                             <img src="/img/search.gif" border="0"/>
                         </a>
-                        
+
                         <a tal:attributes="href python:u'/admin/export/metatype/{}'.format(metadatatype.getName())" i18n:attributes="title admin_meta_export_title" target="_blank">
                             <img src="/img/export.png" border="0"/>
                         </a>
@@ -160,7 +160,7 @@
         }
     </script>
     <p><a tal:attributes="href python:u'./metatype{}'.format(page)" i18n:translate="admin_overview">TEXT</a></p>
-    <form tal:attributes="action page" name="editmetatype" method="post">                    
+    <form tal:attributes="action page" name="editmetatype" method="post">
         <table>
             <tr>
                 <td colspan="2">
@@ -222,9 +222,9 @@
                 </td>
                 <td>
                     <select name="mciteproc" multiple="multiple" style="width:300px" size="5">
-                        <option tal:repeat="citeproctype citeproctypes" 
+                        <option tal:repeat="citeproctype citeproctypes"
                             tal:attributes="value python:citeproctype; selected python:'selected' if citeproctype in citeprocselected else None"
-                            tal:content="python:citeproctype" 
+                            tal:content="python:citeproctype"
                             i18n:translate=""
                         />
                     </select>
@@ -250,22 +250,12 @@
                                 </select>
                             </td>
                         </tr>
-                    </table> 
+                    </table>
                 </td>
             </tr>
             <tr>
                 <td>&nbsp;</td>
                 <td><small>(<span class="required">* </span><span i18n:translate="admin_mandatory_info">TEXT</span>)</small></td>
-            </tr>
-            <tr tal:define="corrupt python:metadatatype.searchIndexCorrupt()">
-                <td>&nbsp;</td>
-                <td tal:condition="python: corrupt and unicode(metadatatype.id)!='None'">
-                    <span i18n:translate="admin_metatype_reindex_title">TEXT</span> &nbsp;&nbsp; <button type="submit" tal:attributes="name python:u'indexupdate_{}'.format(metadatatype.id)" i18n:translate="admin_metatype_reindex_button" value="">TEXT</button>
-                    <br/>&nbsp;<br/>
-                </td>
-                <td tal:condition="python: not corrupt and unicode(metadatatype.id)!='None'">
-                    <span i18n:translate="admin_metatype_index_ok">TEXT</span><br/>&nbsp;<br/>
-                </td>
             </tr>
             <tr>
                 <td>&nbsp;</td>
@@ -322,8 +312,8 @@
 
             <title i18n:translate="admin_defpopup_title">TEXT</title>
             <link rel="stylesheet" href="/css/admin.css">
-        
-            
+
+
             <style type="text/css">
                 body{
                     margin: 10px;
@@ -364,7 +354,7 @@
                         <td tal:content="python:metafield.getName()" class="list"/>
                         <td tal:content="python:metafield.getLabel()" class="list"/>
                         <td tal:content="python:fieldtypes[metafield.getFieldtype()]" i18n:translate="" class="list"/>
-                        
+
                         <td tal:define="flist python:metafield.getFieldOptionList()" class="list">
                             <table>
                                 <tr>
