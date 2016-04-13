@@ -31,42 +31,6 @@ def get_user_for_login_name(login_name):
 
 
 # from bin/mediatumipython.py (make_info_producer_access_rules)
-def make_access_rules_info_dict_old(node, ruletype):
-    rule_assocs = node.access_rule_assocs.filter_by(ruletype=ruletype).all()
-    own_ruleset_assocs = node.access_ruleset_assocs.filter_by(ruletype=ruletype).all()
-    effective_ruleset_assocs = node.effective_access_ruleset_assocs.filter(
-        EffectiveNodeToAccessRuleset.c.ruletype == ruletype).all()
-    inherited_ruleset_assocs = set(effective_ruleset_assocs) - set(own_ruleset_assocs)
-
-    effective_rulesets = [rsa.ruleset for rsa in effective_ruleset_assocs]
-    rule_assocs_in_rulesets = [r for rs in effective_rulesets for r in rs.rule_assocs]
-
-    def assoc_filter(assocs, to_remove):
-
-        def _f(a):
-            for rem in to_remove:
-                if a.rule == rem.rule and a.invert == rem.invert and a.blocking == rem.blocking:
-                    return False
-            return True
-
-        return [a for a in assocs if _f(a)]
-
-    remaining_rule_assocs = assoc_filter(rule_assocs, rule_assocs_in_rulesets)
-    special_ruleset = node.get_special_access_ruleset(ruletype)
-    special_rule_assocs = special_ruleset.rule_assocs if special_ruleset else []
-
-    res_dict = {
-        'rulesets_not_inherited': [rs.to_dict() for rs in own_ruleset_assocs],
-        'rulesets_inherited': [rs.to_dict() for rs in inherited_ruleset_assocs],
-        'additional_rules': [r.to_dict() for r in remaining_rule_assocs],
-        'special_ruleset': special_ruleset,
-        'special_rule_assocs': special_rule_assocs,
-    }
-
-    return res_dict
-
-
-# from bin/mediatumipython.py (make_info_producer_access_rules)
 def make_access_rules_info_dict(node, ruletype):
     rule_assocs = node.access_rule_assocs.filter_by(ruletype=ruletype).all()
     own_ruleset_assocs = node.access_ruleset_assocs.filter_by(ruletype=ruletype).all()
@@ -90,7 +54,6 @@ def make_access_rules_info_dict(node, ruletype):
     remaining_rule_assocs = assoc_filter(rule_assocs, rule_assocs_in_rulesets)
     special_ruleset = node.get_special_access_ruleset(ruletype)
     special_rule_assocs = special_ruleset.rule_assocs if special_ruleset else []
-    print '###'
     res_dict = {
         'node': node,
         'rulesets_not_inherited': [rs.to_dict() for rs in own_ruleset_assocs],
@@ -103,7 +66,6 @@ def make_access_rules_info_dict(node, ruletype):
     }
 
     return res_dict
-
 
 
 # from bin/mediatumipython.py (make_info_producer_access_rules)
@@ -134,21 +96,7 @@ def get_access_rules_info(node, ruletype):
         raise ValueError(msg)
     special_ruleset = node.get_special_access_ruleset(ruletype)
     special_rule_assocs = special_ruleset.rule_assocs if special_ruleset else []
-    print '#info#acl#'
     return inherited_ruleset_assocs, own_ruleset_assocs, special_ruleset, special_rule_assocs
-
-    res_dict = {
-        'node': node,
-        'rulesets_not_inherited': [rs.to_dict() for rs in own_ruleset_assocs],
-        'rulesets_inherited': [rs.to_dict() for rs in inherited_ruleset_assocs],
-        'additional_rules': [r.to_dict() for r in remaining_rule_assocs],
-        'own_ruleset_assocs': own_ruleset_assocs,
-        'inherited_ruleset_assocs': inherited_ruleset_assocs,
-        'special_ruleset': special_ruleset,
-        'special_rule_assocs': special_rule_assocs,
-    }
-
-    return res_dict
 
 
 @dec_entry_log
@@ -248,30 +196,6 @@ def getContent(req, ids):
                     node.access_rule_assocs.append(assoc)
 
             db.session.commit()
-
-    '''
-    not_inherited_ruleset_names = {}
-    inherited_ruleset_names = {}
-    additional_rules = {}
-    additional_rules_inherited = {}
-    additional_rules_not_inherited = {}
-    for rule_type in rule_types:
-        inherited_ruleset_names[rule_type] = []
-        additional_rules[rule_type] = {}
-
-        rules_info_dict = make_access_rules_info_dict(node, rule_type)
-        logg.debug("node: %r, rule_type: %r, info_dict: %r" % (node, rule_type, rules_info_dict))
-
-        rulesets_not_inherited = rules_info_dict.get('rulesets_not_inherited', [])
-        not_inherited_ruleset_names[rule_type] = [r.get('ruleset_name', '-unnamed-ruleset-') for r in rulesets_not_inherited]
-
-        rulesets_inherited = rules_info_dict.get('rulesets_inherited', [])
-        inherited_ruleset_names[rule_type] = [r.get('ruleset_name', '-unnamed-ruleset-') for r in rulesets_inherited]
-
-        additional_rules[rule_type] = rules_info_dict.get('additional_rules', [])
-        additional_rules_inherited[rule_type] = [rd for rd in additional_rules[rule_type] if rd.get('inherited', False)]
-        additional_rules_not_inherited[rule_type] = [rd for rd in additional_rules[rule_type] if not rd.get('inherited', False)]
-    '''
 
     action = req.params.get("action", "")
 

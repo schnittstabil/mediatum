@@ -49,7 +49,7 @@ def decider_is_private_user_group_access_rule(ar):
         usergroup = q(UserGroup).get(gid)
         cand_uids = [t[0] for t in q(UserToUserGroup.user_id).filter_by(usergroup_id=gid).filter_by(private=True).all()]
         if not cand_uids:
-            # for mediatums migrated from mysql
+            # for mediatums migrated from mysql - may be removed after migration
             if gid >= 99990000:
                 return u"compatibility: private usergroup for dynamic user: gid=%r" % gid
             return None

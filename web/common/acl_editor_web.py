@@ -46,14 +46,7 @@ def ruleset_is_private_to_node(ruleset):
 def makeList(req, own_ruleset_assocs, inherited_ruleset_assocs, special_ruleset, special_rule_assocs,
              rulesetnamelist, private_ruleset_names, rule_type=''):
 
-    #            (req, not_inherited_ruleset_names, inherited_ruleset_names, additional_rules_inherited=[],
-    #         additional_rules_not_inherited=[], rule_type=""):
     already_shown_left = {}  # ruleset names in left handside lists will not be shown on the right side
-
-    # for filling val_right
-    #rulesetnamelist = [t[0] for t in q(AccessRuleset.name).order_by(AccessRuleset.name).all()]
-    #private_rulset_names = [t[0] for t in q(NodeToAccessRuleset.ruleset_name).filter_by(private=True).all()]
-    #rulesetnamelist = [rulesetname for rulesetname in rulesetnamelist if not rulesetname in private_rulset_names]
 
     val_left = []
     val_right = []
