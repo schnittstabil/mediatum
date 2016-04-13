@@ -788,7 +788,9 @@ def content(req):
                  (n.id, n.id, n.getLabel(lang=language))] + s
 
             p = n.parents
-            if p and not isinstance(p[0], Root):
+            # XXX: we only check the first parent. This is wrong, how could be solve this? #
+            first_parent = p[0]
+            if isinstance(first_parent, Data) and first_parent.has_read_access():
                 n = p[0]
             else:
                 n = None
