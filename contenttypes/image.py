@@ -454,8 +454,10 @@ class Image(Content):
                 self.set("exif_" + k.replace(" ", "_"), utf8_decode_escape(str(tags[k])))
 
         # IPTC
-        for k, v in iteritems(lib.iptc.IPTC.get_iptc_tags(image_file.abspath)):
-            self.set('iptc_' + k, v)
+        iptc_metadata = lib.iptc.IPTC.get_iptc_tags(image_file.abspath)
+        if iptc_metadata is not None:
+            for k, v in iteritems(iptc_metadata):
+                self.set('iptc_' + k, v)
 
     def event_files_changed(self):
         """postprocess method for object type 'image'. called after object creation"""
