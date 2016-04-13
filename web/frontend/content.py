@@ -644,8 +644,6 @@ class ContentNode(Content):
     def html(self, req):
         language = lang(req)
         paths = u""
-        # XXX: remove session-stored Node instances!
-        self.node = db.refresh(self.node)
         show_node_big = ensure_unicode_returned(self.node.show_node_big, name="show_node_big of %s" % self.node)
 
         if not isinstance(self.node, Container):
