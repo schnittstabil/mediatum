@@ -51,9 +51,9 @@ class File(DeclarativeBase, FileMixin):
     nid = C(Integer, FK(Node.id, ondelete="CASCADE"), primary_key=True, index=True)
     path = C(Unicode(4096), primary_key=True)
     filetype = C(Unicode(126), primary_key=True)
-    mimetype = C(String(126))
+    mimetype = C(String(255))
 
-    node = rel(Node, backref=bref("files", lazy="dynamic", cascade="all, delete-orphan", query_class=AppenderQueryWithLen))
+    node = rel(Node, backref=bref("files", lazy="dynamic", cascade="all, delete-orphan", passive_deletes=True, query_class=AppenderQueryWithLen))
 
     def __repr__(self):
         return "File for Node #{} ({}:{}|{}) at {}".format(
