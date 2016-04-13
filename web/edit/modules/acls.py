@@ -249,7 +249,7 @@ def getContent(req, ids):
 
             db.session.commit()
 
-    #'
+    '''
     not_inherited_ruleset_names = {}
     inherited_ruleset_names = {}
     additional_rules = {}
@@ -271,7 +271,7 @@ def getContent(req, ids):
         additional_rules[rule_type] = rules_info_dict.get('additional_rules', [])
         additional_rules_inherited[rule_type] = [rd for rd in additional_rules[rule_type] if rd.get('inherited', False)]
         additional_rules_not_inherited[rule_type] = [rd for rd in additional_rules[rule_type] if not rd.get('inherited', False)]
-    #'''
+    '''
 
     action = req.params.get("action", "")
 
@@ -299,14 +299,23 @@ def getContent(req, ids):
 
     if action == 'get_userlist':  # load additional rights by ajax
 
+        rulesetnamelist = [t[0] for t in q(AccessRuleset.name).order_by(AccessRuleset.name).all()]
+        private_ruleset_names = [t[0] for t in q(NodeToAccessRuleset.ruleset_name).filter_by(private=True).all()]
+        rulesetnamelist = [rulesetname for rulesetname in rulesetnamelist if not rulesetname in private_ruleset_names]
+
         retuser = ""
         for rule_type in rule_types:
+            inherited_ruleset_assocs, \
+            own_ruleset_assocs, \
+            special_ruleset, special_rule_assocs = get_access_rules_info(node, rule_type)
             retuser += req.getTAL("web/edit/modules/acls.html",
                                   makeUserList(req,
-                                               not_inherited_ruleset_names[rule_type],
-                                               inherited_ruleset_names[rule_type],
-                                               additional_rules_inherited[rule_type],
-                                               additional_rules_not_inherited[rule_type],
+                                               own_ruleset_assocs,  # not_inherited_ruleset_names[rule_type],  # rights
+                                               inherited_ruleset_assocs,  # inherited_ruleset_names[rule_type],  # readonlyrights
+                                               special_ruleset,  # additional_rules_inherited[rule_type],
+                                               special_rule_assocs,  # additional_rules_not_inherited[rule_type],
+                                               rulesetnamelist,
+                                               private_ruleset_names,
                                                rule_type=rule_type),
                                   macro="edit_acls_userselectbox")
         req.write(retuser)
