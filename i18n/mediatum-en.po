@@ -257,7 +257,7 @@ msgid "unfold"
 msgstr "unfold"
 
 msgid "search_list_title"
-msgstr "back to complete results"
+msgstr "back to start of result list"
 
 msgid "search_hit"
 msgstr "hints"

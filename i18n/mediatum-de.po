@@ -264,7 +264,7 @@ msgid "unfold"
 msgstr "Aufklappen"
 
 msgid "search_list_title"
-msgstr "Zurück zur Trefferliste"
+msgstr "Zurück zum Anfang der Trefferliste"
 
 msgid "search_hit"
 msgstr "Treffer"
