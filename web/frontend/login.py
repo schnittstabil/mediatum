@@ -82,10 +82,9 @@ def _set_return_after_login(req):
     if referer is None or any(uri in referer for uri in ('/login', '/logout', '/pwdforgotten', '/pwdchange', '/pnode')):
         req.session['return_after_login'] = False
     else:
-        if '/edit' in referer:
+        if '/edit_content' in referer:
             # returns the user to /edit/ instead of /edit/edit_content?id=604993, which has no sidebar
-            req.session['return_after_login'] = '/'.join(referer
-                                                         .split('/')[:-1])
+            req.session['return_after_login'] = referer.replace("/edit_content", "")
         else:
             req.session['return_after_login'] = referer
 
