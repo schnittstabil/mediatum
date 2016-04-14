@@ -21,16 +21,17 @@ import logging
 import os
 import math
 import sys
-import traceback
 
+from core import db, User, AuthenticatorInfo
 import core.users as users
 import core.config as config
-from utils.utils import Link, splitpath, parseMenuString
 from core.translation import t, lang
-from core.transition import httpstatus
-from utils.strings import ensure_unicode_returned
-from core import db
+from core.transition import httpstatus, current_user, request
 from core.systemtypes import Root
+from utils.strings import ensure_unicode_returned
+from utils.utils import Link, splitpath, parseMenuString
+from utils.list import filter_scalar
+from core.exceptions import SecurityException
 
 logg = logging.getLogger(__name__)
 q = db.query
@@ -284,3 +285,44 @@ def getMenuItemID(menulist, path):
                 return [item.name, "admin_menu_" + subitem[0]]
 
     return ["admin_menu_menumain"]
+
+
+def become_user(login_name, authenticator_key=None):
+    """Changes current user to the user specified by `login_name` and returns the user object.
+    If there are multiple results for a `login_name`, an authenticator_key must be given.
+    Can only be called when the current user is admin.
+    """
+    if not current_user.is_admin:
+        raise SecurityException("becoming other users not allowed for non-admin users")
+
+    candidate_users = q(User).filter_by(login_name=login_name).all()
+
+    if not candidate_users:
+        raise ValueError("unknown user login name " + login_name)
+
+    if len(candidate_users) == 1:
+        user = candidate_users[0]
+    else:
+        # multiple candidates
+        if not authenticator_key:
+            raise ValueError("no authenticator_key given, but multiple users found for login name" + login_name)
+
+
+        parts = authenticator_key.split(":")
+
+        if len(parts) != 2:
+            raise ValueError("invalid authenticator key " + authenticator_key)
+
+        authenticator_type, authenticator_name = parts
+        authenticator_info = q(AuthenticatorInfo).filter_by(type=authenticator_type, name=authenticator_name).scalar()
+
+        if authenticator_info is None:
+            raise ValueError("cannot find authenticator key" + authenticator_key)
+
+        user = filter_scalar(lambda u: u.authenticator_id == authenticator_info.id)
+
+        if user is None:
+            return
+
+    request.session["user_id"] = user.id
+    return user
