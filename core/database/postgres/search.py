@@ -8,6 +8,7 @@
 import logging
 from sqlalchemy import func, Text, text
 from core import config, db
+from core.search import SearchQueryException
 from core.search.representation import AttributeMatch, FullMatch, SchemaMatch, FulltextMatch, AttributeCompare, TypeMatch, And, Or, Not
 from core.database.postgres import mediatumfunc, DeclarativeBase, integer_pk, integer_fk, C, FK
 from sqlalchemy.dialects.postgresql.base import TSVECTOR
@@ -69,12 +70,16 @@ class Fts(DeclarativeBase):
 def _prepare_searchstring(op, searchstring):
     terms = searchstring.strip().strip('"').strip().split()
     def rewrite_prefix_search(t):
+        # we must ignore searchterms starting with * or Postgres will complain
         starpos = t.find(u"*")
+        # term starts with *: search term would be empty, Postgres doesn't like that
+        if starpos == 0:
+            return
         return t[:starpos] + u":*"
 
-    # postgres needs the form term:* for prefix search, we allow simple stars at the end of the word
+    # Postgres needs the form term:* for prefix search, we allow simple stars at the end of the word
     rewritten_terms = [rewrite_prefix_search(t) if u"*" in t else t for t in terms]
-    return op.join(rewritten_terms)
+    return op.join(t for t in rewritten_terms if t)
 
 
 def make_fts_expr_tsvec(languages, target, searchstring, op="&"):
@@ -86,6 +91,10 @@ def make_fts_expr_tsvec(languages, target, searchstring, op="&"):
     """
     languages = list(languages)
     prepared_searchstring = _prepare_searchstring(op, searchstring)
+
+    if not prepared_searchstring:
+        raise SearchQueryException("invalid query for postgres full text search: " + searchstring)
+
     ts_query = func.to_tsquery(languages[0], prepared_searchstring)
 
     for language in languages[1:]:
