@@ -69,25 +69,11 @@ BEGIN
     RAISE NOTICE 'home dirs set, % users with home dir', (SELECT COUNT(*) FROM mediatum.user WHERE home_dir_id IS NOT NULL);
 
     INSERT INTO user_to_usergroup
-       SELECT cid AS user_id, id AS usergroup_id
-         FROM nodemapping JOIN node ON nid = id
-        WHERE     node.id IN (SELECT cid
-                                FROM nodemapping
-                               WHERE nid = (SELECT id
-                                              FROM node
-                                             WHERE type = 'usergroups'))
-              AND cid NOT IN
-                     (SELECT cid
-                        FROM nodemapping
-                       WHERE nid =
-                                (SELECT id
-                                   FROM node
-                                  WHERE     type = 'directory'
-                                        AND name = 'yearbookuser')) -- ignore yearbookuser
-              AND cid NOT IN (SELECT cid
-                                FROM nodemapping
-                               WHERE nid = 674265) -- user from Jahrbuch-User group ignored
-    ;
+    SELECT cid AS user_id, id AS usergroup_id
+    FROM nodemapping JOIN node ON nid = id
+    WHERE node.id IN (SELECT cid
+                      FROM nodemapping
+                      WHERE nid = (SELECT id FROM node WHERE type = 'usergroups'));
 
     GET DIAGNOSTICS rows = ROW_COUNT;
     RAISE NOTICE 'users mapped to groups, % mappings', rows;
