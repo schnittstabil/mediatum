@@ -6,7 +6,8 @@
 import logging
 import json
 from core import db, Node, User, UserGroup
-from core.database.postgres.permission import NodeToAccessRule, NodeToAccessRuleset, EffectiveNodeToAccessRuleset, AccessRule, AccessRuleset
+from core.permission import get_or_add_access_rule
+from core.database.postgres.permission import NodeToAccessRule, NodeToAccessRuleset, EffectiveNodeToAccessRuleset, AccessRule, AccessRuleset, AccessRulesetToRule
 
 from core.transition import httpstatus, current_user
 from web.common.acl_editor_web import makeList
@@ -99,6 +100,19 @@ def get_access_rules_info(node, ruletype):
     return inherited_ruleset_assocs, own_ruleset_assocs, special_ruleset, special_rule_assocs
 
 
+def get_or_add_private_access_rule_for_user(user):
+    '''
+    get the access rule for the private group of this user
+    this may be called the private rule for this user
+    :param user:
+    :return: AccessRule
+    '''
+    private_group = user.get_or_add_private_group()
+    pug_id = private_group.id
+    private_access_rule = get_or_add_access_rule(group_ids=[pug_id])
+    return private_access_rule
+
+
 @dec_entry_log
 def getContent(req, ids):
 
@@ -154,48 +168,48 @@ def getContent(req, ids):
 
         if req.params.get("type") == "user":
 
-            additional_rules = {}
-            additional_rules_inherited = {}
-            additional_rules_not_inherited = {}
-
             for rule_type in rule_types:
 
                 user_ids_from_request = [rsn for rsn in req.params.get(u"leftuser%s" % rule_type, u"").split(u";") if rsn.strip()]
 
-                rules_info_dict = make_access_rules_info_dict(node, rule_type)
-                rulesets_not_inherited = rules_info_dict.get('rulesets_not_inherited', [])
+                special_ruleset = node.get_special_access_ruleset(rule_type)
+                if special_ruleset:
+                    special_rule_assocs = special_ruleset.rule_assocs
+                else:
+                    special_rule_assocs = []
 
-                additional_rules[rule_type] = rules_info_dict.get('additional_rules', [])
-                additional_rules_inherited[rule_type] = [rd for rd in additional_rules[rule_type] if rd.get('inherited', False)]
-                additional_rules_not_inherited[rule_type] = [rd for rd in additional_rules[rule_type] if not rd.get('inherited', False)]
+                special_access_rules = [ra.rule for ra in special_rule_assocs]
+                user_test_results = [decider_is_private_user_group_access_rule(ar) for ar in special_access_rules]
+                uids = [u.id for u in user_test_results if isinstance(u, User)]
 
-                uids = []
-                for ar_dict in additional_rules_not_inherited[rule_type]:
-                    ar_id = ar_dict.get('rule_id')
-                    ar = q(AccessRule).get(ar_id)
-                    test_result = decider_is_private_user_group_access_rule(ar)
-                    if not type(test_result) == User:
-                        continue
-                    elif not test_result.id in user_ids_from_request:
-                        assoc = node.access_rule_assocs.filter_by(rule_id=ar_id, ruletype=rule_type).scalar()
-                        node.access_rule_assocs.remove(assoc)
-                    else:
-                        uids.append(test_result.id)
+                uids_to_remove = list(set(uids) - set(user_ids_from_request))
+                uids_to_add = list(set(user_ids_from_request) - set(uids))
+                if uids_to_add and not special_ruleset:  # in this case uids_to_remove will be empty
+                    special_ruleset = node.get_or_add_special_access_ruleset(rule_type)
+                    special_rule_assocs = special_ruleset.rule_assocs
 
-                for uid in user_ids_from_request:
-                    if uid in uids:
-                        continue
-                    # add access rule
+                for uid in uids_to_remove:
+
                     user = q(User).get(uid)
-                    pug_id = user.private_group_id
-                    ar = q(AccessRule).filter(AccessRule.group_ids.all(pug_id))\
-                          .filter_by(subnets=None, dateranges=None,
-                                     invert_group=False, invert_date=False, invert_subnet=False)\
-                          .scalar()
-                    if not ar:
-                        ar = AccessRule(group_ids = [pug_id])
-                    assoc = NodeToAccessRule(rule=ar, ruletype=rule_type, invert=False, blocking=False)
-                    node.access_rule_assocs.append(assoc)
+                    access_rule = get_or_add_private_access_rule_for_user(user)
+
+                    for rule_assoc in special_rule_assocs:
+                        if rule_assoc.rule_id == access_rule.id:
+                            db.session.delete(rule_assoc)
+
+                    #special_rule_assocs.filter_by(rule_id=access_rule.id, invert=False, blocking=False).delete()
+
+                    db.session.flush()
+
+                for uid in uids_to_add:
+                    user = q(User).get(uid)
+                    access_rule = get_or_add_private_access_rule_for_user(user)
+                    rule_assoc = AccessRulesetToRule(rule=access_rule,
+                                                     #ruleset=special_ruleset,
+                                                     invert=False,
+                                                     blocking=False)
+                    special_rule_assocs.append(rule_assoc)
+
 
             db.session.commit()
 
