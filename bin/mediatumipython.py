@@ -157,6 +157,7 @@ import tempfile
 import warnings
 from sqlalchemy import sql
 from sqlalchemy.orm.exc import NoResultFound
+import humanize
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
@@ -342,6 +343,14 @@ def make_info_producer_access_rules(ruletype):
     return _info_producer
 
 
+def file_info_producer(node):
+    return [u"{} {} {} ({})".format(a.filetype,
+                                    a.mimetype,
+                                    a.path,
+                                    humanize.filesize.naturalsize(a.size) if a.exists else "missing!")
+            for a in sorted(node.files, key=lambda f: (f.filetype, f.mimetype))]
+
+
 INFO_PRODUCERS = OrderedDict([
     ("parents", lambda node: (u"{} {}:  {}".format(n.id, n.name, n.type) for n in node.parents)),
     ("children", lambda node: (u"{} {}:  {}".format(n.id, n.name, n.type) for n in node.children)),
@@ -349,7 +358,7 @@ INFO_PRODUCERS = OrderedDict([
                                  for name, value in sorted(iteritems(node.attrs), key=lambda a: a[0]))),
     ("system_attributes", lambda node: (u"{} = {}".format(name, value)
                                  for name, value in sorted(iteritems(node.system_attrs), key=lambda a: a[0]))),
-    ("files", lambda node: (u"{} {} {}".format(a.path, a.filetype, a.mimetype) for a in node.files)),
+    ("files", file_info_producer),
     ("read_rules", make_info_producer_access_rules("read")),
     ("write_rules", make_info_producer_access_rules("write")),
     ("data_rules", make_info_producer_access_rules("data")),
