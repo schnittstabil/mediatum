@@ -18,6 +18,7 @@ from core.database.postgres.user import AuthenticatorInfo, create_special_user_d
 from sqlalchemy import event
 from core.database.postgres.alchemyext import truncate_tables
 from core.archive import Archive
+from core.transition.app import AthanaFlaskStyleApp
 logg = logging.getLogger(__name__)
 
 
@@ -372,3 +373,15 @@ def fake_archive():
     archive = FakeArchive()
     register_archive(archive)
     return archive
+
+
+@fixture
+def app():
+    app = AthanaFlaskStyleApp("test")
+    return app
+
+@yield_fixture
+def req(app, guest_user):
+    with app.test_request_context() as ctx:
+        yield ctx.request
+

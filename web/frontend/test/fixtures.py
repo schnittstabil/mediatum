@@ -10,18 +10,6 @@ from core.transition.app import AthanaFlaskStyleApp
 
 
 @fixture
-def app():
-    app = AthanaFlaskStyleApp("test")
-    return app
-
-@yield_fixture
-
-def req(app, guest_user):
-    with app.test_request_context() as ctx:
-        yield ctx.request
-
-
-@fixture
 def user():
     """XXX: Very simple mock user, improve this"""
     return MagicMock(name="user")
