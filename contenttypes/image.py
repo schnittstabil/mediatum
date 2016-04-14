@@ -440,9 +440,19 @@ class Image(Content):
         self.files.append(File(thumbname2, u"presentation", u"image/jpeg"))
 
     def _generate_zoom_archive(self, files=None):
+        if files is None:
+            files = self.files.all()
+
         image_file = self._find_processing_file(files)
 
         zip_filepath = os.path.join(os.path.dirname(image_file.abspath), u"zoom{}.zip".format(self.id))
+
+        old_zoom_files = filter(lambda f: f.filetype == u"zoom", files)
+
+        for old in old_zoom_files:
+            self.files.remove(old)
+            old.unlink()
+
         _create_zoom_archive(Image.ZOOM_TILESIZE, image_file.abspath, zip_filepath)
         file_obj = File(path=zip_filepath, filetype=u"zoom", mimetype=u"application/zip")
         self.files.append(file_obj)
