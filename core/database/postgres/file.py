@@ -63,9 +63,9 @@ class File(DeclarativeBase, FileMixin):
 @event.listens_for(File, 'after_delete')
 def unlink_physical_file_on_delete(mapper, connection, target):
     # XXX: convert this to a SQLAlchemy 1.1 session event
-    if os.path.exists(target.abspath):
-        if target.unlink_after_deletion:
-            target.unlink()
-    else:
-        logg.info("trying to unlink physical file for file with type %s for node %s, but it doesn't exist, ignoring.",
-                  target.filetype, target.nid)
+    if target.unlink_after_deletion:
+        if os.path.exists(target.abspath):
+                target.unlink()
+        else:
+            logg.info("trying to unlink physical file for file with type %s for node %s, but it doesn't exist, ignoring.",
+                      target.filetype, target.nid)
