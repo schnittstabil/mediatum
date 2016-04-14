@@ -24,6 +24,7 @@ if __name__ == "__main__":
 import logging
 import random
 from PIL import Image, ImageDraw
+from core import config
 import sys
 import os
 from subprocess import call, check_call, check_output, CalledProcessError
@@ -122,15 +123,26 @@ def parsePDF(filename, tempdir):
     else:
         makeThumbs(imgfile, thumb128, thumb300)
 
+    # try to get pdftotext_exe and uconv_exe from config-file
+    pdftotext_exe = "pdftotext"
+    uconv_exe = "uconv"
+    if not config.settings:
+        # parsePDF is called as subprocess: config-file must be read again
+        config.initialize()
+
+    if config.settings:
+        pdftotext_exe = config.get("external.pdftotext", "pdftotext")
+        uconv_exe = config.get("external.uconv", "uconv")
+
     # extract fulltext (xpdf)
-    fulltext_cmd = ["pdftotext", "-enc", "UTF-8", filename, fulltext_from_pdftotext]
+    fulltext_cmd = [pdftotext_exe, "-enc", "UTF-8", filename, fulltext_from_pdftotext]
     try:
         check_call(fulltext_cmd)
     except CalledProcessError:
         logg.exception("failed to extract fulltext from file %s", filename)
 
     # normalization of fulltext (uconv)
-    fulltext_normalization_cmd = ["uconv", "-x", "any-nfc", "-f UTF-8", "-t UTF-8", "--output", fulltext, fulltext_from_pdftotext]
+    fulltext_normalization_cmd = [uconv_exe, "-x", "any-nfc", "-f", "UTF-8", "-t", "UTF-8", "--output", fulltext, fulltext_from_pdftotext]
     try:
         check_call(fulltext_normalization_cmd)
     except CalledProcessError:
