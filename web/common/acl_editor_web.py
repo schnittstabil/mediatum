@@ -18,29 +18,6 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 from core.translation import translate, lang
-from core.database.postgres.permission import AccessRuleset, NodeToAccessRuleset
-from core import db
-import logging
-
-logg = logging.getLogger(__name__)
-q = db.query
-
-
-def ruleset_is_private_to_node(ruleset):
-    """If this ruleset is the exclusive private ruleset for node n
-    n.id is returned,
-    otherwise None is returned
-    """
-    nids = q(NodeToAccessRuleset.nid).filter_by(ruleset_name=ruleset.name).filter_by(private=True).all()
-    if not nids:
-        return None
-    elif len(nids) == 1:
-        return nids[0][0]
-    else:
-        msg = u"data integrity error (?): ruleset %r is 'private' to more than one (%d) node" % (ruleset.name,
-                                                                                                 len(nids))
-        logg.warning(msg)
-        raise ValueError(msg)
 
 
 def makeList(req, own_ruleset_assocs, inherited_ruleset_assocs, special_ruleset, special_rule_assocs,
