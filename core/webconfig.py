@@ -199,6 +199,8 @@ def initContexts():
 
     # === admin area ===
     context = athana.addContext("/admin", ".")
+    file = context.addFile("web/handlers/become.py")
+    file.addHandler("become_user").addPattern("/_become/.*")
     file = context.addFile("web/admin/main.py")
     file.addHandler("show_node").addPattern("/(?!export/).*")
     file.addHandler("export").addPattern("/export/.*")
