@@ -373,7 +373,7 @@ def print_info_for_category(category, limit=None):
     info_producer = INFO_PRODUCERS[category]
 
     for line in islice(info_producer(cnode), 0, limit):
-        print(u"\t\t" + line)
+        print(u"\t\t{}".format(line).encode("utf8"))
 
 
 def needs_init(min_state):
