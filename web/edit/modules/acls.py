@@ -127,13 +127,15 @@ def getContent(req, ids):
 
                 ruleset_names_from_request = [rsn for rsn in req.params.get(u"left%s" % rule_type, u"").split(u";") if rsn.strip()]
 
-                rules_info_dict = make_access_rules_info_dict(node, rule_type)
-                rulesets_not_inherited = rules_info_dict.get('rulesets_not_inherited', [])
+                inherited_ruleset_assocs, \
+                own_ruleset_assocs, \
+                special_ruleset, \
+                special_rule_assocs = get_access_rules_info(node, rule_type)
 
-                ruleset_names_not_inherited = [rs_dict.get('ruleset_name') for rs_dict in rulesets_not_inherited]
+                own_ruleset_names_not_private = [r.ruleset_name for r in own_ruleset_assocs if not r.private]
 
-                to_be_removed_rulesets = set(ruleset_names_not_inherited) - set(ruleset_names_from_request)
-                to_be_added_rulesets = set(ruleset_names_from_request) - set(ruleset_names_not_inherited) - {'__special_rule__'}
+                to_be_removed_rulesets = set(own_ruleset_names_not_private) - set(ruleset_names_from_request)
+                to_be_added_rulesets = set(ruleset_names_from_request) - set(own_ruleset_names_not_private) - {'__special_rule__'}
 
                 if to_be_removed_rulesets:
                     msg = "node %r: %r removing rulesets %r" % (node, rule_type, to_be_removed_rulesets)
