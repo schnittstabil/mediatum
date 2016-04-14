@@ -4,11 +4,15 @@
     :license: GPL3, see COPYING for details
 """
 import codecs
+import logging
 import os.path
 from warnings import warn
 
 from core import config
 from utils.utils import get_filesize, get_hash
+
+
+logg = logging.getLogger(__name__)
 
 
 class FileMixin(object):
@@ -60,7 +64,10 @@ class FileMixin(object):
         return codecs.open(self.abspath, *args, **kwargs)
 
     def unlink(self):
-        os.unlink(self.abspath)
+        if self.exists:
+            os.unlink(self.abspath)
+        else:
+            logg.warn("tried to unlink missing physical file for node %s at %s, ignored", self.nid, self.path)
 
     def getType(self):
         warn("use File.type instead", DeprecationWarning)
