@@ -21,6 +21,7 @@ import utils.date as date
 import logging
 from core import Node, db
 from core.translation import lang, translate
+from core.search import SearchQueryException
 from core.styles import theme
 from web.frontend import Content
 from utils.strings import ensure_unicode_returned
@@ -92,8 +93,11 @@ def search(searchtype, searchquery, readable_query, req):
     if container is None or not container.has_read_access():
         container = q(Collections).one()
 
-    result = container.search(searchquery).filter_read_access()
-#     result = container.content_children_for_all_subcontainers_with_duplicates
+    try:
+        result = container.search(searchquery).filter_read_access()
+    except SearchQueryException as e:
+        # query parsing went wrong or the search backend complained about something
+        return SearchResult([], readable_query, container)
 
     content_list = ContentList(result, container, readable_query)
     content_list.feedback(req)
