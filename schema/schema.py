@@ -18,27 +18,29 @@
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
+import datetime
+import inspect
+import importlib
 import logging
+import os
+import pkgutil
+import sys
+from warnings import warn
+
+from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.orm import undefer
 import core.config as config
 import core.translation as translation
 from core import Node
-
-from utils.utils import *
-from utils.date import *
-from core.config import *
 from core.xmlnode import getNodeXML, readNodeXML
 from core.metatype import Metatype
-import inspect
-import importlib
-import pkgutil
-from warnings import warn
 from core import db
 from core.systemtypes import Metadatatypes
-from sqlalchemy.orm.exc import NoResultFound
 from core.transition.postgres import check_type_arg
 from core.database.postgres.node import children_rel, parents_rel
-from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.orm import undefer
+from utils.date import parse_date, format_date, validateDateString
+from utils.utils import Option, esc
 
 
 log = logg = logging.getLogger(__name__)
@@ -848,17 +850,17 @@ def update_multilang_field(node, field, mdt, req):
         langPos = item.find('__')
         if langPos != -1 and item[langPos + 2:] == field.name:
             # cut the language identifier (en__, fr__, etc)
-            if (req.params.get(ustr(field.id) + '_show_multilang', '') == 'multi'
+            if (req.params.get(unicode(field.id) + '_show_multilang', '') == 'multi'
                     and hasattr(mdt, "language_update")):
                 value_old = node.get(field.name)
                 value_new = req.params.get(item)
                 value = mdt.language_update(value_old, value_new, item[:langPos])
                 node[field.name] = value
-            elif req.params.get(ustr(field.id) + '_show_multilang', '') == 'single':
+            elif req.params.get(unicode(field.id) + '_show_multilang', '') == 'single':
                 if item[0:langPos] == translation.lang(req):
                     new_value = req.params.get(item)
                     node[field.name] = new_value
-            elif (req.params.get(ustr(field.id) + '_show_multilang', '') == 'multi'
+            elif (req.params.get(unicode(field.id) + '_show_multilang', '') == 'multi'
                   and not hasattr(mdt, "language_update")):
                 value = mdt.format_request_value_for_db(field, req.params, item)
                 oldValue = node.get(field.name)
@@ -1114,7 +1116,7 @@ class Mask(Node):
             return ret
 
         ret += '<div align="right"><input type="image" src="/img/install.png" name="newdetail_'
-        ret += ustr(self.id)
+        ret += unicode(self.id)
         ret += '" i18n:attributes="title mask_editor_new_line_title"/></div><br/>'
 
         if not self.validateMappingDef():
