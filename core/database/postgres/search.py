@@ -79,7 +79,12 @@ def _prepare_searchstring(op, searchstring):
 
     # Postgres needs the form term:* for prefix search, we allow simple stars at the end of the word
     rewritten_terms = [rewrite_prefix_search(t) if u"*" in t else t for t in terms]
-    return op.join(t for t in rewritten_terms if t)
+    rewritten_searchstring = op.join(t for t in rewritten_terms if t)
+
+    if not rewritten_searchstring:
+        raise SearchQueryException("invalid query for postgres full text search: " + searchstring)
+
+    return rewritten_searchstring
 
 
 def make_fts_expr_tsvec(languages, target, searchstring, op="&"):
@@ -91,9 +96,6 @@ def make_fts_expr_tsvec(languages, target, searchstring, op="&"):
     """
     languages = list(languages)
     prepared_searchstring = _prepare_searchstring(op, searchstring)
-
-    if not prepared_searchstring:
-        raise SearchQueryException("invalid query for postgres full text search: " + searchstring)
 
     ts_query = func.to_tsquery(languages[0], prepared_searchstring)
 
