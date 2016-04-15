@@ -110,8 +110,12 @@ class NodeMixin(object):
         return self.name
 
     def removeAttribute(self, key):
-        warn("deprecated, use del Node.attrs[attrname] instead", DeprecationWarning)
-        del self.attrs[key]
+        if key.startswith("system."):
+            warn("use del Node.system_attrs[attrname] instead", DeprecationWarning)
+            del self.system_attrs[key[7:]]
+        else:
+            warn("use del Node.attrs[attrname] instead", DeprecationWarning)
+            del self.attrs[key]
 
     def getAccess(self, type):
         raise Exception("old acl stuff removed!")

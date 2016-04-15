@@ -124,6 +124,12 @@ def test_removeAttribute(some_node):
     assert len(some_node.attrs) == num_attrs - 1
 
 
+def test_removeAttribute_system(some_node):
+    num_attrs = len(some_node.system_attrs)
+    assert_deprecation_warning(some_node.removeAttribute, "system.testattr")
+    assert len(some_node.system_attrs) == num_attrs - 1
+
+
 def test_getOrderPos(some_node):
     assert some_node.getOrderPos() == 1
 
