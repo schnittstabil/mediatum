@@ -272,7 +272,7 @@ def registerDefaultContextEntry(key, entry):
 
 
 def handleCommand(cmd, var, s, node, attrnode=None, field_value="", options=[], mask=None):
-    from web.frontend.streams import build_filelist, get_transfer_url
+    from web.frontend.filehelpers import build_filelist, get_transfer_url
     if cmd == 'cmd:getTAL':
         context = default_context.copy()
         context['node'] = node
