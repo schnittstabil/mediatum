@@ -74,7 +74,6 @@ def test_image_create_zoom_tile_buffer(image_png):
 @pytest.mark.slow
 def test_create_zoom_archive(image_png):
     img_path = fullpath_to_test_image("png")
-    img_path = image_png.abspath
     with tempfile.NamedTemporaryFile() as tmpfile:
         _create_zoom_archive(256, img_path, tmpfile)
         assert os.stat(tmpfile.name).st_size > 1000
@@ -101,7 +100,8 @@ def _test_event_files_changed(image):
     with call_event_files_changed(image):
         assert_thumbnails_ok(image)
         assert_image_formats_ok(image)
-        assert_zoom_ok(image)
+        if image._test_mimetype != "image/svg+xml":
+            assert_zoom_ok(image)
 
 @pytest.mark.slow
 def test_event_files_changed_svg(image_svg):
