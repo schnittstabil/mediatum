@@ -5,8 +5,8 @@
 """
 
 import os.path
-from pytest import fixture, yield_fixture
-import migration.acl_migration
+from munch import Munch
+from pytest import fixture
 from migration.test.factories import AccessFactory, IPListFactory, AccessRulesetFactory
 from migration.test.factories import ImportNodeFactory
 from core.database.postgres.permission import AccessRule, AccessRuleset, AccessRulesetToRule
@@ -25,11 +25,14 @@ def database(database):
         conn.execute("CREATE SCHEMA mediatum_import")
         sql_dir = os.path.join(os.path.dirname(__file__), "..")
         conn.execute(read_and_prepare_sql("acl_migration.sql", sql_dir=sql_dir))
+        conn.execute(read_and_prepare_sql("user_migration.sql", sql_dir=sql_dir))
+        conn.execute(read_and_prepare_sql("migration.sql", sql_dir=sql_dir))
 
     from migration.import_datamodel import ImportBase
     ImportBase.metadata.bind = db.engine
     ImportBase.metadata.create_all()
     return db
+
 
 @fixture
 def import_node_with_simple_access():
@@ -75,6 +78,35 @@ def import_node_with_non_dnf_ruleset(session):
     acl1 = AccessFactory(rule=u"NOT ( group test_readers OR group test_readers2 )", name=u"not_rule")
     import_node = ImportNodeFactory(id=100, readaccess=u"not_rule,{ user darfdas }")
     return import_node
+
+
+@fixture
+def user_nodes(session):
+    users_root = NodeFactory(name=u"users", type=u"users")
+    u1 = NodeFactory(name=u"testuser1", type=u"user")
+    u2 = NodeFactory(name=u"testuser2", type=u"user")
+    users = [u1, u2]
+    users_root.children.extend(users)
+    return users
+
+
+@fixture
+def usergroup_nodes(session):
+    usergroups_root = NodeFactory(name=u"usergroups", type=u"usergroups")
+    ug1 = NodeFactory(name=u"testgroup1", type=u"usergroup")
+    ug2 = NodeFactory(name=u"testgroup2", type=u"usergroup")
+    usergroups = [ug1, ug2]
+    usergroups_root.children.extend(usergroups)
+    return usergroups
+
+
+@fixture
+def user_nodes_with_groups(user_nodes, usergroup_nodes):
+    ug1, ug2 = usergroup_nodes
+    u1, _ = user_nodes
+    ug1.children.extend(user_nodes)
+    ug2.children.append(u1)
+    return Munch(users=user_nodes, groups=usergroup_nodes)
 
 
 @fixture
