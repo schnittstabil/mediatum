@@ -115,6 +115,10 @@ class User(DeclarativeBase, TimeStamp, UserMixin):
         return [g.id for g in self.groups]
 
     @property
+    def group_names(self):
+        return [g.name for g in self.groups]
+
+    @property
     def is_editor(self):
         return any(g.is_editor_group for g in self.groups)
 
