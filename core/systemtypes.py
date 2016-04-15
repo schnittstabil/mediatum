@@ -33,13 +33,3 @@ class Mappings(Node):
 @check_type_arg
 class Metadatatypes(Node):
     pass
-
-
-@check_type_arg
-class Navigation(Node):
-    pass
-
-
-@check_type_arg
-class Schedules(Node):
-    pass

@@ -216,7 +216,7 @@ s = core.db.session
 # load types for interactive querying
 from contenttypes import Audio, Content, Directory, Collection, Container, Collections, Home, Document, Image, Imagestream, \
     Project, Video, Data
-from core.systemtypes import Mappings, Metadatatypes, Root, Navigation, Searchmasks
+from core.systemtypes import Mappings, Metadatatypes, Root, Searchmasks
 from schema.schema import Metadatatype, Maskitem, Mask, Metafield
 from schema.mapping import Mapping, MappingField
 from workflow.workflow import Workflow, Workflows
