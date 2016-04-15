@@ -18,10 +18,11 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 import json
+from functools import wraps
 import logging
+import re
 
 import core.config as config
-from utils.utils import *
 from core.metatype import Context
 from core.translation import lang
 from web.frontend.frame import getNavigationFrame
@@ -36,8 +37,8 @@ from contenttypes import Collection
 from workflow.workflow import Workflows
 from werkzeug.datastructures import ImmutableMultiDict
 from utils.url import build_url_from_path_and_params
-from functools import wraps
 from contenttypes import Collections, Container
+from utils.utils import modify_tex
 
 q = db.query
 
