@@ -11,7 +11,6 @@ from PIL import Image as PILImage
 import pytest
 from contenttypes.test.helpers import call_event_files_changed
 from contenttypes.image import _create_zoom_tile_buffer, _create_zoom_archive
-from contenttypes.test import fullpath_to_test_image
 from contenttypes.test.asserts import assert_thumbnails_ok
 from utils.testing import make_files_munch
 
@@ -61,8 +60,8 @@ def test_image_generate_thumbnails(image):
     assert_thumbnails_ok(image)
 
 
-def test_image_create_zoom_tile_buffer():
-    img_path = fullpath_to_test_image("png")
+def test_image_create_zoom_tile_buffer(image_png):
+    img_path = image_png.abspath
     img = PILImage.open(img_path)
     with _create_zoom_tile_buffer(img, 4, 256, 1, 0, 0) as buff:
         val = buff.getvalue()
@@ -72,8 +71,8 @@ def test_image_create_zoom_tile_buffer():
 
 
 @pytest.mark.slow
-def test_create_zoom_archive():
-    img_path = fullpath_to_test_image("png")
+def test_create_zoom_archive(image_png):
+    img_path = image_png.abspath
     with tempfile.NamedTemporaryFile() as tmpfile:
         _create_zoom_archive(256, img_path, tmpfile)
         assert os.stat(tmpfile.name).st_size > 1000

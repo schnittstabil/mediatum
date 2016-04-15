@@ -8,5 +8,5 @@ from core import config
 
 tal.set_base(config.basedir)
 
-from web.frontend.test.fixtures import req
+from core.test.fixtures import req
 from contenttypes.test.fixtures import *

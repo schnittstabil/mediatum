@@ -115,7 +115,7 @@ def test_login_from_login_page(req):
 def test_login_login_from_edit(req):
     req.headers["Referer"] = "/edit/edit_content?id=604993"
     assert login.login(req) == 200
-    assert req.session["return_after_login"] == "/edit"
+    assert req.session["return_after_login"] == "/edit?id=604993"
 
 
 def test_login_from_other(req):
