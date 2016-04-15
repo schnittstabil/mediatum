@@ -13,7 +13,7 @@ BEGIN
     bool(position('e' in attrs->>'opts')) AS is_editor_group,
     now() AS created_at
     FROM node
-    WHERE id IN (SELECT cid FROM nodemapping WHERE nid=(SELECT id FROM node WHERE name = 'usergroups'));
+    WHERE id IN (SELECT cid FROM nodemapping WHERE nid=(SELECT id FROM node WHERE name = 'usergroups' AND type = 'usergroups'));
 END;
 $f$;
 
@@ -46,7 +46,7 @@ BEGIN
     0 AS authenticator_id,
     now() AS created_at
     FROM node
-    WHERE id IN (SELECT cid FROM nodemapping WHERE nid=(SELECT id FROM node WHERE name = 'users'));
+    WHERE id IN (SELECT cid FROM nodemapping WHERE nid=(SELECT id FROM node WHERE name = 'users' AND type = 'users'));
 
     GET DIAGNOSTICS rows = ROW_COUNT;
     RAISE NOTICE '% internal users inserted', rows;
