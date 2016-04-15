@@ -36,7 +36,6 @@ def getInformation():
 def getContent(req, ids):
     user = current_user
     publishdir = q(Node).get(ids[0])
-    explicit = q(Collections).one().container_children.sort_by_orderpos()
     ret = ""
 
     actionerror = []
@@ -118,22 +117,8 @@ def getContent(req, ids):
         ret += req.getTAL("web/edit/modules/publish.html", v, macro="reload")
 
     # build normal window
-    stddir = ""
+    stddir = ""  # preset value for destination ids
     stdname = ""
-    l = []
-    users_homedir_id = getHomeDir(user).id
-    for n in explicit:
-
-        if not n.has_write_access():
-            continue
-
-        # not needed anymore (?)
-        if unicode(users_homedir_id) != unicode(n):
-            l.append(n)
-
-    if len(l)==1:
-        stddir = unicode(l[0])+","
-        stdname = "- " + q(Node).get(l[0]).getName()
 
     v = {"id": publishdir.id,
          "stddir": stddir,
