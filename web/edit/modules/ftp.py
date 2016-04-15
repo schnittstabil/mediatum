@@ -19,7 +19,6 @@
 import logging
 import os
 
-import core.acl as acl
 import core.config as config
 
 from schema.schema import get_permitted_schemas

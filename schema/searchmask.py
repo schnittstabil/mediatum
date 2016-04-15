@@ -1,4 +1,3 @@
-import core.acl as acl
 import hashlib
 import random
 from sqlalchemy import func

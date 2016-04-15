@@ -470,7 +470,7 @@ class Node(DeclarativeBase, NodeMixin):
 
     @cached_property
     def has_files(self):
-        # XXX: this must not be cached, change this!
+        # XXX: can we really cache this?
         return self.files.first() is not None
 
     __mapper_args__ = {

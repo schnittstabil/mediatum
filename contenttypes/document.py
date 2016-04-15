@@ -20,7 +20,6 @@
 import logging
 
 import core.config as config
-import core.acl as acl
 import os
 import shutil
 import codecs

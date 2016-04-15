@@ -22,7 +22,6 @@ import json
 from core import db
 from contenttypes import Data, Home, Collections
 from core.systemtypes import Root
-import core.acl as acl
 from web.edit.edit_common import showdir, showoperations
 from utils.utils import dec_entry_log
 from core.translation import translate, lang, t

@@ -18,7 +18,6 @@
 """
 
 
-from core.acl import AccessData
 from schema.schema import loadTypesFromDB, getMetaType
 from web.frontend.content import getPaths
 from utils.utils import u, dec_entry_log

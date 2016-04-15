@@ -22,7 +22,6 @@ import os
 import codecs
 import core.users as users
 
-import core.acl as acl
 import re
 import core.config as config
 import zipfile

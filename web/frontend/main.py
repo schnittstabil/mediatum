@@ -20,10 +20,7 @@
 import json
 import logging
 
-import core.acl
 import core.config as config
-import core.users as users
-import core.xmlnode as xmlnode
 from utils.utils import *
 from core.metatype import Context
 from core.translation import lang

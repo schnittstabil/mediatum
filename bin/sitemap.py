@@ -21,6 +21,7 @@
 
 import os
 import sys
+from core.users import get_guest_user
 sys.path += ['../..', '../', '.']
 
 import core.config as config
@@ -36,7 +37,6 @@ from core.init import full_init
 full_init()
 
 import core.users as users
-import core.acl as acl
 from core import Node
 from core import db
 from contenttypes import Collections
@@ -204,10 +204,8 @@ def create():
     hostname = config.get('host.name')
 
     root = q(Collections).one()
-    all_nodes = root.all_children_by_query(q(Node))
-    #todo acl check here needed
-    user = users.getUser('Gast')
-    access = acl.AccessData(user=user)
+    guest_user = get_guest_user()
+    all_nodes = root.all_children_by_query(q(Node)).filter_read_access(user=guest_user)
     sitemaps = []
 
     node_dict = {'collection': [],
@@ -221,8 +219,7 @@ def create():
 
     for node in all_nodes:
         # Arkitekt had a guest field that is actually not visible
-        #todo acl check here needed
-        if access.hasAccess(node, 'read'):
+        if node.has_read_access(user=guest_user):
             for node_type in node_dict.keys():
                 if node_type in q(Node).get(node.id).type:
                     node_dict[node_type].append((unicode(node.id), q(Node).get(node.id).get('updatetime')))

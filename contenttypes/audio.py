@@ -21,7 +21,6 @@ import logging
 import shutil
 import subprocess
 from PIL import Image, ImageDraw
-import core.acl as acl
 from contenttypes.data import Content
 from lib.audio import File as AudioFile
 from utils.utils import splitfilename
