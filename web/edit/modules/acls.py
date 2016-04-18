@@ -149,6 +149,16 @@ def getContent(req, ids):
                     special_ruleset = node.get_or_add_special_access_ruleset(rule_type)
                     special_rule_assocs = special_ruleset.rule_assocs
 
+                for uid in uids_to_add:
+                    user = q(User).get(uid)
+                    access_rule = get_or_add_private_access_rule_for_user(user)
+                    rule_assoc = AccessRulesetToRule(rule=access_rule,
+                                                     #ruleset=special_ruleset,
+                                                     invert=False,
+                                                     blocking=False)
+                    special_rule_assocs.append(rule_assoc)
+
+                # remove uids_to_remove *after* having added uids_to_add: a trigger may delete empty rulesets
                 for uid in uids_to_remove:
 
                     user = q(User).get(uid)
@@ -158,18 +168,7 @@ def getContent(req, ids):
                         if rule_assoc.rule_id == access_rule.id:
                             db.session.delete(rule_assoc)
 
-                    #special_rule_assocs.filter_by(rule_id=access_rule.id, invert=False, blocking=False).delete()
-
                     db.session.flush()
-
-                for uid in uids_to_add:
-                    user = q(User).get(uid)
-                    access_rule = get_or_add_private_access_rule_for_user(user)
-                    rule_assoc = AccessRulesetToRule(rule=access_rule,
-                                                     #ruleset=special_ruleset,
-                                                     invert=False,
-                                                     blocking=False)
-                    special_rule_assocs.append(rule_assoc)
 
 
             db.session.commit()
