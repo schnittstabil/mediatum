@@ -230,7 +230,7 @@ msgstr "Weniger Felder"
 msgid "search_extendedsuper"
 msgstr "Mehr Felder"
 
-msgid "all_metafields"
+msgid "all_data"
 msgstr "Alle Daten"
 
 msgid "search_for"

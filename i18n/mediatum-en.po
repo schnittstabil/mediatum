@@ -223,8 +223,8 @@ msgstr "Less Searchfields"
 msgid "search_extendedsuper"
 msgstr "More Searchfields"
 
-msgid "all_metafields"
-msgstr "all metadata"
+msgid "all_data"
+msgstr "all data"
 
 msgid "search_for"
 msgstr "Search for"
