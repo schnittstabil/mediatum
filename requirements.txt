@@ -1,3 +1,4 @@
+# WARNING: this list may be incomplete / wrong. Better use Nix instead!
 alembic
 bibtexparser
 coffeescript
@@ -11,6 +12,7 @@ ipython
 ipython-sql
 jinja2
 lxml
+magic
 mediatumbabel
 mediatumfsm
 mediatumtal

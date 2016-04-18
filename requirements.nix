@@ -17,6 +17,7 @@ let
   jinja2
   ldap 
   lxml
+  magic
   pillow
   pygments
   pyPdf
@@ -367,6 +368,7 @@ in {
       ipython-sql
       jinja2
       lxml
+      magic
       mediatumbabel
       mediatumfsm
       mediatumtal
