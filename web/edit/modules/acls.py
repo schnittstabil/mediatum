@@ -92,9 +92,8 @@ def get_access_rules_info(node, ruletype):
 
     remaining_rule_assocs = assoc_filter(rule_assocs, rule_assocs_in_rulesets)
     if remaining_rule_assocs:
-        msg = "node %r: RULES NOT IN A RULESET (INVALID!)" % (node, [r.to_dict() for r in remaining_rule_assocs])
-        logg.warning(msg)
-        raise ValueError(msg)
+        msg = "node %r: ruletype: %r: REMAINING RULEASSOCS %r (INVALID!)" % (node, ruletype, [r.to_dict() for r in remaining_rule_assocs])
+        logg.error(msg)
     special_ruleset = node.get_special_access_ruleset(ruletype)
     special_rule_assocs = special_ruleset.rule_assocs if special_ruleset else []
     return inherited_ruleset_assocs, own_ruleset_assocs, special_ruleset, special_rule_assocs
