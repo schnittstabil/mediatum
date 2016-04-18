@@ -32,44 +32,6 @@ def get_user_for_login_name(login_name):
 
 
 # from bin/mediatumipython.py (make_info_producer_access_rules)
-def make_access_rules_info_dict(node, ruletype):
-    rule_assocs = node.access_rule_assocs.filter_by(ruletype=ruletype).all()
-    own_ruleset_assocs = node.access_ruleset_assocs.filter_by(ruletype=ruletype).all()
-    effective_ruleset_assocs = node.effective_access_ruleset_assocs.filter(
-        EffectiveNodeToAccessRuleset.c.ruletype == ruletype).all()
-    inherited_ruleset_assocs = set(effective_ruleset_assocs) - set(own_ruleset_assocs)
-
-    effective_rulesets = [rsa.ruleset for rsa in effective_ruleset_assocs]
-    rule_assocs_in_rulesets = [r for rs in effective_rulesets for r in rs.rule_assocs]
-
-    def assoc_filter(assocs, to_remove):
-
-        def _f(a):
-            for rem in to_remove:
-                if a.rule == rem.rule and a.invert == rem.invert and a.blocking == rem.blocking:
-                    return False
-            return True
-
-        return [a for a in assocs if _f(a)]
-
-    remaining_rule_assocs = assoc_filter(rule_assocs, rule_assocs_in_rulesets)
-    special_ruleset = node.get_special_access_ruleset(ruletype)
-    special_rule_assocs = special_ruleset.rule_assocs if special_ruleset else []
-    res_dict = {
-        'node': node,
-        'rulesets_not_inherited': [rs.to_dict() for rs in own_ruleset_assocs],
-        'rulesets_inherited': [rs.to_dict() for rs in inherited_ruleset_assocs],
-        'additional_rules': [r.to_dict() for r in remaining_rule_assocs],
-        'own_ruleset_assocs': own_ruleset_assocs,
-        'inherited_ruleset_assocs': inherited_ruleset_assocs,
-        'special_ruleset': special_ruleset,
-        'special_rule_assocs': special_rule_assocs,
-    }
-
-    return res_dict
-
-
-# from bin/mediatumipython.py (make_info_producer_access_rules)
 def get_access_rules_info(node, ruletype):
     rule_assocs = node.access_rule_assocs.filter_by(ruletype=ruletype).all()
     own_ruleset_assocs = node.access_ruleset_assocs.filter_by(ruletype=ruletype).all()
