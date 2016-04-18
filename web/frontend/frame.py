@@ -167,29 +167,29 @@ class Searchlet(Portlet):
         else:
             extendedfields = []
 
-        for pos in extendedfields:
-            searchmaskitem_argname = "field" + str(pos)
-            searchmaskitem_id = req.args.get(searchmaskitem_argname, type=int)
-            self.searchmaskitem_ids[pos] = searchmaskitem_id
+        # this is the "special" value for simple search
+        if not extendedfields and "query" in req.args:
+            self.values[0] = req.args["query"]
+        else:
+            for pos in extendedfields:
+                searchmaskitem_argname = "field" + str(pos)
+                searchmaskitem_id = req.args.get(searchmaskitem_argname, type=int)
+                self.searchmaskitem_ids[pos] = searchmaskitem_id
 
-            searchmaskitem = self.searchmask.children.filter_by(id=searchmaskitem_id).scalar() if searchmaskitem_id else None
-            field = searchmaskitem.children.scalar() if searchmaskitem else None
+                searchmaskitem = self.searchmask.children.filter_by(id=searchmaskitem_id).scalar() if searchmaskitem_id else None
+                field = searchmaskitem.children.scalar() if searchmaskitem else None
 
-            if field is not None:
                 value_argname = "query" + str(pos)
-                if field.getFieldtype() == "date":
-                    from_value = req.args.get(value_argname + "-from", "")
-                    to_value = req.args.get(value_argname + "-to", "")
+
+                if field is not None and field.getFieldtype() == "date":
+                    from_value = req.args.get(value_argname + "-from", u"")
+                    to_value = req.args.get(value_argname + "-to", u"")
                     value = from_value + ";" + to_value
                 else:
                     value = req.args.get(value_argname)
 
                 if value:
                     self.values[pos] = value
-
-        # this is the "special" value for simple search
-        if not extendedfields and "query" in req.args:
-            self.values[0] = req.args["query"]
 
     def hasExtendedSearch(self):
         return self.searchmask is not None
