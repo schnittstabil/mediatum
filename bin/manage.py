@@ -86,7 +86,7 @@ def data(args):
     if action == "init":
         init_database_values(s)
     elif action == "truncate":
-        truncate_tables(s)
+        truncate_tables(s, db_metadata)
     elif action == "import":
         import_dump(s, args.sql_dumpfile)
 
@@ -168,11 +168,11 @@ def vacuum(args):
     action = args.action.lower() if args.action else None
 
     if action is None:
-        vacuum_tables(s)
+        vacuum_tables(s, db_metadata=db_metadata)
     elif action == "analyze":
-        vacuum_analyze_tables(s)
+        vacuum_analyze_tables(s, db_metadata=db_metadata)
     elif action == "full":
-        vacuum_full_tables(s)
+        vacuum_full_tables(s, db_metadata=db_metadata)
 
 
 def result_proxy_to_yaml(resultproxy):
