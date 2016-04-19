@@ -44,7 +44,7 @@ def popup_fullsize(req):
     node = q(Node).get(req.params["id"])
     if not isinstance(node, Node):
         return 404
-    node.popup_fullsize(req)
+    return node.popup_fullsize(req)
 #
 # execute thumbBig method from node-type
 #
@@ -54,7 +54,7 @@ def popup_thumbbig(req):
     node = q(Node).get(req.params["id"])
     if not isinstance(node, Node):
         return 404
-    node.popup_thumbbig(req)
+    return node.popup_thumbbig(req)
 
 
 #
