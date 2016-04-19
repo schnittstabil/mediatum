@@ -32,13 +32,15 @@ from contenttypes import Collections
 from web.edit.modules.manageindex import getAllAttributeValues
 from core.database.postgres import mediatumfunc
 from core.database.postgres.alchemyext import exec_sqlfunc
+from utils.lrucache import lru_cache
 
 q = db.query
 logg = logging.getLogger(__name__)
 
 
-def count_list_values_for_all_content_children(collection, attribute_name):
-    func_call = mediatumfunc.count_list_values_for_all_content_children(collection.id, attribute_name)
+@lru_cache(maxsize=16)
+def count_list_values_for_all_content_children(collection_id, attribute_name):
+    func_call = mediatumfunc.count_list_values_for_all_content_children(collection_id, attribute_name)
     stmt = sql.select([sql.text("*")], from_obj=func_call)
     res = db.session.execute(stmt)
     return res.fetchall()
@@ -58,7 +60,7 @@ class m_ilist(Metatype):
 
     def getSearchHTML(self, context):
         field_name = context.field.getName()
-        value_and_count = count_list_values_for_all_content_children(context.collection, field_name)
+        value_and_count = count_list_values_for_all_content_children(context.collection.id, field_name)
 
         return tal.getTAL("metadata/ilist.html", {"context": context, "valuelist": value_and_count},
                           macro="searchfield", language=context.language)
