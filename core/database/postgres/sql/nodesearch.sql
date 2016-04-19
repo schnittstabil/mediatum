@@ -233,7 +233,7 @@ BEGIN
 
             -- rebuild the search index
             EXECUTE 'CREATE INDEX ' || index_name
-            || ' ON node USING gin(to_tsvector_safe(''' || searchconfig || ''', node.attrs ->> ''' || name || '''))';
+            || ' ON node USING gin(to_tsvector_safe(''' || searchconfig || ''', replace(node.attrs ->> ''' || name || ''', '';'', '' '')))';
         END LOOP;
     END IF;
 RETURN;

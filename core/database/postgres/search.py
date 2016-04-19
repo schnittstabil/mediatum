@@ -134,10 +134,13 @@ def make_attribute_fts_cond(languages, target, searchstring, op="&"):
     languages = list(languages)
     prepared_searchstring = _prepare_searchstring(op, searchstring)
 
-    cond = mediatumfunc.to_tsvector_safe(languages[0], target).op("@@")(func.to_tsquery(languages[0], prepared_searchstring))
+    def cond_func(lang):
+        return mediatumfunc.to_tsvector_safe(lang, func.replace(target, ";", " ")).op("@@")(func.to_tsquery(lang, prepared_searchstring))
+
+    cond = cond_func(languages[0])
 
     for language in languages[1:]:
-        cond |= mediatumfunc.to_tsvector_safe(language, target).op("@@")(func.to_tsquery(language, prepared_searchstring))
+        cond |= cond_func(language)
 
     return cond
 

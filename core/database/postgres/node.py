@@ -138,6 +138,14 @@ def _subquery_subtree(node):
 
     return (db.query(t_noderelation.c.cid)
             .filter(t_noderelation.c.nid == node.id)
+            .subquery())
+
+
+def _subquery_subtree_distinct(node):
+    from core import db
+
+    return (db.query(t_noderelation.c.cid)
+            .filter(t_noderelation.c.nid == node.id)
             .distinct()
             .subquery())
 
@@ -277,7 +285,7 @@ class Node(DeclarativeBase, NodeMixin):
         """
         from contenttypes.data import Content
         from core import db
-        sq = _subquery_subtree(self)
+        sq = _subquery_subtree_distinct(self)
         return object_session(self).query(Content).filter(Node.id.in_(sq)).filter_by(subnode=False)
 
     @property
@@ -288,13 +296,12 @@ class Node(DeclarativeBase, NodeMixin):
         Don't use distinct() on this method, use content_children_for_all_subcontainers instead if you need it!
         """
         from contenttypes.data import Content
-        from core import db
-        sq = _subquery_subtree(self)
         nr = t_noderelation
+        # TODO: check if it's better to use the _subquery_subtree() here
         return object_session(self).query(Content).filter_by(subnode=False).join(nr, Content.id == nr.c.cid).filter(nr.c.nid==self.id)
 
     def all_children_by_query(self, query):
-        sq = _subquery_subtree(self)
+        sq = _subquery_subtree_distinct(self)
         query = query.filter(Node.id.in_(sq))
         return query
 
@@ -346,7 +353,8 @@ class Node(DeclarativeBase, NodeMixin):
         """Builds the query object that is used as basis for content node searches below this node"""
         from contenttypes import Content
         q = object_session(self).query
-        base_query = self.all_children_by_query(q(Content))
+        sq = _subquery_subtree(self)
+        base_query = q(Content).filter(Node.id.in_(sq))
         return base_query
 
     def search(self, searchquery, languages=None):

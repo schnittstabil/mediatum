@@ -189,7 +189,8 @@ def _extended_searchquery_from_req(req):
                                                                 translate("search_and", request=req),
                                                                 to_value)
                 else:
-                    if field_type in ("list", "dlist", "hlist", "ilist", "number"):
+                    # XXX: what about dates?
+                    if field_type == "number":
                         # exact match
                         q_str += field.name + " eq " + protect(element_query)
                     else:
