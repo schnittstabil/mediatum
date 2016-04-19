@@ -512,7 +512,12 @@ class Image(Content):
         self._extract_metadata(files)
 
         if self.should_use_zoom:
-            self._generate_zoom_archive(files)
+            try:
+                self._generate_zoom_archive(files)
+            except:
+                # XXX: this sometimes throws SystemError, see #806
+                # XXX: missing zoom tiles shouldn't abort the upload process
+                logg.exception("zoom image generation failed!")
 
         # XXX: IPTC writeback will be fixed in #782
         # self._writeback_iptc()
