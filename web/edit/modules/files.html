@@ -108,7 +108,7 @@
                         <tr tal:repeat="file python:files">
                             <tal:block tal:condition="python:file.type!='attachment' and (user.isAdmin() or file.type!='statistic')">
                             <td>
-                                <a tal:attributes="href python:u'/file/{}/{}'.format(node.id, file.getName())" tal:content="python:file.getName()" i18n:attributes="title edit_files_open_title" target="filewindow"/>
+                                <a tal:attributes="href python:u'/file/{}/{}'.format(node.id, file.getName())" tal:content="python:file.path" i18n:attributes="title edit_files_open_title" target="filewindow"/>
                             </td>
                             <td tal:content="python:file.type"/>
                             <td tal:content="python:file.getSize()" style="text-align:right;"/>
