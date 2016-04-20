@@ -37,10 +37,6 @@ def getContent(req, ids):
         req.setStatus(httpstatus.HTTP_FORBIDDEN)
         return req.getTAL("web/edit/edit.html", {}, macro="access_error")
 
-    if req.params.get('action') == 'getsearchdata':
-        req.writeTAL("web/edit/modules/admin.html", {'searchdata': node.search('searchcontent=%s' % node.id), 'node': node}, macro="searchdata")
-        return ''
-
     if req.params.get("type", "") == "addattr" and req.params.get("new_name", "") != "" and req.params.get("new_value", "") != "":
         node.attrs[req.params.get("new_name")] = req.params.get("new_value", "")
         db.session.commit()

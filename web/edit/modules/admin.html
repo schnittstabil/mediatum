@@ -134,13 +134,6 @@
                         <div class="label" i18n:translate="edit_admin_noattribute">TEXT</div>
                     </div>
                 </div>
-                <h3><a href="#" i18n:translate="edit_admin_searchdata">TEXT</a></h3>
-                <div>
-                    <p style="padding-left:20px">
-                        <button type="button" onclick="getSearchData()" i18n:translate="edit_admin_index_button">TEXT</button>
-                    </p>
-                    <div id="searchdata"> </div>
-                </div>
             </div>
             <input type="hidden" name="type" value=""/>
             <input type="hidden" name="type" id="type" value=""/>
@@ -177,12 +170,6 @@
         function closeForm(){ // close upload form
             $('#addform').css('display','none');
             parent.$('#overlay').css('display', 'none');
-        }
-
-        function getSearchData(){
-            $.get('/edit/edit_content?id='+id+'&tab=admin&action=getsearchdata&style=popup', function(data) {
-                $('#searchdata').html(data);
-            });
         }
 
         function setActionType(value){
