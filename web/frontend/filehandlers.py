@@ -186,8 +186,7 @@ def send_file(req):
             display_file_name = u'{}{}'.format(os.path.splitext(os.path.basename(node.name))[0], file_ext)
         else:
             display_file_name = filename
-
-        req.reply_headers["Content-Disposition"] = u'attachment; filename="{}"'.format(display_file_name).encode('utf8')
+        req.reply_headers["Content-Disposition"] = u'attachment; filename="{}"'.format(display_file_name)
         return req.sendFile(filepath, mimetype)
 
     if filename is None:

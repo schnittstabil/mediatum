@@ -155,7 +155,7 @@ def setNodeWorkflow(node, workflow):
     return getNodeWorkflowStep(node)
 
 
-def createWorkflowStep(name="", type="workflowstep", trueid="", falseid="", truelabel="", falselabel="", comment=ustr(""), adminstep=""):
+def createWorkflowStep(name="", type="workflowstep", trueid="", falseid="", truelabel="", falselabel="", comment='', adminstep=""):
     n = WorkflowStep(name)
     n.set("truestep", trueid)
     n.set("falsestep", falseid)
@@ -508,7 +508,7 @@ class WorkflowStep(Node):
         display_name_attr = self.parents[0].display_name_attribute
         i = 0
         for item in self.children:
-            c.append({"id": ustr(item.id), "creationtime": date.format_date(
+            c.append({"id": unicode(item.id), "creationtime": date.format_date(
                 date.parse_date(item.get('creationtime')), 'dd.mm.yyyy HH:MM:SS')})
             if display_name_attr:
                 c[i]["name"] = item.get(display_name_attr)

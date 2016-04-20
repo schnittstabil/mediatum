@@ -54,14 +54,14 @@ class WorkflowStep_End(WorkflowStep):
         return req.getTALstr(
             '<p><a href="/publish" i18n:translate="workflow_back">TEXT</a></p><h2 i18n:translate="wf_step_ready">Fertig</h2><p>&nbsp;</p><p i18n:translate="workflow_step_ready_msg">Das Objekt <span tal:content="node" i18n:name="name"/> ist am Ende des Workflows angekommen.</p>',
             {
-                "node": ustr(
+                "node": unicode(
                     node.id)})
 
     def runAction(self, node, op=""):
         # insert node into searchindex
         try:
-            if node.get('updatetime') <= ustr(now()):  # do only if date in the past
-                node.set('updatetime', ustr(now()))
+            if node.get('updatetime') <= unicode(now()):  # do only if date in the past
+                node.set('updatetime', unicode(now()))
             db.session.commit()
         except:
             logg.exception("exception in workflow step end, runAction failed")
