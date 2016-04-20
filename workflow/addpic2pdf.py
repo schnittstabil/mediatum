@@ -75,8 +75,8 @@ check_context()
 
 
 def getPdfFilepathForProcessing(workflowstep_node, node):
-    res = ([f.abspath for f in node.files if f.getName().startswith('addpic2pdf_%s_node_%s_' %
-                                                                                    (ustr(workflowstep_node.id), ustr(node.id))) and f.filetype.startswith('p_document')] +
+    res = ([f.abspath for f in node.files if f.base_name.startswith('addpic2pdf_%s_node_%s_' % (
+        unicode(workflowstep_node.id), unicode(node.id))) and f.filetype.startswith('p_document')] +
            [f.abspath for f in node.files if f.filetype.startswith('document')])[0]
     return res
 
@@ -123,12 +123,12 @@ class WorkflowStep_AddPic2Pdf(WorkflowStep):
 
             if radio_apply_reset_accept == 'reset':
                 for f in node.files:
-                    f_name = f.getName()
+                    f_name = f.base_name
                     if f_name.startswith('addpic2pdf_%s_node_%s_' %
-                                         (ustr(current_workflow_step.id), ustr(node.id))) and f.filetype.startswith('p_document'):
+                                         (unicode(current_workflow_step.id), unicode(node.id))) and f.filetype.startswith('p_document'):
                         logg.info("workflow step addpic2pdf(%s): going to remove file '%s' from node '%s' (%s) for request from user '%s' (%s)",
-                            current_workflow_step.id, f_name, node.name, node.id, user.name, req.ip)
-                        node.removeFile(f)
+                            current_workflow_step.id, f_name, node.name, node.id, user.login_name, req.ip)
+                        node.files.remove(f)
                         db.session.commit()
                         try:
                             os.remove(f.abspath)
@@ -140,8 +140,8 @@ class WorkflowStep_AddPic2Pdf(WorkflowStep):
 
             elif radio_apply_reset_accept == 'accept':
 
-                p_document_files = [f for f in node.files if f.filetype == 'p_document' and f.getName().startswith(
-                    'addpic2pdf_%s_node_%s_' % (ustr(current_workflow_step.id), ustr(node.id)))]
+                p_document_files = [f for f in node.files if f.filetype == 'p_document' and f.base_name.startswith(
+                    'addpic2pdf_%s_node_%s_' % (unicode(current_workflow_step.id), unicode(node.id)))]
 
                 if len(p_document_files) > 0:
 
@@ -149,21 +149,21 @@ class WorkflowStep_AddPic2Pdf(WorkflowStep):
 
                     document_file = [f for f in node.files if f.filetype == 'document'][0]
 
-                    o_document_file = File(document_file._path, 'o_document', document_file.mimetype)
+                    o_document_file = File(document_file.path, 'o_document', document_file.mimetype)
 
                     node.files.remove(document_file)
                     node.files.append(o_document_file)
                     db.session.commit()
-                    o_document_name = o_document_file.getName()
+                    o_document_name = o_document_file.base_name
 
                     for f in node.files:
-                        if f.type in ['thumb', 'fileinfo', 'fulltext'] or f.type.startswith('present'):
-                            if os.path.splitext(f.getName())[0] == os.path.splitext(o_document_name)[0]:
-                                new_f = File(f._path, 'o_' + f.filetype, f.mimetype)
+                        if f.filetype in ['thumb', 'fileinfo', 'fulltext'] or f.filetype.startswith('present'):
+                            if os.path.splitext(f.base_name)[0] == os.path.splitext(o_document_name)[0]:
+                                new_f = File(f.path, 'o_' + f.filetype, f.mimetype)
                                 node.files.remove(f)
                                 node.files.apped(new_f)
 
-                    new_document_file = Node(p_document_file._path, 'document', p_document_file.mimetype)
+                    new_document_file = File(p_document_file.path, 'document', p_document_file.mimetype)
                     node.files.remove(p_document_file)
                     node.files.append(new_document_file)
                     db.session.commit()
@@ -182,7 +182,7 @@ class WorkflowStep_AddPic2Pdf(WorkflowStep):
                     del req.params['gotrue']
                     return self.show_workflow_node(node, req)
 
-                drag_logo_filepath = [f.retrieveFile() for f in current_workflow_step.getFiles() if f.getName() == drag_logo_fullname][0]
+                drag_logo_filepath = [f.abspath for f in current_workflow_step.files if f.base_name == drag_logo_fullname][0]
 
                 pos_cm = req.params.get("input_poffset_cm", "0, 0")
                 x_cm, y_cm = [float(x.strip()) for x in pos_cm.split(",")]
@@ -259,7 +259,7 @@ class WorkflowStep_AddPic2Pdf(WorkflowStep):
                 date_str = format_date().replace('T', '-').replace(' ', '').replace(':', '-')
                 filetempname = tmppath + \
                     "temp_addpic_pdf_wfs_%s_node_%s_%s_%s_.pdf" % (
-                        ustr(current_workflow_step.id), ustr(node.id), date_str, ustr(random.random()))
+                        unicode(current_workflow_step.id), unicode(node.id), date_str, unicode(random.random()))
 
                 url = req.params.get('input_drag_logo_url', '')
 
@@ -269,22 +269,22 @@ class WorkflowStep_AddPic2Pdf(WorkflowStep):
                                        mask='auto', pages=printer_range, follow_rotate=True, url=(" " * ADD_NBSP) + url)
 
                 for f in node.files:
-                    f_name = f.getName()
+                    f_name = f.base_name
                     if f_name.startswith('addpic2pdf_%s_node_%s_' %
-                                         (ustr(current_workflow_step.id), ustr(node.id), )) and f.type.startswith('p_document'):
+                                         (unicode(current_workflow_step.id), unicode(node.id), )) and f.filetype.startswith('p_document'):
                         logg.info("workflow step addpic2pdf(%s): going to remove file '%s' from node '%s' (%s) for request from user '%s' (%s)",
-                            current_workflow_step.id, f_name, node.name, node.id, user.name, req.ip)
+                            current_workflow_step.id, f_name, node.name, node.id, user.login_name, req.ip)
                         node.files.remove(f)
                         db.session.commit()
                         try:
-                            os.remove(f.retrieveFile())
+                            os.remove(f.abspath)
                         except:
                             pass
                         break
 
                 date_str = format_date().replace('T', '-').replace(' ', '').replace(':', '-')
                 nodeFile = importFileToRealname("_has_been_processed_%s.pdf" % (date_str), filetempname, prefix='addpic2pdf_%s_node_%s_' % (
-                    ustr(current_workflow_step.id), ustr(node.id), ), typeprefix="p_")
+                    unicode(current_workflow_step.id), unicode(node.id), ), typeprefix="p_")
                 node.files.append(nodeFile)
                 db.session.commit()
                 try:
@@ -347,7 +347,7 @@ class WorkflowStep_AddPic2Pdf(WorkflowStep):
             pdf_dimensions = {'d_pages': 0, 'd_pageno2size': (0, 0), 'd_pageno2rotate': 0}
             pdf_pagecount = 0
             FATAL_ERROR = True
-            FATAL_ERROR_STR += " - %s" % (ustr(e))
+            FATAL_ERROR_STR += " - %s" % (unicode(e))
 
         #wfs_files = [f for f in current_workflow_step.getFiles() if os.path.isfile(f.retrieveFile())]
 
@@ -359,7 +359,7 @@ class WorkflowStep_AddPic2Pdf(WorkflowStep):
 
         logo_info = {}
         logo_info_list = []
-        for f in [f for f in wfs_files if f.getName().startswith('m_upload_logoupload')]:
+        for f in [f for f in wfs_files if f.base_name.startswith('m_upload_logoupload')]:
             f_path = f.abspath
 
             try:
@@ -368,10 +368,10 @@ class WorkflowStep_AddPic2Pdf(WorkflowStep):
             except Exception as e:
                 logg.exception("exception in workflow step addpic2pdf(%s)", current_workflow_step.id)
                 FATAL_ERROR = True
-                FATAL_ERROR_STR += (" - ERROR loading logo '%s'" % ustr(f_path)) + ustr(e)
+                FATAL_ERROR_STR += (" - ERROR loading logo '%s'" % f_path) + unicode(e)
                 continue
 
-            logo_filename = f.getName()
+            logo_filename = f.base_name
 
             logo_url = ""
             for key in url_mapping:
@@ -636,8 +636,8 @@ def handle_request(req):
 
         if req.path == '/serve_page/p_document.pdf':
             filepath = (
-                [f.abspath for f in node.files if f.filetype.startswith('p_document') and f.getName().startswith(
-                    'addpic2pdf_%s_node_%s_' % (ustr(current_workflow_step.id), ustr(node.id), )) and f.type.startswith('p_document')]
+                [f.abspath for f in node.files if f.filetype.startswith('p_document') and f.base_name.startswith(
+                    'addpic2pdf_%s_node_%s_' % (unicode(current_workflow_step.id), unicode(node.id), )) and f.filetype.startswith('p_document')]
                 + [f.abspath for f in node.files if f.filetype.startswith('document')]
             )[0]
 
@@ -693,12 +693,12 @@ def handle_request(req):
         nodeid = nodeid.replace("pdfpage_select_for_node_", "")
         node = q(Node).get(nodeid)
         if node is None:
-            msg = "workflowstep addpic2pdf: nodeid='%s' for non-existant node for upload from '%s'" % (ustr(nodeid), ustr(req.ip))
+            msg = "workflowstep addpic2pdf: nodeid='%s' for non-existant node for upload from '%s'" % (unicode(nodeid), req.ip)
             errors.append(msg)
             logg.error(msg)
             return 404  # not found
     else:
-        msg = "workflowstep addpic2pdf: could not find 'nodeid' for upload from '%s'" % ustr(req.ip)
+        msg = "workflowstep addpic2pdf: could not find 'nodeid' for upload from '%s'" % req.ip
         errors.append(msg)
         logg.error(msg)
         return 404  # not found

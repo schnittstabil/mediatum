@@ -103,10 +103,10 @@ class WorkflowStep_SendEmail(WorkflowStep):
         else:
             logg.info("sending mail prevented by condition %s " % (sendcondition))
             return
-
-        for s in ["system.mailtmp.from", "system.mailtmp.to", "system.mailtmp.subject", "system.mailtmp.text", "system.mailtmp.error", "system.mailtmp.talerror", "system.mailtmp.send"]:
+        for s in ["mailtmp.from", "mailtmp.to", "mailtmp.subject", "mailtmp.text",
+                  "mailtmp.error", "mailtmp.talerror", "mailtmp.send"]:
             try:
-                node.removeAttribute(s)
+                del node.system_attrs[s]
             except KeyError:
                 continue
 
@@ -135,7 +135,7 @@ class WorkflowStep_SendEmail(WorkflowStep):
             node.set("system.mailtmp.text", getTALtext(self.get("text"), attrs))
             db.session.commit()
         except:
-            node.set("system.mailtmp.talerror", formatException())
+            node.system_attrs['mailtmp.talerror'] = formatException()
             db.session.commit()
             return
         if self.get("allowedit").lower().startswith("n"):
@@ -161,12 +161,12 @@ class WorkflowStep_SendEmail(WorkflowStep):
         if "gofalse" in req.params:
             return self.forwardAndShow(node, False, req)
 
-        elif node.get("system.mailtmp.talerror"):
-            node.removeAttribute("system.mailtmp.talerror")
-            self.runAction(node, "true")
+        elif node.system_attrs.get("mailtmp.talerror", "") != "":
+            del node.system_attrs["mailtmp.talerror"]
             db.session.commit()
-            if node.get("system.mailtmp.talerror"):
-                return """<pre>%s</pre>""" % node.get("system.mailtmp.talerror")
+            self.runAction(node, "true")
+            if node.system_attrs.get("mailtmp.talerror", "") != "":
+                return """<pre>%s</pre>""" % node.system_attrs.get("mailtmp.talerror")
             else:
                 return self.show_node_big(req)
         elif node.get("system.mailtmp.error"):
