@@ -30,7 +30,6 @@ class AccessRule(DeclarativeBase):
 
 class NodeToAccessRule(DeclarativeBase):
     __tablename__ = "node_to_access_rule"
-    __versioned__ = {}
 
     nid = C(FK(Node.id, ondelete="CASCADE"), primary_key=True)
     rule_id = C(FK(AccessRule.id, ondelete="CASCADE"), primary_key=True)
