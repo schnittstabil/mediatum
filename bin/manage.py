@@ -65,8 +65,87 @@ def import_dump(s, dump_filepath):
     logg.info("imported dump from %s", dump_filepath)
 
 
-# subcommand handlers
+def _drop_index_for_attribute(name_or_all, index_type):
+    from schema.schema import Metafield
 
+    drop_func = getattr(mediatumfunc, "drop_attrindex_" + index_type)
+
+    if name_or_all == "all":
+        # find all search / sort metafields
+        if index_type == "search":
+            flags = "%s%"
+        elif index_type == "sort":
+            flags = "%o%"
+
+        metafield_names = (t[0] for t in q(Metafield.name).filter(Metafield.a.opts.like(flags)).distinct())
+        dropped_indices = []
+        failed_indices = []
+
+        for attrname in metafield_names:
+            try:
+                created = exec_sqlfunc(s, drop_func(attrname))
+            except sqlalchemy.exc.OperationalError:
+                logg.exception("failed to create index for %s", index_type, attrname)
+                s.rollback()
+                failed_indices.append(attrname)
+            else:
+                if created:
+                    s.commit()
+                    dropped_indices.append(attrname)
+
+        logg.info("dropped %s indices for %s attributes, %s failed: %s",
+                  index_type, len(dropped_indices), len(failed_indices), failed_indices)
+    else:
+        name = name_or_all
+        dropped = exec_sqlfunc(s, drop_func(name))
+        if dropped:
+            s.commit()
+            logg.info("dropped %s index for attribute '%s'", index_type, name)
+        else:
+            logg.info("%s index for attribute '%s' does not exist, ignoring", index_type, name)
+
+
+def _create_index_for_attribute(name_or_all, index_type, recreate=False):
+    from schema.schema import Metafield
+
+    creation_func = getattr(mediatumfunc, "create_attrindex_" + index_type)
+
+    if name_or_all == "all":
+        # find all search / sort metafields
+        if index_type == "search":
+            flags = "%s%"
+        elif index_type == "sort":
+            flags = "%o%"
+
+        metafield_names = (t[0] for t in q(Metafield.name).filter(Metafield.a.opts.like(flags)).distinct())
+        created_indices = []
+        failed_indices = []
+
+        for attrname in metafield_names:
+            try:
+                created = exec_sqlfunc(s, creation_func(attrname, recreate))
+            except sqlalchemy.exc.OperationalError:
+                logg.exception("failed to create index for %s", index_type, attrname)
+                s.rollback()
+                failed_indices.append(attrname)
+            else:
+                if created:
+                    s.commit()
+                    created_indices.append(attrname)
+
+        logg.info("created %s indices for %s attributes, %s failed: %s",
+                  index_type, len(created_indices), len(failed_indices), failed_indices)
+    else:
+        name = name_or_all
+        created = exec_sqlfunc(s, creation_func(name, recreate))
+        if created:
+            s.commit()
+            logg.info("created %s index for attribute '%s'", index_type, name)
+        else:
+            logg.info("%s index for attribute '%s' already exists", index_type, name)
+
+
+# subcommand handlers
 
 def schema(args):
     action = args.action.lower()
@@ -86,43 +165,29 @@ def data(args):
     if action == "init":
         init_database_values(s)
     elif action == "truncate":
-        truncate_tables(s, db_metadata)
+        truncate_tables(s, db_metadata=db_metadata)
     elif action == "import":
         import_dump(s, args.sql_dumpfile)
 
 
 def attrindex(args):
-    from schema.schema import Metafield
-    name_or_all = args.name_or_all.lower()
+    name_or_all = args.name_or_all
+    index_type = args.type
 
-    if name_or_all == "all":
-        # find all search / sort metafields
-        metafield_names = (t[0] for t in q(Metafield.name).filter(Metafield.a.opts.like("%o%")).distinct())
-        created_indices = []
-        failed_indices = []
-
-        for attrname in metafield_names:
-            try:
-                created = exec_sqlfunc(s, mediatumfunc.create_attr_sort_index(attrname))
-            except sqlalchemy.exc.OperationalError:
-                logg.exception("failed to create index for " + attrname)
-                s.rollback()
-                failed_indices.append(attrname)
-            else:
-                if created:
-                    s.commit()
-                    created_indices.append(attrname)
-
-        logg.info("created sort / search indices for %s attributes, %s failed: %s",
-                  len(created_indices), len(failed_indices), failed_indices)
-    else:
-        name = name_or_all
-        created = exec_sqlfunc(s, mediatumfunc.create_attr_sort_index(name))
-        if created:
-            s.commit()
-            logg.info("created sort / search indices for attribute '%s'", name)
+    if args.action == "drop":
+        if index_type == "all":
+            _drop_index_for_attribute(name_or_all, "search")
+            _drop_index_for_attribute(name_or_all, "sort")
         else:
-            logg.info("sort / search indices for attribute '%s' already exist", name)
+            _drop_index_for_attribute(name_or_all, index_type)
+
+    else:
+        recreate = args.action == "recreate"
+        if index_type == "all":
+            _create_index_for_attribute(name_or_all, "search", recreate)
+            _create_index_for_attribute(name_or_all, "sort", recreate)
+        else:
+            _create_index_for_attribute(name_or_all, index_type, recreate)
 
 
 def fulltext(args):
@@ -157,9 +222,9 @@ def searchindex(args):
     action = args.action.lower()
 
     if action == "recreate":
-        logg.info("recreating search indexes from node fulltexts...")
+        logg.info("recreating search indices from node fulltexts...")
         s.execute(mediatumfunc.recreate_all_tsvectors_fulltext())
-        logg.info("recreating search indexes from node attributes...")
+        logg.info("recreating search indices from node attributes...")
         s.execute(mediatumfunc.recreate_all_tsvectors_attrs())
         logg.info("searchindex recreate finished")
 
@@ -223,8 +288,10 @@ def main():
     data_subparser.set_defaults(func=data)
 
     attrindex_subparser = subparsers.add_parser("attrindex", help="database performance index management")
-    attrindex_subparser.add_argument("action", choices=["create"],
-                                help="create search / sort index for attribute")
+    attrindex_subparser.add_argument("--type", "-t", choices=["search", "sort", "all"], default="all",
+                                     help="which index type to create (search / sort / all)")
+    attrindex_subparser.add_argument("action", choices=["create", "recreate", "drop"],
+                                     help="drop / create / recreate search / sort index for attribute (or all attributes)")
     attrindex_subparser.add_argument("name_or_all", help="attribute name to index or all")
     attrindex_subparser.set_defaults(func=attrindex)
 
@@ -241,7 +308,9 @@ def main():
     searchindex_subparser.add_argument("action", choices=["recreate"], help="recreate search index from node data")
     searchindex_subparser.set_defaults(func=searchindex)
 
-    sql_subparser = subparsers.add_parser("sql", help="run a single SQL statement (use quotes if needed, for example if your query contains *)")
+    sql_subparser = subparsers.add_parser(
+        "sql",
+        help="run a single SQL statement (use quotes if needed, for example if your query contains *)")
     sql_subparser.add_argument("--yaml", "-y", action="store_true", help="pretty yaml output")
     sql_subparser.add_argument("sql", nargs="+", help="SQL statement to execute")
     sql_subparser.set_defaults(func=sql)

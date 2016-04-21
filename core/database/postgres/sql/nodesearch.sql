@@ -213,30 +213,68 @@ RETURN;
 END;
 $$;
 
-
-CREATE OR REPLACE FUNCTION recreate_fts_index_for_attribute(name text) RETURNS void
+CREATE OR REPLACE FUNCTION drop_attrindex_search(attrname text)
+    RETURNS text[]
     LANGUAGE plpgsql
     SET search_path = :search_path
     AS $$
 DECLARE
     searchconfig regconfig;
     autoindex_languages text[];
-    index_name text;
+    idx text;
+    dropped text[];
 BEGIN
     autoindex_languages = get_autoindex_languages();
 
     IF autoindex_languages IS NOT NULL THEN
         FOREACH searchconfig IN ARRAY autoindex_languages LOOP
-            -- TODO: replace with proper upsert after 9.5
-            index_name = 'fts_attr_' || replace(name, '-', '_') || '_' || searchconfig;
-            EXECUTE 'DROP INDEX IF EXISTS ' || index_name; 
+            idx = 'ix_mediatum_node_attr_search_' || replace(attrname, '-', '_') || '_' || searchconfig;
 
-            -- rebuild the search index
-            EXECUTE 'CREATE INDEX ' || index_name
-            || ' ON node USING gin(to_tsvector_safe(''' || searchconfig || ''', replace(node.attrs ->> ''' || name || ''', '';'', '' '')))';
+            IF (SELECT to_regclass(idx::cstring) IS NOT NULL) THEN
+                EXECUTE 'DROP INDEX ' || idx; 
+                RAISE NOTICE 'dropped attribute fts index % (attr:%, searchconfig:%)', idx, attrname, searchconfig;
+                dropped = array_append(dropped, searchconfig::text);
+            END IF;
         END LOOP;
     END IF;
-RETURN;
+
+    RETURN dropped;
+END;
+$$;
+
+
+CREATE OR REPLACE FUNCTION create_attrindex_search(attrname text, replace_existing boolean = false)
+    RETURNS text[]
+    LANGUAGE plpgsql
+    SET search_path = :search_path
+    AS $$
+DECLARE
+    searchconfig regconfig;
+    autoindex_languages text[];
+    idx text;
+    created text[];
+BEGIN
+    autoindex_languages = get_autoindex_languages();
+
+    IF autoindex_languages IS NOT NULL THEN
+        FOREACH searchconfig IN ARRAY autoindex_languages LOOP
+            idx = 'ix_mediatum_node_attr_search_' || replace(attrname, '-', '_') || '_' || searchconfig;
+
+            IF replace_existing THEN
+                EXECUTE 'DROP INDEX IF EXISTS ' || idx; 
+            END IF;
+
+            IF (SELECT to_regclass(idx::cstring) IS NULL) THEN
+                EXECUTE 'CREATE INDEX ' || idx
+                || ' ON node USING gin(to_tsvector_safe(''' || searchconfig 
+                || ''', replace(attrs ->> ''' || attrname || ''', '';'', '' '')))';
+                RAISE NOTICE 'created attribute fts index % (attr:%, searchconfig:%)', idx, attrname, searchconfig;
+                created = array_append(created, searchconfig::text);
+            END IF;
+        END LOOP;
+    END IF;
+
+    RETURN created;
 END;
 $$;
 

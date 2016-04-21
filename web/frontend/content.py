@@ -37,6 +37,8 @@ from core.systemtypes import Root
 from contenttypes.container import Container
 from mediatumtal import tal
 from schema.schema import Metadatatype
+from core.database.postgres import mediatumfunc
+import json
 
 
 logg = logging.getLogger(__name__)
@@ -114,7 +116,7 @@ def node_value_expression(name):
     elif name == "node.name":
         return Node.name
     else:
-        return getattr(Node.a, name)
+        return mediatumfunc.jsonb_limit_to_size(Node.attrs[name])
 
 comparisons = {
     "asc": (lambda l, r: l > r),
@@ -127,6 +129,23 @@ comparisons_inv = {
 }
 
 
+def _limit_to_size(val, size=2000):
+    """This should do the same as the SQL function jsonb_limit_to_size"""
+    if isinstance(val, basestring):
+        return val[:size]
+    else:
+        return val
+
+
+def _prepare_value(name, val):
+    val = _limit_to_size(val)
+    # XXX: that's a bit hacky, find a better solution (maybe in node_value_expression?)
+    if name not in ("node.id", "node.orderpos", "node.name"):
+        return json.dumps(val)
+    else:
+        return val
+
+
 def make_cond(name_to_comp, invert=False):
 
     name, (op_name, val) = name_to_comp
@@ -136,6 +155,8 @@ def make_cond(name_to_comp, invert=False):
         if invert:
             return node_expr != None
         return
+
+    val = _prepare_value(name, val)
 
     if invert:
         return comparisons_inv[op_name](node_expr, val)
@@ -162,7 +183,8 @@ def position_filter(sortfields_to_comp, after=False, before=False):
         # ... and add equivalence conditions for previous fields
         for prev in prev_sortfields_to_comp:
             expr = node_value_expression(prev[0])
-            eq_cond = expr == prev[1][1]
+            # XXX: can we replace this by make_cond or something like that?
+            eq_cond = expr == _prepare_value(prev[0][0], prev[1][1])
             sub_cond &= eq_cond
 
         prev_sortfields_to_comp.append(sortfield_to_comp)
