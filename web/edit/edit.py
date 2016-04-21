@@ -192,20 +192,15 @@ def frameset(req):
 
     if not user.is_admin:
         # search all metadatatypes which are container
-        container_nodetype_names = [t[0] for t in q(NodeType.name).filter_by(is_container=True)]
-        container_metadatanames = [t[0] for t in q(Metadatatype.name)
+        container_nodetype_names = [c.__name__.lower() for c in containertypes]
+        allowed_container_metadatanames = [x[0] for x in q(Metadatatype.name)
                                                   .filter(Metadatatype.name.in_(container_nodetype_names)).filter_read_access()]
-
-        # add at least collection and directory
-        for key in ['collection', 'directory']:
-            if key not in container_metadatanames:
-                container_metadatanames += [key]
 
         # remove all elements from containertypes which names are not in container_metadatanames
         new_containertypes = []
         for ct in containertypes:
             ct_name = ct.__name__
-            if ct_name.lower() in container_metadatanames:
+            if ct_name.lower() in allowed_container_metadatanames:
                 new_containertypes += [ct]
         containertypes = new_containertypes
 
