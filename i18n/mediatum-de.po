@@ -295,7 +295,7 @@ msgid "Document"
 msgstr "Dokumente"
 
 msgid "Collection"
-msgstr "Kollektion (Systemtyp)"
+msgstr "Kollektion"
 
 msgid "User"
 msgstr "Benutzer (Systemtyp)"
@@ -307,7 +307,7 @@ msgid "Mask"
 msgstr "Maske (Systemtyp)"
 
 msgid "Directory"
-msgstr "Verzeichnis (Systemtyp)"
+msgstr "Verzeichnis"
 
 msgid "directory"
 msgstr "Verzeichnis"
