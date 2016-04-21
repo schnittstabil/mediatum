@@ -36,6 +36,7 @@ from core.transition import httpstatus, current_user
 
 from utils.utils import funcname, get_user_id, dec_entry_log, Menu, splitpath, parseMenuString,\
     isDirectory, isCollection
+from schema.schema import Metadatatype
 
 
 logg = logging.getLogger(__name__)
@@ -191,25 +192,9 @@ def frameset(req):
 
     if not user.is_admin:
         # search all metadatatypes which are container
-        container_metadatatypes = []
-        for mtd in q(Metadatatypes).one().children:
-            for datatype in q(NodeType).filter_by(name=mtd.attrs['datatypes']):
-                if datatype.is_container:
-                     container_metadatatypes += [mtd]
-
-        # select all container where the usergroup of the user has access to
-        usergroup = q(UserToUserGroup).filter_by(user_id=user.id,private=False).one().usergroup
-        container_metadatanames = []
-        for mtd in container_metadatatypes:
-            for ruleset in q(NodeToAccessRuleset).filter_by(nid=mtd.id):
-                for rule in q(AccessRulesetToRule).filter_by(ruleset_name=ruleset.ruleset_name):
-                    group_ids = q(AccessRule).filter_by(id=rule.rule_id).one().group_ids
-                    if not group_ids:
-                        continue
-                    for group_id in group_ids:
-                        name = q(UserGroup).filter_by(id=group_id).first()
-                        if name == usergroup:
-                            container_metadatanames += [mtd.name]
+        container_nodetype_names = [t[0] for t in q(NodeType.name).filter_by(is_container=True)]
+        container_metadatanames = [t[0] for t in q(Metadatatype.name)
+                                                  .filter(Metadatatype.name.in_(container_nodetype_names)).filter_read_access()]
 
         # add at least collection and directory
         for key in ['collection', 'directory']:
