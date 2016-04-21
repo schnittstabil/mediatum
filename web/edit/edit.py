@@ -24,7 +24,9 @@ import json
 import core.config as config
 import core.help as help
 import core.translation
-from core import Node, db, User
+from core import Node, NodeType, db, User, UserGroup, UserToUserGroup
+from core.systemtypes import Metadatatypes
+from core.database.postgres.permission import NodeToAccessRuleset, AccessRulesetToRule, AccessRule
 
 from contenttypes import Container, Collections, Data, Home
 
@@ -32,7 +34,8 @@ from core.translation import lang, t
 from edit_common import *
 from core.transition import httpstatus, current_user
 
-from utils.utils import funcname, get_user_id, dec_entry_log, Menu, splitpath, parseMenuString, isDirectory
+from utils.utils import funcname, get_user_id, dec_entry_log, Menu, splitpath, parseMenuString,\
+    isDirectory, isCollection
 
 
 logg = logging.getLogger(__name__)
@@ -185,6 +188,42 @@ def frameset(req):
                'faultydir': getPathToFolder(user.faulty_dir)}
 
     containertypes = Container.get_all_subclasses(filter_classnames=("collections", "home", "container", "project"))
+
+    if not user.is_admin:
+        # search all metadatatypes which are container
+        container_metadatatypes = []
+        for mtd in q(Metadatatypes).one().children:
+            for datatype in q(NodeType).filter_by(name=mtd.attrs['datatypes']):
+                if datatype.is_container:
+                     container_metadatatypes += [mtd]
+
+        # select all container where the usergroup of the user has access to
+        usergroup = q(UserToUserGroup).filter_by(user_id=user.id,private=False).one().usergroup
+        container_metadatanames = []
+        for mtd in container_metadatatypes:
+            for ruleset in q(NodeToAccessRuleset).filter_by(nid=mtd.id):
+                for rule in q(AccessRulesetToRule).filter_by(ruleset_name=ruleset.ruleset_name):
+                    group_ids = q(AccessRule).filter_by(id=rule.rule_id).one().group_ids
+                    if not group_ids:
+                        continue
+                    for group_id in group_ids:
+                        name = q(UserGroup).filter_by(id=group_id).first()
+                        if name == usergroup:
+                            container_metadatanames += [mtd.name]
+
+        # add at least collection and directory
+        for key in ['collection', 'directory']:
+            if key not in container_metadatanames:
+                container_metadatanames += [key]
+
+        # remove all elements from containertypes which names are not in container_metadatanames
+        new_containertypes = []
+        for ct in containertypes:
+            ct_name = ct.__name__
+            if ct_name.lower() in container_metadatanames:
+                new_containertypes += [ct]
+        containertypes = new_containertypes
+
     cmenu_iconpaths = []
 
     for ct in containertypes:
@@ -584,7 +623,7 @@ def action(req):
             obj = q(Node).get(id)
             mysrc = src
 
-            if isDirectory(obj):
+            if isDirectory(obj) or isCollection(obj):
                 mysrc = obj.parents[0]
 
             if action == "delete":
