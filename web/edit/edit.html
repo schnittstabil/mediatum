@@ -254,7 +254,7 @@ function build_context_menu_items(node, opts) {
 
     containertype2iconpath.forEach(
           function(t){
-            create_container_items['create_container_'+t[0]] = {name: t[1], icon:t[2]};
+            create_container_items['create_container_'+t[0]] = {name: t[1], icon:t[0]};
             }
     );
 
@@ -1567,7 +1567,7 @@ ct.visit(function(node){
             </style>
 
             <tal:block tal:repeat="ct_iconpath cmenu_iconpaths">
-                <style tal:content="python: '.context-menu-item.icon-%s { background-image: url(img/%s); }' % (ct_iconpath[2], ct_iconpath[1])">#</style>
+                <style tal:content="python: '.context-menu-item.icon-%s { background-image: url(img/%s); }' % (ct_iconpath[0], ct_iconpath[2])">#</style>
             </tal:block>
 
             <div id="clear_trash_question" style="display:none" i18n:translate="clear_trash_question"> </div>
