@@ -200,6 +200,7 @@ class MtQuery(Query):
         return self._filter_access("data", user, ip, req)
 
     def _filter_access(self, accesstype, user=None, ip=None, req=None):
+        from core.users import get_guest_user
 
         if user is None and ip is None:
             if req is None:
@@ -209,9 +210,15 @@ class MtQuery(Query):
             user = user_from_session(req.session)
             ip = IPv4Address(req.remote_addr)
 
+        if user is None:
+            user = get_guest_user()
+
         # admin sees everything ;)
         if user.is_admin:
             return self
+
+        if ip is None:
+            ip = IPv4Address("0.0.0.0")
 
         nodeclass = self._find_nodeclass()
         if not nodeclass:
