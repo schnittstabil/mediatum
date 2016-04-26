@@ -102,7 +102,7 @@ def prepare_sortfields(node, pos_to_sortfield):
         sortfields_to_comp[sortfield] = (order, value)
 
     # sort position must always be unique. That means that the node id must be part of the position key.
-    if not "node.id" in sortfields:
+    if not ("node.id" in sortfields or "-node.id" in sortfields):
         sortfields_to_comp["node.id"] = ("desc", node.id if node is not None else None)
 
     return sortfields_to_comp
@@ -210,7 +210,7 @@ def apply_order_by_for_sortfields(query, sortfields_to_comp, before=False):
         if desc:
             expr = expr.desc()
 
-        # attributes can be NULL (means: attribute doesn't exists), so we must be careful about null ordering
+        # attributes can be NULL (means: attribute doesn't exist), so we must be careful about null ordering
         if not (sortfield.startswith("node.") or sortfield == "nodename"):
             if before:
                 expr = expr.nullsfirst()
@@ -481,8 +481,6 @@ class ContentList(Content):
             sortfields_to_comp = prepare_sortfields(None, self.sortfields)
 
         q_nodes = apply_order_by_for_sortfields(q_nodes, sortfields_to_comp, self.before)
-
-        # get one more to find out if there are more nodes available
 
         ctx = {
             "nav": self,
