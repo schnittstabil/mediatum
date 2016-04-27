@@ -10,18 +10,18 @@
     <div id="object_meta">
         <tal:block tal:content="raw metadata"> </tal:block>
         <div id="files">
-        <tal:block tal:repeat="fl python:node.getFiles()">
+        <tal:block tal:repeat="fl python:node.files">
             <div class="mask_row">
                 <div class="mask_label" i18n:translate="file_size"></div>
             </div>
             <div class="mask_row">
-                <div class="mask_value" tal:content="python:u'{}'.format(format_size(fl.getSize()))"></div>
+                <div class="mask_value" tal:content="python:u'{}'.format(naturalsize(fl.size))"></div>
             </div>
             <div class="mask_row">
                 <div class="mask_label" i18n:translate="file"> </div>
             </div>
             <div class="mask_row" style="overflow: hidden">
-                <a class="mask_value" tal:attributes="href python:u'/file/{}{}{}'.format(node.id, '/', fl.getName())" tal:content="python:fl.getName()" i18n:attributes="title edit_files_open_title" target="filewindow"/>
+                <a class="mask_value" tal:attributes="href python:u'/file/{}{}{}'.format(node.id, '/', fl.base_name)" tal:content="python:fl.base_name" i18n:attributes="title edit_files_open_title" target="filewindow"/>
             </div>
         </tal:block>
         </div>

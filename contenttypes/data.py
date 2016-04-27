@@ -22,20 +22,19 @@ import sys
 import logging
 import time
 from warnings import warn
-
+import humanize
 from mediatumtal import tal
+
 from core import Node
+from core.database.postgres.node import children_rel
 import core.config as config
 from core.translation import lang, t
 from core.styles import getContentStyles
 from core.transition.postgres import check_type_arg_with_schema
-from schema.schema import getMetadataType, VIEW_DATA_ONLY, VIEW_HIDE_EMPTY, SchemaMixin
-from utils.utils import Menu, highlight, format_filesize
 from export.exportutils import runTALSnippet, default_context
+from schema.schema import getMetadataType, VIEW_DATA_ONLY, VIEW_HIDE_EMPTY, SchemaMixin
 from web.services.cache import date2string as cache_date2string
-from core.database.postgres.node import children_rel
-from mock import MagicMock
-from sqlalchemy.orm import object_session
+from utils.utils import highlight
 
 logg = logging.getLogger(__name__)
 
@@ -150,20 +149,12 @@ class Data(Node):
         return "view"
 
     def show_node_big(self, req, template="", macro=""):
-        mask = self.getFullView(lang(req))
-
         if template == "":
-            styles = getContentStyles("bigview", contenttype=self.getContentType())
+            styles = getContentStyles("bigview", contenttype=self.type)
             if len(styles) >= 1:
                 template = styles[0].getTemplate()
-        # hide empty elements}, macro)
 
-        return req.getTAL(template,
-                          {'node': self,
-                           'metadata': mask.getViewHTML([self], VIEW_HIDE_EMPTY),
-                           'format_size': format_filesize,
-                           'parentInformation': self.getParentInformation(req)
-                          })
+        return req.getTAL(template, self._prepareData(req), macro)
 
     def show_node_image(self, language=None):
         return tal.getTAL(
@@ -438,4 +429,13 @@ class Content(Data, SchemaMixin):
 
 @check_type_arg_with_schema
 class Other(Content):
-    pass
+
+    def _prepareData(self, req):
+        obj = super(Other, self)._prepareData(req)
+        if obj["deleted"]:
+            # no more processing needed if this object version has been deleted
+            # rendering has been delegated to current version
+            return obj
+
+        obj["naturalsize"] = humanize.filesize.naturalsize
+        return obj
