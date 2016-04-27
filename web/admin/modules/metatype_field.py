@@ -25,7 +25,7 @@ import logging
 
 from web.admin.adminutils import Overview, getAdminStdVars, getSortCol, getFilter
 from schema.schema import getMetaType, getMetaFieldTypeNames, getMetaField, getFieldsForMeta, getMetadataType, dateoption, requiredoption,\
-    fieldoption
+    fieldoption, Metadatatype
 from core.translation import lang, t
 from schema.schema import Metafield
 from core import Node
@@ -133,7 +133,7 @@ def FieldDetail(req, pid, id, err=0):
 
     elif id != "":
         # edit field
-        field = getMetaField(pid, id)
+        field = q(Metadatatype).get(pid).children.filter_by(name=id, type=u'metafield').scalar()
 
     else:
         # error filling values
