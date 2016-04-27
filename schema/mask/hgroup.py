@@ -94,7 +94,7 @@ class m_hgroup(Metatype):
         ret += '<fieldset>'
 
         if item.getLabel() != "":
-            ret += '<legend>{}</legend>'.format(item.getLabel())
+            ret += u'<legend>{}</legend>'.format(item.getLabel())
 
         ret += '<div id="editor_content">'
         for field in item.getChildren().sort_by_orderpos():
