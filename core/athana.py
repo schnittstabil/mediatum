@@ -4450,7 +4450,10 @@ class AthanaThread:
                 try:
                     call_handler_func(server, function, req)
                 except:
-                    logg.error("Error while processing request:", exc_info=1)
+                    try:
+                        logg.error("Error while processing request:", exc_info=1)
+                    except:
+                        print "FATAL ERROR: error in request, logging the exception failed!"
 
                 if profiling:
                     global profiles
