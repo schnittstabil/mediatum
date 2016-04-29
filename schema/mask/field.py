@@ -291,6 +291,7 @@ class m_field(Metatype):
         if req.params.get("op", "") == "new":
             pidnode = q(Node).get(req.params.get("pid"))
             if hasattr(pidnode, 'getMasktype') and pidnode.getMasktype() in ("vgroup", "hgroup"):
+                # XXX: getAllChildren does not exist anymore, is this dead code?
                 for field in pidnode.getAllChildren():
                     if field.getType().getName() == "maskitem" and field.id != pidnode.id:
                         fields.append(field)
