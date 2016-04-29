@@ -619,7 +619,7 @@ def getPaths(node):
     omit = 0
     if p:
         for node in p:
-            if node.has_read_access():
+            if node.has_read_access() or node.type in ("home", "root"):
                 if node.type in ("directory", "home", "collection") or node.type.startswith("directory"):
                     paths.append(node)
                 if isinstance(node, (Collections, Root)):
