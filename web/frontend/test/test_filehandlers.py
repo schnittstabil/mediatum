@@ -11,6 +11,7 @@ from core.permission import get_or_add_everybody_rule
 from core.database.postgres.permission import AccessRulesetToRule
 from core.transition import httpstatus
 from web.frontend.filehandlers import fetch_archived, send_image
+from utils.testing import make_node_public
 
 
 def test_fetch_archived(req, session, fake_archive, content_node):
@@ -22,21 +23,6 @@ def test_fetch_archived(req, session, fake_archive, content_node):
     assert fake_archive.get_state(node) == Archive.NOT_PRESENT
     fetch_archived(req)
     assert fake_archive.get_state(node) == Archive.PRESENT
-
-
-def make_node_public(node, ruletype=u"all"):
-    er = get_or_add_everybody_rule()
-
-    def _add(ruletype):
-        special_ruleset = node.get_or_add_special_access_ruleset(ruletype)
-        rsa = AccessRulesetToRule(rule=er)
-        special_ruleset.rule_assocs.append(rsa)
-
-    if ruletype == "all":
-        for ruletype in (u"read", u"write", u"data"):
-            _add(ruletype)
-    else:
-        _add(ruletype)
 
 
 @yield_fixture

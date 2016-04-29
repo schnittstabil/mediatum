@@ -20,6 +20,7 @@ from core.database.postgres.psycopg2_debug import make_debug_connection_factory
 from core.database.init import init_database_values
 from utils.utils import find_free_port
 from utils.postgres import schema_exists, table_exists
+from core.database.postgres.permission import AccessRulesetToRule
 
 # set this to True or False to override debug config settings
 DEBUG = None
@@ -234,6 +235,7 @@ class PostgresSQLAConnector(object):
             AccessRuleset,
             NodeToAccessRule,
             NodeToAccessRuleset,
+            AccessRulesetToRule,
             Setting,
             Fts,
             NodeType,
