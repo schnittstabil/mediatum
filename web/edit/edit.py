@@ -893,13 +893,13 @@ def content(req):
         # add icons to breadcrumbs
         ipath = 'webtree/directory.gif'
         if node and node.isContainer():
-            if node.name == 'home' or 'Arbeitsverzeichnis' in node.name:
+            if node.name == 'home' or 'Arbeitsverzeichnis' in node.name or node == current_user.home_dir:
                 ipath = 'webtree/homeicon.gif'
-            elif node.name == 'Uploads':
+            elif node.name in ('Uploads', 'upload'):
                 ipath = 'webtree/uploadicon.gif'
-            elif node.name == 'Inkonsistente Daten':
+            elif node.name in ('Inkonsistente Daten', 'faulty'):
                 ipath = 'webtree/faultyicon.gif'
-            elif node.name == 'Papierkorb':
+            elif node.name in ('Papierkorb', 'trash'):
                 ipath = 'webtree/trashicon.gif'
             else:
                 ipath = getEditorIconPath(node)
