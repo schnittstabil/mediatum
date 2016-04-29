@@ -159,8 +159,9 @@ class StatisticFile:
             self.period_month = int(self.filename.split("_")[2].split("-")[1])
             self.type = self.filename.split("_")[3]
 
-            if os.path.exists(filenode.retrieveFile()):
-                with codecs.open(filenode.retrieveFile(), "r", encoding='utf8') as fi:
+            if filenode.exists:
+                with open(filenode.abspath, "r") as fi:
+                    # expat only understands str, so we cannot use codecs here, just plain open()
                     p = xml.parsers.expat.ParserCreate()
                     p.StartElementHandler = lambda name, attrs: self.\
                         xml_start_element(name, attrs)

@@ -151,8 +151,7 @@ def getContent(req, ids):
 
         if statstring == "":  # load stats from objects/renew stat
             data = StatTypes()
-            #todo: getallchildren?
-            for n in node.getAllChildren():
+            for n in node.all_children:
                 found_dig = 0 or len(
                     [file for file in n.files if file.filetype in["image", "document", "video"]])
                 data.addItem(n.type, n.schema, found_dig)
