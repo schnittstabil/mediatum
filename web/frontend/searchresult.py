@@ -99,7 +99,7 @@ def search(searchtype, searchquery, readable_query, req):
         # query parsing went wrong or the search backend complained about something
         return SearchResult([], readable_query, container)
 
-    content_list = ContentList(result, container, readable_query)
+    content_list = ContentList(result, container, readable_query, show_sidebar=False)
     content_list.feedback(req)
     language = lang(req)
     content_list.linkname = u"{}: {} \"{}\"".format(container.getLabel(language),

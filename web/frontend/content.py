@@ -235,8 +235,9 @@ DEFAULT_NODES_PER_PAGE = 9
 
 class ContentList(Content):
 
-    def __init__(self, node_query, collection, words=None):
+    def __init__(self, node_query, collection, words=None, show_sidebar=True):
 
+        self.show_sidebar = show_sidebar
         self.nodes_per_page = None
         self.nav_params = None
         self.before = None
@@ -583,22 +584,21 @@ class ContentList(Content):
 
         contentList = liststyle.renderTemplate(req, ctx)
 
-        sidebar = u""  # check for sidebar
-        if self.collection.get(u"system.sidebar") != "":
-            for sb in [s for s in self.collection.get("system.sidebar").split(";") if s != ""]:
-                l, fn = sb.split(":")
-                if l == lang(req):
-                    for f in [f for f in self.collection.getFiles() if fn.endswith(f.getName())]:
-                        sidebar = includetemplate(self, f.retrieveFile(), {}).strip()
-        if sidebar != "":
-            return u'<div id="portal-column-one">{0}<div id="nodes">{1}</div>{0}</div><div id="portal-column-two">{2}</div>'.format(
-                filesHTML,
-                contentList,
-                sidebar)
-        else:
-            return u'{0}<div id="nodes">{1}</div>{0}'.format(filesHTML, contentList)
+        if self.show_sidebar:
+            sidebar = u""  # check for sidebar
+            if self.collection.get(u"system.sidebar") != "":
+                for sb in [s for s in self.collection.get("system.sidebar").split(";") if s != ""]:
+                    l, fn = sb.split(":")
+                    if l == lang(req):
+                        for f in [f for f in self.collection.getFiles() if fn.endswith(f.getName())]:
+                            sidebar = includetemplate(self, f.retrieveFile(), {}).strip()
+            if sidebar:
+                return u'<div id="portal-column-one">{0}<div id="nodes">{1}</div>{0}</div><div id="portal-column-two">{2}</div>'.format(
+                    filesHTML,
+                    contentList,
+                    sidebar)
 
-# paths
+        return u'{0}<div id="nodes">{1}</div>{0}'.format(filesHTML, contentList)
 
 
 def getPaths(node):
