@@ -148,7 +148,6 @@ def getContent(req, ids):
          'node': node,
          'current_type': node.type,
          'current_schema': node.schema,
-         'category_name': node.getCategoryName(),
          # XXX: this is the only line that uses getTypeAlias. What is the real meaning?
          'type_alias': node.getTypeAlias(),
          'is_container': int(node.isContainer()),
