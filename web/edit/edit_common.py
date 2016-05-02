@@ -398,3 +398,17 @@ def upload_for_html(req):
 def get_special_dir_type(node):
     return node.get("system.used_as", None)
 
+
+def get_edit_label(node, lang):
+    special_dir_type = get_special_dir_type(node)
+
+    if special_dir_type is None:
+        label = node.getLabel(lang=lang)
+    elif special_dir_type == "home":
+        label = t(lang, 'user_home')
+        if current_user.is_admin:
+            label += " (" + node.name + ")"
+    else:
+        label = t(lang, 'user_' + special_dir_type)
+
+    return label

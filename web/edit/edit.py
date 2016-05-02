@@ -37,6 +37,7 @@ from core.transition import httpstatus, current_user
 from utils.utils import funcname, get_user_id, dec_entry_log, Menu, splitpath, parseMenuString,\
     isDirectory, isCollection
 from schema.schema import Metadatatype
+from web.edit.edit_common import get_edit_label
 
 
 logg = logging.getLogger(__name__)
@@ -44,17 +45,7 @@ q = db.query
 
 
 def getTreeLabel(node, lang):
-    special_dir_type = get_special_dir_type(node)
-
-    if special_dir_type is None:
-        label = node.getLabel(lang=lang)
-    elif special_dir_type == "home":
-        label = t(lang, 'user_home')
-        if current_user.is_admin:
-            label += " (" + node.name + ")"
-    else:
-        label = t(lang, 'user_' + special_dir_type)
-
+    label = get_edit_label(node, lang)
     c = node.content_children.count()
     if c > 0:
         label += ' <small>(%s)</small>' % (c)
@@ -804,7 +795,7 @@ def content(req):
         s = []
         while n:
             s = ['<a onClick="activateEditorTreeNode(%r); return false;" href="/edit/edit_content?id=%s">%s</a>' %
-                 (n.id, n.id, n.getLabel(lang=language))] + s
+                 (n.id, n.id, get_edit_label(n, language))] + s
 
             p = n.parents
             # XXX: we only check the first parent. This is wrong, how could be solve this? #
@@ -820,10 +811,10 @@ def content(req):
         s = []
         while n:
             if len(s) == 0:
-                s = ['%s' % (n.getLabel(lang=language))]
+                s = ['%s' % (get_edit_label(n, language))]
             else:
                 s = ['<a onClick="activateEditorTreeNode(%r); return false;" href="/edit/edit_content?id=%s">%s</a>' %
-                     (n.id, n.id, n.getLabel(lang=language))] + s
+                     (n.id, n.id, get_edit_label(n, language))] + s
 
             p = n.parents
             if p and not isinstance(p[0], Root):
