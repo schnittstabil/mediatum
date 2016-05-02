@@ -20,9 +20,11 @@ import logging
 
 from web.frontend.content import getPaths
 from core.translation import translate
+from core.transition import current_user
 from contenttypes import Collections, Container
 from core import Node
 from core import db
+from web.edit.edit import get_special_dir_type
 
 logg = logging.getLogger(__name__)
 q = db.query
@@ -35,6 +37,7 @@ def getData(req):
     for c in q(Node).get(pid).children.filter_read_access().order_by(Node.orderpos):
         try:
             if isinstance(c, Container):
+                special_dir_type = get_special_dir_type(c)
                 cnum = c.container_children.count()
                 inum = c.content_children.count()
 
@@ -52,15 +55,15 @@ def getData(req):
                 if hasattr(c, 'treeiconclass'):
                     cls = c.treeiconclass()
 
-                if c.name.startswith(translate('user_trash', request=req)):
+                if c.name.startswith(translate('user_trash', request=req)) or special_dir_type == u'trash':
                     cls = "trashicon"
-                elif c.name.startswith(translate('user_upload', request=req)):
+                elif c.name.startswith(translate('user_upload', request=req)) or special_dir_type == u'upload':
                     cls = "uploadicon"
                 elif c.name.startswith(translate('user_import', request=req)):
                     cls = "importicon"
-                elif c.name.startswith(translate('user_faulty', request=req)):
+                elif c.name.startswith(translate('user_faulty', request=req)) or special_dir_type == u'faulty':
                     cls = "faultyicon"
-                elif c.name.startswith(translate('user_directory', request=req)):
+                elif c.name.startswith(translate('user_directory', request=req)) or c == current_user.home_dir:
                     cls = "homeicon"
 
                 if style == "edittree":  # standard tree for edit area
