@@ -93,7 +93,7 @@ DECLARE
     exc_detail text;
     exc_hint text;
 BEGIN
-    IF length(text) < 4 THEN
+    IF length(text) < 2 THEN
         RETURN NULL;
     END IF;
 
@@ -258,7 +258,7 @@ BEGIN
 
     IF autoindex_languages IS NOT NULL THEN
         FOREACH searchconfig IN ARRAY autoindex_languages LOOP
-            idx = 'ix_mediatum_node_attr_search_' || replace(attrname, '-', '_') || '_' || searchconfig;
+            idx = 'ix_mediatum_node_attr_search_' || replace(replace(attrname, '-', '_'), '.', '_') || '_' || searchconfig;
 
             IF replace_existing THEN
                 EXECUTE 'DROP INDEX IF EXISTS ' || idx; 
