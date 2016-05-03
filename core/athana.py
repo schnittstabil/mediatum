@@ -3900,15 +3900,6 @@ _request_finished_handlers = []
 app = None
 
 
-def _call_handler_func(handler, handler_func, request):
-    for handler in _request_started_handlers:
-        handler(request)
-    res = handler.callhandler(handler_func, request)
-    for handler in _request_finished_handlers:
-        handler(request)
-    return res
-
-
 def call_handler_func(handler, handler_func, request):
 
     # WSGI passthrough. WSGIHandler takes care of the rest
@@ -3917,10 +3908,9 @@ def call_handler_func(handler, handler_func, request):
 
     elif app:
         with app.request_context(request, request.session):
-            _call_handler_func(handler, handler_func, request)
-            pass
+            handler.callhandler(handler_func, request)
     else:
-        _call_handler_func(handler, handler_func, request)
+        handler.callhandler(handler_func, request)
 # /COMPAT
 
 
@@ -4129,16 +4119,22 @@ class AthanaHandler:
             logg.debug("Request %s matches no pattern (context: %s)", request.path, context.name)
             return request.error(404, "File %s not found" % request.path)
 
-    def callhandler(self, function, req):
-        request = req.request
+    def callhandler(self, handler_func, req):
+        for handler in _request_started_handlers:
+            handler(req)
+
         s = None
         try:
-            status = function(req)
+            status = handler_func(req)
         except:
+            request = req.request
             logg.error("Error in page: '%s %s', session '%s'",
                        request.type, request.uri, request.session.id, exc_info=1)
             s = "<pre>" + traceback.format_exc() + "</pre>"
             return request.error(500, s)
+        finally:
+            for handler in _request_finished_handlers:
+                handler(req)
 
 
 class fs:
