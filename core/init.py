@@ -288,6 +288,8 @@ def basic_init(root_loglevel=None, config_filepath=None, log_filepath=None, use_
     load_types()
     connect_db(force_test_db, automigrate)
     _set_current_init_state(init_state)
+    from core import db
+    db.session.close()
 
 
 def _additional_init():
@@ -303,6 +305,8 @@ def _additional_init():
     update_nodetypes_in_db()
     init_fulltext_search()
     tal_setup()
+    db.session.close()
+
 
 
 def full_init(root_loglevel=None, config_filepath=None, log_filepath=None, use_logstash=None, force_test_db=None, automigrate=False):

@@ -29,7 +29,6 @@ from core import db
 from core.plugins import find_plugin_with_theme
 
 logg = logging.getLogger(__name__)
-q = db.query
 
 
 def loadThemes():
@@ -267,11 +266,12 @@ def initContexts():
         # dummy handler for users
         athana.addFTPHandler(collection_ftpserver(None, port=int(config.get("ftp.port", 21)), debug=config.get("host.type", "testing")))
 
-        for collection in q(Collections).one().children:
+        for collection in db.query(Collections).one().children:
             if collection.get("ftp.user") and collection.get("ftp.passwd"):
                 athana.addFTPHandler(collection_ftpserver(
                     collection, port=int(config.get("ftp.port", 21)), debug=config.get("host.type", "testing")))
 
+        db.session.close()
 
     # new admin area
 
