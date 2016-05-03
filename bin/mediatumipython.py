@@ -214,7 +214,7 @@ from core import AccessRule, AccessRuleset, NodeToAccessRule, NodeToAccessRulese
 from core import Fts, Setting
 
 q = core.db.query
-s = core.db.session
+s = core.db.Session
 
 # load types for interactive querying
 from contenttypes import Audio, Content, Directory, Collection, Container, Collections, Home, Document, Image, Imagestream, \
@@ -941,3 +941,7 @@ def load_ipython_extensions(ip):
 load_ipython_extensions(ip)
 
 ip.magic("autocall 1")
+
+# the sql extension and is in state of "idle in transaction" here. Force the end of the transaction.
+ip.magic("sql ROLLBACK")
+# the transaction from the SQLAlchemy session is always open, this can block other DB users that want an exclusive lock!
