@@ -21,12 +21,13 @@ from core.database.init import init_database_values
 from utils.utils import find_free_port
 from utils.postgres import schema_exists, table_exists
 from core.database.postgres.permission import AccessRulesetToRule
+import sys
 
 # set this to True or False to override debug config settings
 DEBUG = None
 DEBUG_SHOW_TRACE = None
 
-CONNECTSTR_TEMPLATE = "postgresql+psycopg2://{user}:{passwd}@{host}:{port}/{database}"
+CONNECTSTR_TEMPLATE = "postgresql+psycopg2://{user}:{passwd}@{host}:{port}/{database}?application_name={application_name}"
 CONNECTSTR_TEMPLATE_TEST_DB = "postgresql+psycopg2://{user}@:{port}/{database}?host={socketdir}"
 CONNECTSTR_TEMPLATE_WITHOUT_PW = "postgresql+psycopg2://{user}:<passwd>@{host}:{port}/{database}"
 
@@ -90,6 +91,7 @@ class PostgresSQLAConnector(object):
             self.database = config.get("database.db", "mediatum")
             self.user = config.get("database.user", "mediatum")
             self.passwd = config.get("database.passwd", "mediatum")
+            self.application_name = "{}({})".format(os.path.basename(sys.argv[0]), os.getpid())
             self.connectstr = CONNECTSTR_TEMPLATE.format(**self.__dict__)
             logg.info("using database connection string: %s", CONNECTSTR_TEMPLATE_WITHOUT_PW.format(**self.__dict__))
         # test_db is handled in create_engine / check_run_test_db_server
