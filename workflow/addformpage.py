@@ -51,7 +51,7 @@ def register():
 
 
 def get_pdftk_fields_dump(path_to_pdf):
-    return subprocess.Popen(("pdftk", path_to_pdf, "dump_data_fileds"),
+    return subprocess.Popen(("pdftk", path_to_pdf, "dump_data_fields"),
                             stdout=subprocess.PIPE).communicate()[0]
 
 
@@ -251,7 +251,7 @@ class WorkflowStep_AddFormPage(WorkflowStep):
                             m = re.search('(?<=\[att:)([^&\]]+)', value)
                             if m:
                                 if m.group(0) == 'id':
-                                    v = node.id
+                                    v = unicode(node.id)
                                 elif m.group(0) == 'type':
                                     v = node.type
                                 elif m.group(0) == 'schema':
