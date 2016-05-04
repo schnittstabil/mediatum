@@ -66,10 +66,6 @@ class ImageZoomData(object):
         if not self.height:
             logg.warn("original width for image %s is zero or missing!", self.node_id)
 
-        image = node.files.filter_by(filetype=u"image").first()
-        if image is None:
-            raise ValueError("image node ({}) has no file with type image, cannot create zoom file!".format(node_id))
-
         zoom_file = q(File).filter_by(nid=self.node_id, filetype=u"zoom").scalar()
 
         if zoom_file is None:
