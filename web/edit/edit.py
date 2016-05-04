@@ -354,14 +354,18 @@ def getIDs(req):
 
     try:
         srcid = req.params.get("src")
-        if srcid == "":
+        if not srcid:
             raise KeyError
         src = q(Node).get(srcid)
     except KeyError:
         src = None
 
-    idlist = ids.split(',')
-    if idlist == ['']:
+    if type(ids) == str:
+        idlist = ids.split(',')
+    elif type(ids) == unicode:
+        idlist = ids.split(u',')
+
+    if idlist == [''] or idlist == [u'']:
         idlist = []
     return idlist
 
