@@ -892,8 +892,9 @@ def write_formatted_response(
         d['timetable'].append(["serving %.3f sec. old response (%d bytes) from '%s', cache_key: %s" %
                                (time.time() - timestamp_from_cache, len(s), cache_name, cache_key), time.time() - atime])
         atime = time.time()
-        req.reply_headers['Content-Type'] = mimetype_from_cache + "; charset=utf-8"
         mimetype = mimetype_from_cache
+        content_type = mimetype + "; charset=utf-8"
+        req.reply_headers['Content-Type'] = content_type
 
     def compressForDeflate(s):
         import gzip
