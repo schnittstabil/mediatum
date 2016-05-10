@@ -175,6 +175,10 @@ def _create_zoom_tile_buffer(img, max_level, tilesize, level, x, y):
     xl = (x1 - x0) / level
     yl = (y1 - y0) / level
 
+    # do not resize to zero dimension (would cause exception when saving)
+    xl = max(1, xl)
+    yl = max(1, yl)
+
     img = img.crop((x0, y0, x1, y1)).resize((xl, yl))
     img.save(buff, format="JPEG")
     try:
