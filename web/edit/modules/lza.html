@@ -18,7 +18,7 @@
     <tal:block tal:repeat="m_id python:list(meta)">
         <div style="border:1px solid silver">
             <span i18n:translate="edit_lza_node"/> <span tal:content="m_id"/>:
-            <pre tal:content="python:meta[m_id]"/>
+            <pre tal:content="python:str(meta[m_id])"/>
         </div>
     </tal:block>
   </div>
