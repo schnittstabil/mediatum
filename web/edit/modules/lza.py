@@ -63,8 +63,8 @@ def getContent(req, ids):
                         schema = node.schema
 
                         # test for lza export mask
-                        if (getMetaType(schema).getMask(u"lza")):
-                            m = getMetaType(schema).getMask(u"lza")
+                        m = getMetaType(schema).get_mask(u"lza")
+                        if (m):
                             meta = l.LZAMetadata(m.getViewHTML([node], 8))
                         else:
                             # generate error message
@@ -74,7 +74,8 @@ def getContent(req, ids):
                                                 <lza:error>-definition missing-</lza:error>
                                                 </lza:data><?xpacket end="w"?>""")
                         archive.writeMediatumData(meta)
-                        node.addFile(File(archive.buildLZAName(), "lza", f.mimetype))
+                        nodefile = File(archive.buildLZAName(), "lza", f.mimetype)
+                        node.files.append(nodefile)
 
                     except l.FiletypeNotSupported:
                         v['error'] = "edit_lza_wrongfiletype"
