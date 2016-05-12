@@ -675,6 +675,33 @@ FROM del;
 RETURN rec;
 END;
 $f$;
+
+
+CREATE OR REPLACE FUNCTION on_access_ruleset_to_rule_delete_delete_empty_private_rulesets()
+    RETURNS trigger
+    LANGUAGE plpgsql
+    SET search_path TO :search_path
+    VOLATILE
+AS $f$
+DECLARE
+    nid integer;
+BEGIN
+    -- find out if the ruleset is a private ruleset for a node
+    nid = (SELECT nar.nid FROM node_to_access_ruleset nar WHERE private = true and ruleset_name = old.ruleset_name);
+
+    IF (nid > 0) THEN
+        -- is it an empty ruleset? Then delete it.
+        IF NOT EXISTS (SELECT FROM access_ruleset_to_rule WHERE ruleset_name = old.ruleset_name) THEN
+            DELETE FROM node_to_access_ruleset WHERE ruleset_name = old.ruleset_name;
+            DELETE FROM access_ruleset WHERE name = old.ruleset_name;
+        END IF;
+    END IF;
+
+RETURN old;
+END;
+$f$;
+
+
 ----
 -- maintenance functions
 ----
