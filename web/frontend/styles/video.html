@@ -10,7 +10,9 @@
 
 <div id="object_main">
     <div id="object_image">
-        <video tal:condition="python:video_url" controls autobuffer tal:attributes="src python:video_url" style="cursor:pointer;width:300px"/>
+        <video tal:condition="python:video_url" controls preload="metadata" class="video" id="video">
+            <source type="video/mp4" tal:attributes="src python:video_url" />
+        </video>
         <img tal:condition="python:not video_url" tal:attributes="src python:u'/thumb2/{}'.format(node.id)" style="border:0px;width:300px"/>
         <br/>
 
