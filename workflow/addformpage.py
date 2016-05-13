@@ -37,6 +37,7 @@ from utils.date import format_date, now
 
 import utils.utils as utils
 import core.config as config
+import utils.process
 
 from core import db
 from core import File
@@ -51,8 +52,8 @@ def register():
 
 
 def get_pdftk_fields_dump(path_to_pdf):
-    return subprocess.Popen(("pdftk", path_to_pdf, "dump_data_fields"),
-                            stdout=subprocess.PIPE).communicate()[0]
+    return utils.process.Popen(("pdftk", path_to_pdf, "dump_data_fields"),
+                               stdout=subprocess.PIPE).communicate()[0]
 
 
 def parse_pdftk_fields_dump(s):
@@ -153,7 +154,7 @@ def fillPDFForm(formPdf, fields, outputPdf="filled.pdf", input_is_fullpath=False
         pdftkcmd = ["pdftk", formPdf, "fill_form", fdffilename, "output", outputPdf]
         if editable:
             pdftkcmd.append("flatten")
-        subprocess.call(pdftkcmd)
+        utils.process.call(pdftkcmd)
 
         if os.path.exists(fdffilename):
             os.remove(fdffilename)
@@ -166,7 +167,7 @@ def fillPDFForm(formPdf, fields, outputPdf="filled.pdf", input_is_fullpath=False
 def addPagesToPDF(prefile, pdffile):
     outfile = pdffile[:-4] + "1.pdf"
     try:
-        subprocess.call(("pdftk", prefile, pdffile, "output", outfile))
+        utils.process.call(("pdftk", prefile, pdffile, "output", outfile))
         os.remove(prefile)
     except Exception:
         logg.exception("exception in workflow step addformpage, error while adding pages, ignoring")

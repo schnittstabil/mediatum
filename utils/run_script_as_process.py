@@ -27,6 +27,11 @@ import subprocess
 
 
 def detach(program, *args):
+    """
+    Caution: In contrast to most other code of mediatum,
+    this function does *not* resolve the executable's name
+    with the config "external" section (c.f. utils.process).
+    """
     return subprocess.Popen([program] + list(args))
 
 

@@ -27,7 +27,8 @@ from PIL import Image, ImageDraw
 from core import config
 import sys
 import os
-from subprocess import call, check_call, check_output, CalledProcessError
+from subprocess import call, CalledProcessError
+import utils.process
 
 logging.basicConfig()
 
@@ -97,7 +98,7 @@ def parsePDF(filename, tempdir):
 
     info_cmd = ["pdfinfo", "-meta", filename]
     try:
-        out = check_output(info_cmd)
+        out = utils.process.check_output(info_cmd)
     except CalledProcessError:
         logg.exception("failed to extract metadata from file %s")
         info = PDFInfo()
@@ -117,34 +118,23 @@ def parsePDF(filename, tempdir):
     convert_cmd = ["convert", "-alpha", "off", "-colorspace", "RGB,", "-density", "300",
                    filename + "[0]", "-background", "white", "-thumbnail", "x300", imgfile]
     try:
-        check_call(convert_cmd)
+        utils.process.check_call(convert_cmd)
     except CalledProcessError:
         logg.exception("failed to create PDF thumbnail for file " + filename)
     else:
         makeThumbs(imgfile, thumb128, thumb300)
 
-    # try to get pdftotext_exe and uconv_exe from config-file
-    pdftotext_exe = "pdftotext"
-    uconv_exe = "uconv"
-    if not config.settings:
-        # parsePDF is called as subprocess: config-file must be read again
-        config.initialize()
-
-    if config.settings:
-        pdftotext_exe = config.get("external.pdftotext", "pdftotext")
-        uconv_exe = config.get("external.uconv", "uconv")
-
     # extract fulltext (xpdf)
-    fulltext_cmd = [pdftotext_exe, "-enc", "UTF-8", filename, fulltext_from_pdftotext]
+    fulltext_cmd = ["pdftotext", "-enc", "UTF-8", filename, fulltext_from_pdftotext]
     try:
-        check_call(fulltext_cmd)
+        utils.process.check_call(fulltext_cmd)
     except CalledProcessError:
         logg.exception("failed to extract fulltext from file %s", filename)
 
     # normalization of fulltext (uconv)
-    fulltext_normalization_cmd = [uconv_exe, "-x", "any-nfc", "-f", "UTF-8", "-t", "UTF-8", "--output", fulltext, fulltext_from_pdftotext]
+    fulltext_normalization_cmd = ["uconv", "-x", "any-nfc", "-f", "UTF-8", "-t", "UTF-8", "--output", fulltext, fulltext_from_pdftotext]
     try:
-        check_call(fulltext_normalization_cmd)
+        utils.process.check_call(fulltext_normalization_cmd)
     except CalledProcessError:
         logg.exception("failed to normalize fulltext from file %s", filename)
 

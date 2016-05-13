@@ -22,7 +22,7 @@ import shutil
 import json
 import logging
 import os
-from subprocess import CalledProcessError, check_call
+from subprocess import CalledProcessError
 import tempfile
 
 from mediatumtal import tal
@@ -35,6 +35,7 @@ from core.translation import t
 from core.styles import getContentStyles
 from utils.utils import splitfilename
 from utils.date import format_date, make_date
+import utils.process
 
 
 logg = logging.getLogger(__name__)
@@ -112,10 +113,9 @@ class Video(Content):
             self.set('vid-width', self.get('width'))
             self.set('vid-height', self.get('height'))
 
-            ffmpeg = config.get("external.ffmpeg", "ffmpeg")
             thumbframe = self.system_attrs.get("thumbframe")
 
-            ffmpeg_call = [ffmpeg, "-y"]
+            ffmpeg_call = ["ffmpeg", "-y"]
 
             if thumbframe:
                 ffmpeg_call += ['-ss', str(thumbframe)]  # change frame used as thumbnail
@@ -130,7 +130,7 @@ class Video(Content):
                 ffmpeg_call += ['-vframes', '1', '-pix_fmt', 'rgb24', temp_thumbnail_path]  # output options
 
                 try:
-                    check_call(ffmpeg_call)
+                    utils.process.check_call(ffmpeg_call)
                 except CalledProcessError:
                     logg.error("Error processing video, external call failed. No thumbnails generated.")
                     raise

@@ -21,7 +21,6 @@
 """
 
 import os
-import subprocess
 import random
 import string
 import StringIO
@@ -34,6 +33,7 @@ from reportlab.pdfgen import canvas
 from pyPdf import PdfFileWriter, PdfFileReader
 
 import core.config as config
+import utils.process
 
 
 def get_pdf_page_image(pdfpath, page, prefix="_PdfPageImage_%(testname)s_%(page)s_.png", path_only=False):
@@ -45,8 +45,8 @@ def get_pdf_page_image(pdfpath, page, prefix="_PdfPageImage_%(testname)s_%(page)
     tmppng = tmppath + tmpname
 
     if not path_only:
-        subprocess.call(("convert", "-alpha", "off", "-colorspace", "RGB",
-                         "{}[{}]".format(pdfpath, page), tmppng))
+        utils.process.call(("convert", "-alpha", "off", "-colorspace", "RGB",
+                            "{}[{}]".format(pdfpath, page), tmppng))
     return tmppng
 
 
@@ -306,7 +306,7 @@ def build_logo_overlay_pdf(fn_matrix_pdf,
     output.write(outputStream)
 
     outputStream.close()
-    subprocess.call(("pdftk", fn_matrix_pdf, "multistamp", fn_logo_temp, "output", fn_out))
+    utils.process.call(("pdftk", fn_matrix_pdf, "multistamp", fn_logo_temp, "output", fn_out))
     return
 
 

@@ -30,6 +30,7 @@ from utils.date import validateDate
 from utils.date import format_date
 from utils.strings import ensure_unicode
 from core import config
+import utils.process
 import collections
 
 
@@ -187,7 +188,7 @@ def write_iptc_tags(image_path, tag_dict):
         :return  status
     '''
     try:
-        subprocess.call(['exiftool'])
+        utils.process.call(['exiftool'])
     except OSError:
         logg.error('No exiftool installed.')
         return
@@ -226,7 +227,7 @@ def write_iptc_tags(image_path, tag_dict):
         command_list.append(u'-{}={}'.format(tag_name, tag_value))
 
     logg.info(u'Command: {} will be executed.'.format(command_list))
-    process = subprocess.Popen(command_list, stdout=subprocess.PIPE)
+    process = utils.process.Popen(command_list, stdout=subprocess.PIPE)
     output, error = process.communicate()
 
     if error is not None:
