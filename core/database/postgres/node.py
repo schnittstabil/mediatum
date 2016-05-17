@@ -26,6 +26,7 @@ from ipaddr import IPv4Address
 from sqlalchemy_continuum import versioning_manager
 from sqlalchemy_continuum.utils import version_class
 from werkzeug.utils import cached_property
+from core.search.representation import SearchTreeElement
 
 
 logg = logging.getLogger(__name__)
@@ -343,10 +344,15 @@ class Node(DeclarativeBase, NodeMixin):
         return db.session.execute(select([access])).scalar()
 
     def _parse_searchquery(self, searchquery):
-        """Parses `searchquery` and transforms it into the search tree."""
-        from core.search import parser
-        q = object_session(self).query
-        searchtree = parser.parse_string(searchquery)
+        """
+        * `searchquery` is a string type: Parses `searchquery` and transforms it into the search tree.
+        * `searchquery` already is already in search tree form: work is already done, return it unchanged.
+        """
+        from core.search import parse_searchquery
+        if isinstance(searchquery, SearchTreeElement):
+            searchtree = searchquery
+        else:
+            searchtree = parse_searchquery(searchquery)
         return searchtree
 
     def _search_query_object(self):
@@ -359,7 +365,7 @@ class Node(DeclarativeBase, NodeMixin):
 
     def search(self, searchquery, languages=None):
         """Creates a search query.
-        :param searchquery: query in search language
+        :param searchquery: query in search language or parsed query (search tree) as `SearchTreeElement`:
         :param language: sequence of language config strings matching Fts.config
         :returns: Node Query
         """
@@ -370,7 +376,7 @@ class Node(DeclarativeBase, NodeMixin):
 
     def search_multilang(self, searchquery, languages=None):
         """Creates search queries for a sequence of languages.
-        :param searchquery: query in search language :
+        :param searchquery: query in search language or parsed query (search tree) as `SearchTreeElement`:
         :param languages: language config strings matching Fts.config
         :returns list of Node Query
         """
