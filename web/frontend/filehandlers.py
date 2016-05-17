@@ -48,9 +48,9 @@ def _send_thumbnail(thumb_type, req):
             return req.sendFile(f.abspath, f.mimetype)
 
     try:
-        ntype, schema = q(Content.type, Content.schema).filter_by(id=nid).one()
+        ntype, schema = q(Data.type, Data.schema).filter_by(id=nid).one()
     except NoResultFound:
-        return 404
+       return 404
 
     for p in athana.getFileStorePaths("/img/"):
         for test in ["default_thumb_%s_%s.*" % (ntype, schema),
