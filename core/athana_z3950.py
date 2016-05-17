@@ -31,6 +31,7 @@ from PyZ3950 import z3950, zdefs, asn1
 from sqlalchemy.orm import undefer
 from core.users import get_guest_user
 from schema.mapping import Mapping
+from core.search.config import get_service_search_languages
 
 
 logg = logging.getLogger(__name__)
@@ -223,6 +224,7 @@ def search_nodes(query, mapping_prefix='Z3950_search_'):
     # run one search per root node
     node_ids = []
     guest = get_guest_user()
+    search_languages = get_service_search_languages()
 
     for root_node, mapping_node in roots_and_mappings:
         if root_node is None:
@@ -240,7 +242,7 @@ def search_nodes(query, mapping_prefix='Z3950_search_'):
             logg.info('unable to map query: [%r] using mapping %s', query, field_mapping)
             continue
         logg.info('executing query for node %s: %s', root_node.id, query_string)
-        for n in root_node.search(query_string).filter_read_access(user=guest):
+        for n in root_node.search(query_string, search_languages).filter_read_access(user=guest):
             node_ids.append(n.id)
 
     # use a round-robin algorithm to merge the separate query results

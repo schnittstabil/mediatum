@@ -50,6 +50,7 @@ from utils.xml import xml_remove_illegal_chars
 from core.search import SearchQueryException
 
 import core.oauth as oauth
+from core.search.config import get_service_search_languages
 
 
 logg = logging.getLogger(__name__)
@@ -625,6 +626,8 @@ def get_node_data_struct(
         nodequery = node.children
 
     if searchquery:
+        search_languages = get_service_search_languages()
+
         try:
             searchtree = search.parse_searchquery(searchquery)
         except search.SearchQueryException:
@@ -636,7 +639,7 @@ def get_node_data_struct(
                 # we had enough, return error to client...
                 return _client_error_response(400, str(e))
 
-        nodequery = apply_searchtree_to_query(nodequery, searchtree)
+        nodequery = apply_searchtree_to_query(nodequery, searchtree, search_languages)
 
     if typefilter:
         nodequery = nodequery.filter((Node.type + "/" + Node.schema).op("~")(typefilter))
