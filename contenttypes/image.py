@@ -631,7 +631,7 @@ class Image(Content):
         if not self.has_data_access() or not self.has_read_access():
             return 404
 
-        use_zoom = config.get_bool("image.use_flash_zoom", True) and self.should_use_zoom
+        use_zoom = config.getboolean("image.use_flash_zoom", True) and self.should_use_zoom
 
         if use_zoom and not self.zoom_available:
             return 404

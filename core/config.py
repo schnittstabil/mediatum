@@ -1,22 +1,21 @@
 #!/usr/bin/python
 """
- mediatum - a multimedia content repository
+XXX: This module should be replaced by stdlib's `inifile` or something better.
 
- Copyright (C) 2007 Arne Seifert <seiferta@in.tum.de>
- Copyright (C) 2007 Matthias Kramm <kramm@in.tum.de>
+Use config.get() for string values. There are specialized functions for int, float and bool like in `inifile`:
 
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation, either version 3 of the License, or
- (at your option) any later version.
+* config.getint()
+* config.getboolean()
+* config.getfloat()
 
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
+Additionally, we have the convention to represent lists as comma-separated values:
 
- You should have received a copy of the GNU General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
+    key=value1,value2,value3
+
+
+Whitespace around commas is stripped from values.
+
+A list can be fetched with `config.getlist()`.
 """
 from __future__ import print_function
 import logging
@@ -74,17 +73,50 @@ def get(key, default=None):
     return settings.get(key, default)
 
 
-def get_bool(key, default=None):
+def getboolean(key, default=None):
     val = get(key)
     if not val:
         return default
 
-    if val in ("true", "True", "yes", "Yes"):
+    val = val.lower()
+
+    if val in ("true", "yes", "1", "on"):
         return True
-    elif val in ("false", "False", "no", "No"):
+    elif val in ("false", "no", "0", "off"):
         return False
     else:
-        raise ConfigException("boolean config value must be true|false, True|False, yes|no or Yes|No")
+        raise ConfigException(key + ": boolean config value must be true|false, yes|no, 1|0 or on|off")
+
+
+def getlist(key, default=None):
+    val = get(key)
+    if not val:
+        return default
+
+    spl = val.split(",")
+    return [e.strip() for e in spl]
+
+
+def getint(key, default=None):
+    val = get(key)
+    if not val:
+        return default
+
+    try:
+        return int(val)
+    except:
+        ConfigException(key + ": config value cannot be parsed as integer value")
+
+
+def getfloat(key, default=None):
+    val = get(key)
+    if not val:
+        return default
+
+    try:
+        return float(val)
+    except:
+        ConfigException(key + ": config value cannot be parsed as float value")
 
 
 def getsubset(prefix):

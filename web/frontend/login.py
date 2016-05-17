@@ -75,7 +75,7 @@ def _handle_login_submit(req):
             req["Location"] = _make_collection_root_link()
 
         # stores the date/time when a user logs in except in read-only mode
-        if not config.get_bool("config.readonly", False):
+        if not config.getboolean("config.readonly", False):
             user.last_login = datetime.now()
             db.session.commit()
     else:
