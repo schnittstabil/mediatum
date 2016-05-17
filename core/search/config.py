@@ -46,7 +46,7 @@ def _get_languages_from_config(key):
         if fts_config_exists(lang):
             default_languages.add(lang)
         else:
-            logg.warn("postgres search config '%s' not found, ignored")
+            logg.warn("postgres search config '%s' not found, ignored", lang)
 
     if not default_languages:
         logg.warn("no valid postgres search configs found, using 'simple' config")
