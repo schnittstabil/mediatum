@@ -34,6 +34,7 @@ from core.styles import theme
 from contenttypes import Collections
 from core.auth import PasswordsDoNotMatch, WrongPassword, PasswordChangeNotAllowed
 from core.users import get_guest_user
+from datetime import datetime
 
 q = db.query
 logg = logging.getLogger(__name__)
@@ -72,6 +73,11 @@ def _handle_login_submit(req):
             req["Location"] = ''.join(["https://", config.get("host.name"), _make_collection_root_link()])
         else:
             req["Location"] = _make_collection_root_link()
+
+        # stores the date/time when a user logs in except in read-only mode
+        if not config.get_bool("config.readonly", False):
+            user.last_login = datetime.now()
+            db.session.commit()
     else:
         return 1
 
