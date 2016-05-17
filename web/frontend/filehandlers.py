@@ -47,15 +47,10 @@ def _send_thumbnail(thumb_type, req):
         if os.path.isfile(f.abspath):
             return req.sendFile(f.abspath, f.mimetype)
 
-    #try:
-    #    ntype, schema = q(Content.type, Content.schema).filter_by(id=nid).one()
-    #except NoResultFound:
-    #   return 404
-
-    # better try to find default thumb for this type and/or schema; use question mark if no default is found
-    node = q(Node).get(nid)
-    ntype = node.type
-    schema = node.schema
+    try:
+        ntype, schema = q(Data.type, Data.schema).filter_by(id=nid).one()
+    except NoResultFound:
+       return 404
 
     for p in athana.getFileStorePaths("/img/"):
         for test in ["default_thumb_%s_%s.*" % (ntype, schema),
