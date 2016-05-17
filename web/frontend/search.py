@@ -25,10 +25,10 @@ from core.search import SearchQueryException
 from core.styles import theme
 from web.frontend import Content
 from utils.strings import ensure_unicode_returned
-from contenttypes.container import Collections, Collection, Container
+from contenttypes.container import Collections, Container
 from schema.searchmask import SearchMaskItem
-import urllib
 from core.webconfig import node_url
+from core.search.representation import FullMatch
 
 q = db.query
 
@@ -36,32 +36,17 @@ q = db.query
 logg = logging.getLogger(__name__)
 
 
-class SearchResult(Content):
+class NoSearchResult(Content):
+    """This content class is used if no search results cannot be displayed.
+    Either the result was empty, or an error happened.
+    In the error case, NoSearchResult.error is set to True.
+    """
 
-    def __init__(self, resultlist, query, container):
+    def __init__(self, query, container, searchmode, error=False):
         self.query = query
         self.container = container
-        self.active = -1
-        self.error = 0
-        self.searchmode = None
-
-        if resultlist is None:
-            self.resultlist = []
-            self.error = 1
-        else:
-            self.resultlist = resultlist
-            for result in resultlist:
-                result.parent = self
-
-    def feedback(self, req):
-        self.searchmode = req.args.get("searchmode")
-
-    def in_list(self, id):
-        if self.active >= 0:
-            c = self.resultlist[self.active]
-            if hasattr(c, "in_list") and c.in_list(id):
-                return 1
-        return 0
+        self.searchmode = searchmode
+        self.error = error
 
     def getLink(self, container):
         return node_url(container)
@@ -71,13 +56,12 @@ class SearchResult(Content):
 
     @ensure_unicode_returned(name="searchresult:html")
     def html(self, req):
-        if self.error > 0:
+        if self.error:
             return req.getTAL(theme.getTemplate("searchresult.html"), {
                               "query": self.query, "r": self, "container": self.container, "language": lang(req)}, macro="error")
 
-        if not self.resultlist:
-            return req.getTAL(theme.getTemplate("searchresult.html"), {
-                              "query": self.query, "r": self, "container": self.container, "language": lang(req)}, macro="noresult")
+        return req.getTAL(theme.getTemplate("searchresult.html"), {
+                          "query": self.query, "r": self, "container": self.container, "language": lang(req)}, macro="noresult")
 
 
 def protect(s):
@@ -91,16 +75,27 @@ def search(searchtype, searchquery, readable_query, req):
 
     # if the current node is not a Container or not accessible by the user, use the collections root instead
     if container is None or not container.has_read_access():
+        # XXX: The collections root is always searchable. Could there be situations in which we don't want to allow this?
+        # XXX: We could check the read permission for Collections to decide if search is allowed.
         container = q(Collections).one()
 
     try:
         result = container.search(searchquery).filter_read_access()
     except SearchQueryException as e:
         # query parsing went wrong or the search backend complained about something
-        return SearchResult([], readable_query, container)
+        return NoSearchResult(readable_query, container, readable_query, error=True)
 
     content_list = ContentList(result, container, readable_query, show_sidebar=False)
-    content_list.feedback(req)
+    try:
+        content_list.feedback(req)
+    except Exception as e:
+        # that should not happen, but it somewhat likely (db failures, illegal search queries that slipped through...),
+        # just show 0 result view and don't confuse the user with unhelpful error messages ;)
+        logg.exception("exception executing %(searchtype)s search for query %(readable_query)s",
+                       dict(searchtype=searchtype, readable_query=readable_query, error=True))
+        db.session.rollback()
+        return NoSearchResult(readable_query, container, searchtype)
+
     language = lang(req)
     content_list.linkname = u"{}: {} \"{}\"".format(container.getLabel(language),
                                                     translate("search_for", language=language),
@@ -108,18 +103,20 @@ def search(searchtype, searchquery, readable_query, req):
     content_list.linktarget = ""
 
     if content_list.has_elements:
-        logg.info("%s search with query '%s' on container %s produced results", searchtype, searchquery, container_id)
+        logg.info("%s search with query '%s' on container %s produced results", searchtype, readable_query, container_id)
         return content_list
     else:
-        logg.info("%s search with query '%s' on container %s produced no results", searchtype, searchquery, container_id)
-        return SearchResult([], readable_query, container)
+        logg.info("%s search with query '%s' on container %s produced no results", searchtype, readable_query, container_id)
+        return NoSearchResult(readable_query, container, searchtype)
 
 
 def simple_search(req):
     searchquery = req.args.get("query")
+    readable_searchquery = searchquery
+    searchquery = searchquery.replace(u"\"", u'\\"')
     if searchquery is None:
         raise ValueError("searchquery param missing!")
-    return search("simple", u"full=" + searchquery, searchquery, req)
+    return search("simple", FullMatch(searchquery), readable_searchquery, req)
 
 
 def _extended_searchquery_from_req(req):
@@ -205,6 +202,7 @@ def _extended_searchquery_from_req(req):
             q_str += ")"
 
     return q_str, q_user.strip()
+
 
 def extended_search(req):
     searchquery, readable_query = _extended_searchquery_from_req(req)

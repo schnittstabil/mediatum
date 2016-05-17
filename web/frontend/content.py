@@ -32,7 +32,7 @@ from web.frontend import Content
 from utils.strings import ensure_unicode_returned
 from utils.utils import getCollection, Link, getFormatedString
 from utils.compat import iteritems
-from web.frontend.searchresult import simple_search, extended_search
+from web.frontend.search import simple_search, extended_search
 from core.systemtypes import Root
 from contenttypes.container import Container
 from mediatumtal import tal
