@@ -48,6 +48,7 @@ from itertools import izip_longest
 from sqlalchemy import Unicode, Float, Integer
 from utils.xml import xml_remove_illegal_chars
 from core.search import SearchQueryException
+from core.search.representation import FullMatch
 
 import core.oauth as oauth
 from core.search.config import get_service_search_languages
@@ -634,7 +635,7 @@ def get_node_data_struct(
             # wrong search queries are interpreted as full search
             # XXX: can we remove this?
             try:
-                searchtree = search.parse_searchquery('full="{}"'.format(searchquery))
+                searchtree = FullMatch(searchquery)
             except SearchQueryException as e:
                 # we had enough, return error to client...
                 return _client_error_response(400, str(e))
