@@ -6,7 +6,7 @@ from collections import OrderedDict
 import logging
 from os import path
 from jinja2.loaders import FileSystemLoader
-from werkzeug.datastructures import ImmutableDict
+from werkzeug.datastructures import ImmutableDict, MultiDict
 import pyaml
 import yaml
 from core.transition.templating import PyJadeExtension, Environment
@@ -37,8 +37,8 @@ class AthanaTestRequest(athana_http.http_request):
         self.ip = "127.0.0.1"
         self.session = {}
         self.params = {}
-        self.form = {}
-        self.args = {}
+        self.form = MultiDict()
+        self.args = MultiDict()
         self.path = "/"
         self.request = {}
         self.sent_files_with_mimetype = []
