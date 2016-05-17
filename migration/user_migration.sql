@@ -73,7 +73,11 @@ BEGIN
     FROM nodemapping JOIN node ON nid = id
     WHERE node.id IN (SELECT cid
                       FROM nodemapping
-                      WHERE nid = (SELECT id FROM node WHERE type = 'usergroups'));
+                      WHERE nid = (SELECT id FROM node WHERE type = 'usergroups'))
+    -- ignore yearbookuser
+    AND cid NOT IN (SELECT cid
+                    FROM nodemapping
+                    WHERE nid = (SELECT id FROM node WHERE type = 'directory' AND name = 'yearbookuser'));
 
     GET DIAGNOSTICS rows = ROW_COUNT;
     RAISE NOTICE 'users mapped to groups, % mappings', rows;
