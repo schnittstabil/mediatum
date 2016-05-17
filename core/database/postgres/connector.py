@@ -383,7 +383,7 @@ class PostgresSQLAConnector(object):
 
     def init_fulltext_search(self):
         from core.database.postgres.setting import Setting
-        from core.database.postgres.search import fts_config_exists
+        from core.search.config import fts_config_exists
         s = self.session
         autoindex_languages_from_config = [l.strip() for l in config.get("search.autoindex_languages", "").split(",") if l.strip()]
         autoindex_languages = []

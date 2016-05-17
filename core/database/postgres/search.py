@@ -13,6 +13,7 @@ from core.search.representation import AttributeMatch, FullMatch, SchemaMatch, F
 from core.database.postgres import mediatumfunc, DeclarativeBase, integer_pk, integer_fk, C, FK
 from sqlalchemy.dialects.postgresql.base import TSVECTOR
 from core.database.postgres.node import Node
+from core.search.config import get_default_search_languages
 
 
 comparisons = {
@@ -24,33 +25,6 @@ comparisons = {
 }
 
 logg = logging.getLogger(__name__)
-
-
-# postgres search language configuration
-# XXX: maybe we could do that in the database so that an admin could change search parameters at runtime?
-global default_languages
-default_languages = None
-
-
-def fts_config_exists(config_name):
-    stmt = text("SELECT FROM pg_catalog.pg_ts_config WHERE cfgname = :config_name")
-    return db.session.execute(stmt, {"config_name": config_name}).fetchone() is not None
-
-
-def default_languages_from_config():
-    default_languages = set()
-    langs_from_config = config.get("search.default_languages", "simple").split(",")
-    for lang in langs_from_config:
-        if fts_config_exists(lang):
-            default_languages.add(lang)
-        else:
-            logg.warn("postgres search config '%s' not found, ignored")
-
-    if not default_languages:
-        logg.warn("no valid postgres search configs found, using 'simple' config")
-        default_languages.add("simple")
-
-    return default_languages
 
 
 class Fts(DeclarativeBase):
@@ -169,10 +143,7 @@ def make_config_searchtype_cond(languages, searchtypes):
 def apply_searchtree_to_query(query, searchtree, languages=None):
 
     if languages is None:
-        if not default_languages:
-            global default_languages
-            default_languages = default_languages_from_config()
-        languages = default_languages
+        languages = get_default_search_languages()
 
     def walk(n):
         from core import Node
