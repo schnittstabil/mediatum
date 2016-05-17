@@ -31,13 +31,11 @@ from sqlalchemy.orm import undefer
 from core.users import get_guest_user
 from core import config, search
 from core import Node, db, User
-import core.users as users
 from contenttypes import Collections, Home
-from contenttypes import Data
 from schema.schema import VIEW_DATA_ONLY, Metadatatype
 from utils.date import format_date
-from utils.pathutils import getBrowsingPathList, isDescendantOf
-from utils.utils import esc, intersection, getMimeType, modify_tex
+from utils.pathutils import getBrowsingPathList
+from utils.utils import esc, getMimeType, modify_tex
 import web.services.jsonnode as jsonnode
 from web.services.rssnode import template_rss_channel, template_rss_item, feed_channel_dict, try_node_date
 from web.services.serviceutils import attribute_name_filter
@@ -62,7 +60,6 @@ configured_host = config.get("host.name", "")
 
 from web.services.cache import Cache
 from web.services.cache import date2string as cache_date2string
-import web.services.serviceutils as serviceutils
 
 resultcache = Cache(maxcount=25, verbose=True)
 
