@@ -232,6 +232,9 @@ def set_home_dir_permissions():
 
 def migrate_access_entries():
     s = db.session
+    # we need a "internal" ruleset for workflows that is empty
+    workflow_ruleset = AccessRuleset(name=u"workflow", description=u"dummy access ruleset for workflow nodes")
+    s.add(workflow_ruleset)
     access = s.execute("select * from mediatum_import.access").fetchall()
     for a in access:
         rulestr = a["rule"]
