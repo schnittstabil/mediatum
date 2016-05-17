@@ -630,15 +630,9 @@ def get_node_data_struct(
         search_languages = get_service_search_languages()
 
         try:
-            searchtree = search.parse_searchquery(searchquery)
-        except search.SearchQueryException:
-            # wrong search queries are interpreted as full search
-            # XXX: can we remove this?
-            try:
-                searchtree = FullMatch(searchquery)
-            except SearchQueryException as e:
-                # we had enough, return error to client...
-                return _client_error_response(400, str(e))
+            searchtree = search.parse_searchquery_old_style(searchquery)
+        except search.SearchQueryException as e:
+            return _client_error_response(400, str(e))
 
         nodequery = apply_searchtree_to_query(nodequery, searchtree, search_languages)
 

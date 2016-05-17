@@ -24,7 +24,7 @@ import asyncore
 import random  # FIXME: drop dependency!
 
 from .athana import counter, async_chat
-from core import medmarc, db, Node
+from core import medmarc, db, Node, search
 from schema import mapping
 
 from PyZ3950 import z3950, zdefs, asn1
@@ -238,11 +238,12 @@ def search_nodes(query, mapping_prefix='Z3950_search_'):
         # XXX: just to parse it afterwards?
         # XXX: better: create search tree and apply it to a query instead of using node.search()
         query_string = query.build_query_string(field_mapping)
+        searchtree = search.parse_searchquery_old_style(query_string)
         if query_string is None:
             logg.info('unable to map query: [%r] using mapping %s', query, field_mapping)
             continue
         logg.info('executing query for node %s: %s', root_node.id, query_string)
-        for n in root_node.search(query_string, search_languages).filter_read_access(user=guest):
+        for n in root_node.search(searchtree, search_languages).filter_read_access(user=guest):
             node_ids.append(n.id)
 
     # use a round-robin algorithm to merge the separate query results
