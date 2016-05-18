@@ -94,7 +94,7 @@ def search(searchtype, searchquery, readable_query, req):
         logg.exception("exception executing %(searchtype)s search for query %(readable_query)s",
                        dict(searchtype=searchtype, readable_query=readable_query, error=True))
         db.session.rollback()
-        return NoSearchResult(readable_query, container, searchtype)
+        return NoSearchResult(readable_query, container, searchtype, error=True)
 
     language = lang(req)
     content_list.linkname = u"{}: {} \"{}\"".format(container.getLabel(language),
@@ -113,7 +113,6 @@ def search(searchtype, searchquery, readable_query, req):
 def simple_search(req):
     searchquery = req.args.get("query")
     readable_searchquery = searchquery
-    searchquery = searchquery.replace(u"\"", u'\\"')
     if searchquery is None:
         raise ValueError("searchquery param missing!")
     return search("simple", FullMatch(searchquery), readable_searchquery, req)

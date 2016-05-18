@@ -29,23 +29,9 @@ def test_simple_search(session, req, container_node):
     assert_no_searchresult(res, readable_query, container_node, error=False)
 
 
-@pytest.mark.parametrize("searchquery", [
-    u"Haus AND Hof",
-    u"Haus OR Hof",
-    u"!Haus AND !Hof",
-    u"!Haus AND !Hof AND Blah",
-    u"!Haus AND !Hof AND Garten",
-    u"!Haus AND (!Hof AND Garten)",
-    u'"',
-    u'""',
-    u'"blah',
-    u'&',
-    u'blah&',
-    u'^*°°°^%&|!',
-])
-def test_simple_search_special_chars(session, req, container_node, searchquery):
+def test_simple_search_empty_query_error(session, req, container_node):
     make_node_public(container_node)
-    req.args["query"] = readable_query = searchquery
+    req.args["query"] = readable_query = u''
     session.flush()
     req.args["id"] = container_node.id
     res = simple_search(req)
@@ -58,4 +44,3 @@ def test_simple_search_no_access(session, req, container_node):
     req.args["id"] = container_node.id
     with raises(NoResultFound):
         simple_search(req)
-

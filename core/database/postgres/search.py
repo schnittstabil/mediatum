@@ -41,19 +41,26 @@ class Fts(DeclarativeBase):
     tsvec = C(TSVECTOR)
 
 
+def _rewrite_prefix_search(t):
+    # we must ignore searchterms starting with * or Postgres will complain
+    starpos = t.find(u"*")
+    # term starts with *: search term would be empty, Postgres doesn't like that
+    if starpos == 0:
+        return
+    return t[:starpos] + u":*"
+
+
+def _escape_postgres_ts_operators(t):
+    return t.replace(u"&", ur"\&").replace(u"|", ur"\|").replace(u"!", ur"\!").replace(u":", ur"\:").replace(u'"', ur'\"')
+
+
 def _prepare_searchstring(op, searchstring):
     terms = searchstring.strip().strip('"').strip().split()
-    def rewrite_prefix_search(t):
-        # we must ignore searchterms starting with * or Postgres will complain
-        starpos = t.find(u"*")
-        # term starts with *: search term would be empty, Postgres doesn't like that
-        if starpos == 0:
-            return
-        return t[:starpos] + u":*"
-
+    # escape chars with special meaning in postgres tsearch
+    terms = [_escape_postgres_ts_operators(t) for t in terms]
     # Postgres needs the form term:* for prefix search, we allow simple stars at the end of the word
-    rewritten_terms = [rewrite_prefix_search(t) if u"*" in t else t for t in terms]
-    rewritten_searchstring = op.join(t for t in rewritten_terms if t)
+    terms = [_rewrite_prefix_search(t) if u"*" in t else t for t in terms]
+    rewritten_searchstring = op.join(t for t in terms if t)
 
     if not rewritten_searchstring:
         raise SearchQueryException("invalid query for postgres full text search: " + searchstring)
