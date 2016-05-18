@@ -43,19 +43,7 @@ def elemInList(list, name):
 def getTypes(datatypes):
     res = []
     for dtype in datatypes:
-        if dtype.name not in [
-                "root",
-                "user",
-                "usergroup",
-                "home",
-                "mapping",
-                "collections",
-                'metadatatype',
-                'metafield',
-                'mask',
-                'searchmaskitem',
-                'mappingfield',
-                'maskitem'] and not dtype.__name__.lower().startswith("workflow"):
+        if dtype.__name__.lower() not in ['content']:
             res.append(dtype)
     return res
 
@@ -100,7 +88,6 @@ def getContent(req, ids):
     admissible_datatypes = [t for t in admissible_objtypes if issubclass(t, Content)]
     admissible_containers = [n for n in admissible_objtypes if issubclass(t, Container)]
 
-    admissible_objtypes.sort(key=lambda x: translate(x.__name__, request=req).lower())
     admissible_datatypes.sort(key=lambda x: translate(x.__name__, request=req).lower())
     admissible_containers.sort(key=lambda x: translate(x.__name__, request=req).lower())
 
@@ -119,15 +106,19 @@ def getContent(req, ids):
                                                                                          node.name,
                                                                                          node.type,
                                                                                          new_type))
-            #
+            # we must save the node id in order to reload the node later
+            reload_node_id = node.id
+
             node.type = new_type
             node.schema = new_schema
+
             db.session.commit()
-            # you must remove the node reference otherwise the sqlalchemy object
-            # has the wrong class manager and throws an exception when accessing
-            # the object
-            del node
-            node = q(Node).get(req.params.get('id'))
+            # XXX: redirect after database modifications would be better, but we try to continue with old data...
+
+            # reload the node (it could be an object of another class now)
+            db.session.expunge(node)
+            node = q(Node).get(reload_node_id)
+
             available_schemes = [s for s in schemes if new_type in s.getDatatypes()]
 
     if "action" in req.params.keys():
