@@ -81,3 +81,7 @@ def test_parse_combined():
     assert isinstance(st, And)
     assert st.left == left
     assert st.right == right
+
+
+def test_parse_quoted_searchstring_with_operators():
+    searchquery = u'full="haus AND hof"'
