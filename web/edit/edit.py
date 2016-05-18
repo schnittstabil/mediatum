@@ -63,8 +63,6 @@ def getEditorIconPath(node, req=None):
             return 'webtree/homeicon.gif'
         elif node is user.upload_dir:
             return 'webtree/uploadicon.gif'
-        elif node is user.faulty_dir:
-            return 'webtree/faultyicon.gif'
         elif node is user.trash_dir:
             return 'webtree/trashicon.gif'
 
@@ -176,8 +174,7 @@ def frameset(req):
 
     folders = {'homedir': getPathToFolder(user.home_dir),
                'trashdir': getPathToFolder(user.trash_dir),
-               'uploaddir': getPathToFolder(user.upload_dir),
-               'faultydir': getPathToFolder(user.faulty_dir)}
+               'uploaddir': getPathToFolder(user.upload_dir)}
 
     containertypes = Container.get_all_subclasses(filter_classnames=("collections", "home", "container", "project"))
 
@@ -453,9 +450,6 @@ def edit_tree(req):
         elif node is user.trash_dir:
             nodedata["special_dir_type"] = "trash"
 
-        elif node is user.faulty_dir:
-            nodedata["special_dir_type"] = "faulty"
-
         elif node is user.upload_dir:
             nodedata["special_dir_type"] = "upload"
 
@@ -477,7 +471,6 @@ def action(req):
 
     trashdir = user.trash_dir
     uploaddir = user.upload_dir
-    faultydir = user.faulty_dir
 
     trashdir_parents = trashdir.parents
     action = req.params.get("action", "")
@@ -496,7 +489,7 @@ def action(req):
         nids = req.params.get('ids', [])
         nids = [nid.strip() for nid in nids.split(',') if nid.strip()]
 
-        for nid in set(nids + [_n.id for _n in [trashdir, uploaddir, faultydir]]):
+        for nid in set(nids + [_n.id for _n in [trashdir, uploaddir]]):
             try:
                 changednodes[nid] = getTreeLabel(q(Node).get(nid), language)
             except:
@@ -893,8 +886,6 @@ def content(req):
                 ipath = 'webtree/homeicon.gif'
             elif node.name in ('Uploads', 'upload'):
                 ipath = 'webtree/uploadicon.gif'
-            elif node.name in ('Inkonsistente Daten', 'faulty'):
-                ipath = 'webtree/faultyicon.gif'
             elif node.name in ('Papierkorb', 'trash'):
                 ipath = 'webtree/trashicon.gif'
             else:

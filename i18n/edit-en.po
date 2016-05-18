@@ -262,9 +262,6 @@ msgstr "Notice: This Folder contains unpublished objects (objects which are not 
 msgid "unpublished_objects2"
 msgstr "Publish these objects (Quick publisher)"
 
-msgid "user_faulty"
-msgstr "Inconsistent data"
-
 msgid "user_trash"
 msgstr "Trashbox"
 

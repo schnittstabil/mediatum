@@ -132,10 +132,8 @@ def getHomeDir(user):
 
 
 def getSpecialDir(user, type):
-    warn("use User.faulty_dir | User.upload_dir | User.trash_dir instead", DeprecationWarning)
-    if type == "faulty":
-        return user.faulty_dir
-    elif type == "upload":
+    warn("use User.upload_dir | User.trash_dir instead", DeprecationWarning)
+    if type == "upload":
         return user.upload_dir
     elif type == "trash":
         return user.trash_dir
@@ -143,10 +141,6 @@ def getSpecialDir(user, type):
 
 def getUploadDir(user):
     return getSpecialDir(user, "upload")
-
-
-def getFaultyDir(user):
-    return getSpecialDir(user, "faulty")
 
 
 def getTrashDir(user):

@@ -60,8 +60,6 @@ def getData(req):
                     cls = "trashicon"
                 elif special_dir_type == u'upload':
                     cls = "uploadicon"
-                elif special_dir_type == u'faulty':
-                    cls = "faultyicon"
                 elif c == current_user.home_dir:
                     cls = "homeicon"
 

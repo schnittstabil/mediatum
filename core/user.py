@@ -164,7 +164,7 @@ class GuestUser(UserMixin):
         self.__dict__.update(db_obj.to_dict())
 
         for prop in ("group_ids", "is_editor", "is_admin", "is_workflow_editor",
-                     "hidden_edit_functions", "upload_dir", "faulty_dir", "trash_dir"):
+                     "hidden_edit_functions", "upload_dir", "trash_dir"):
             setattr(self, prop, getattr(db_obj, prop))
 
     def get_db_object(self):

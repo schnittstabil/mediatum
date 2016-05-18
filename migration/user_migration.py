@@ -54,7 +54,6 @@ def migrate_special_dirs():
         lang = getDefaultLanguage()
         special_dirs = [
             (translate(u"user_trash", lang), u"trash"),
-            (translate(u"user_faulty", lang), u"faulty"),
             (translate(u"user_upload", lang), u"upload")
         ]
 

@@ -271,9 +271,6 @@ msgstr "Hinweis: Dieser Ordner enthält unpublizierte Objekte (Objekte die bishe
 msgid "unpublished_objects2"
 msgstr "Unpublizierte Objekte jetzt publizieren (Quick-Publisher)"
 
-msgid "user_faulty"
-msgstr "Inkonsistente Daten"
-
 msgid "user_trash"
 msgstr "Papierkorb"
 

@@ -56,13 +56,12 @@ def test_user_home_dir(user_with_home_dir):
     user = user_with_home_dir
     assert isinstance(user.home_dir, Directory)
     # home dir must have 3 special subdirs
-    assert user.home_dir.children.count() == 3
+    assert user.home_dir.children.count() == 2
 
 
 def test_user_special_dirs(user_with_home_dir):
     user = user_with_home_dir
     home_subdirs = user.home_dir.children.all()
-    assert user.faulty_dir in home_subdirs
     assert user.upload_dir in home_subdirs
     assert user.trash_dir in home_subdirs
 
@@ -73,7 +72,6 @@ def test_user_create_home_dir(some_user, home_root):
     home = user.create_home_dir()
     assert isinstance(home, Directory)
     home_subdirs = user.home_dir.children.all()
-    assert user.faulty_dir in home_subdirs
     assert user.upload_dir in home_subdirs
     assert user.trash_dir in home_subdirs
 

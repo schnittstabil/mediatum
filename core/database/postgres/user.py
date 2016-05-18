@@ -70,8 +70,7 @@ class UserGroup(DeclarativeBase, TimeStamp, UserGroupMixin):
 
 def create_special_user_dirs():
     from contenttypes import Directory
-    return [Directory(u"faulty", system_attrs={u"used_as": u"faulty"}),
-            Directory(u"upload", system_attrs={u"used_as": u"upload"}),
+    return [Directory(u"upload", system_attrs={u"used_as": u"upload"}),
             Directory(u"trash", system_attrs={u"used_as": u"trash"})]
 
 
@@ -139,12 +138,6 @@ class User(DeclarativeBase, TimeStamp, UserMixin):
         from contenttypes import Directory
         if self.home_dir:
             return self.home_dir.children.filter(Directory.system_attrs[u"used_as"].astext == u"upload").one()
-
-    @property
-    def faulty_dir(self):
-        from contenttypes import Directory
-        if self.home_dir:
-            return self.home_dir.children.filter(Directory.system_attrs[u"used_as"].astext == u"faulty").one()
 
     @property
     def trash_dir(self):
