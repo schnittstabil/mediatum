@@ -92,7 +92,7 @@ class LDAPAuthenticator(Authenticator):
         while True:
             l2 = ldap.initialize(self.server)
             try:
-                l2.simple_bind_s(user_dn, password)
+                l2.simple_bind_s(user_dn, password.encode("utf8"))
             except ldap.INVALID_CREDENTIALS:
                 return None, None
 
