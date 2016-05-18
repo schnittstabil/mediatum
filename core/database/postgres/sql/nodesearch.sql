@@ -1,14 +1,29 @@
-CREATE OR REPLACE FUNCTION get_autoindex_languages() RETURNS text[]
+CREATE OR REPLACE FUNCTION get_fulltext_autoindex_languages() RETURNS text[]
     LANGUAGE plpgsql
     SET search_path = :search_path
     AS $$
 DECLARE
-    autoindex_languages text[];
+    fulltext_autoindex_languages text[];
 BEGIN
     SELECT array_agg(v)
-    FROM (SELECT jsonb_array_elements_text(value) v FROM setting WHERE key = 'search.autoindex_languages') q
-    INTO autoindex_languages;
-RETURN autoindex_languages;
+    FROM (SELECT jsonb_array_elements_text(value) v FROM setting WHERE key = 'search.fulltext_autoindex_languages') q
+    INTO fulltext_autoindex_languages;
+RETURN fulltext_autoindex_languages;
+END;
+$$;
+
+
+CREATE OR REPLACE FUNCTION get_attribute_autoindex_languages() RETURNS text[]
+    LANGUAGE plpgsql
+    SET search_path = :search_path
+    AS $$
+DECLARE
+    attribute_autoindex_languages text[];
+BEGIN
+    SELECT array_agg(v)
+    FROM (SELECT jsonb_array_elements_text(value) v FROM setting WHERE key = 'search.attribute_autoindex_languages') q
+    INTO attribute_autoindex_languages;
+RETURN attribute_autoindex_languages;
 END;
 $$;
 
@@ -19,15 +34,22 @@ CREATE OR REPLACE FUNCTION insert_node_tsvectors() RETURNS trigger
     AS $$
 DECLARE
     searchconfig regconfig;
-    autoindex_languages text[];
+    fulltext_autoindex_languages text[];
+    attribute_autoindex_languages text[];
 BEGIN
-    autoindex_languages = get_autoindex_languages();
+    fulltext_autoindex_languages = get_fulltext_autoindex_languages();
 
-    IF autoindex_languages IS NOT NULL THEN
-        FOREACH searchconfig IN ARRAY autoindex_languages LOOP
+    IF fulltext_autoindex_languages IS NOT NULL THEN
+        FOREACH searchconfig IN ARRAY fulltext_autoindex_languages LOOP
             INSERT INTO fts (nid, config, searchtype, tsvec)
             SELECT NEW.id, searchconfig, 'fulltext', to_tsvector_safe(searchconfig, NEW.fulltext);
+        END LOOP;
+    END IF;
 
+    attribute_autoindex_languages = get_attribute_autoindex_languages();
+
+    IF attribute_autoindex_languages IS NOT NULL THEN
+        FOREACH searchconfig IN ARRAY attribute_autoindex_languages LOOP
             INSERT INTO fts (nid, config, searchtype, tsvec)
             SELECT NEW.id, searchconfig, 'attrs', jsonb_object_values_to_tsvector(searchconfig, NEW.attrs);
         END LOOP;
@@ -43,13 +65,14 @@ CREATE OR REPLACE FUNCTION update_node_tsvectors() RETURNS trigger
     AS $$
 DECLARE
     searchconfig text;
-    autoindex_languages text[];
+    fulltext_autoindex_languages text[];
+    attribute_autoindex_languages text[];
 BEGIN
-    autoindex_languages = get_autoindex_languages();
+    fulltext_autoindex_languages = get_fulltext_autoindex_languages();
 
-    IF autoindex_languages IS NOT NULL THEN
+    IF fulltext_autoindex_languages IS NOT NULL THEN
         IF OLD.fulltext != NEW.fulltext THEN
-            FOREACH searchconfig IN ARRAY autoindex_languages LOOP
+            FOREACH searchconfig IN ARRAY fulltext_autoindex_languages LOOP
                 -- TODO: replace with proper upsert after 9.5
                 DELETE FROM fts
                 WHERE nid = NEW.id AND config = searchconfig AND searchtype = 'fulltext';
@@ -57,9 +80,13 @@ BEGIN
                 SELECT NEW.id, searchconfig, 'fulltext', to_tsvector_safe(searchconfig::regconfig, NEW.fulltext);
             END LOOP;
         END IF;
+    END IF;
 
+    attribute_autoindex_languages = get_attribute_autoindex_languages();
+
+    IF attribute_autoindex_languages IS NOT NULL THEN
         IF OLD.attrs != NEW.attrs THEN
-            FOREACH searchconfig IN ARRAY autoindex_languages LOOP
+            FOREACH searchconfig IN ARRAY attribute_autoindex_languages LOOP
                 -- TODO: replace with proper upsert after 9.5
                 DELETE FROM fts
                 WHERE nid = NEW.id AND config = searchconfig AND searchtype = 'attrs';
@@ -190,13 +217,13 @@ CREATE OR REPLACE FUNCTION recreate_all_tsvectors_fulltext() RETURNS void
     AS $$
 DECLARE
     searchconfig regconfig;
-    autoindex_languages text[];
+    fulltext_autoindex_languages text[];
 BEGIN
-    autoindex_languages = get_autoindex_languages();
+    fulltext_autoindex_languages = get_fulltext_autoindex_languages();
 
-    IF autoindex_languages IS NOT NULL THEN
+    IF fulltext_autoindex_languages IS NOT NULL THEN
         DELETE FROM fts WHERE searchtype = 'fulltext';
-        FOREACH searchconfig IN ARRAY autoindex_languages LOOP
+        FOREACH searchconfig IN ARRAY fulltext_autoindex_languages LOOP
             -- TODO: replace with proper upsert after 9.5
             EXECUTE 'DROP INDEX IF EXISTS fts_fulltext_' || searchconfig;
             INSERT INTO fts (nid, config, searchtype, tsvec)
@@ -220,18 +247,18 @@ CREATE OR REPLACE FUNCTION drop_attrindex_search(attrname text)
     AS $$
 DECLARE
     searchconfig regconfig;
-    autoindex_languages text[];
+    attribute_autoindex_languages text[];
     idx text;
     dropped text[];
 BEGIN
-    autoindex_languages = get_autoindex_languages();
+    attribute_autoindex_languages = get_attribute_autoindex_languages();
 
-    IF autoindex_languages IS NOT NULL THEN
-        FOREACH searchconfig IN ARRAY autoindex_languages LOOP
+    IF attribute_autoindex_languages IS NOT NULL THEN
+        FOREACH searchconfig IN ARRAY attribute_autoindex_languages LOOP
             idx = 'ix_mediatum_node_attr_search_' || replace(attrname, '-', '_') || '_' || searchconfig;
 
             IF (SELECT to_regclass(idx::cstring) IS NOT NULL) THEN
-                EXECUTE 'DROP INDEX ' || idx; 
+                EXECUTE 'DROP INDEX ' || idx;
                 RAISE NOTICE 'dropped attribute fts index % (attr:%, searchconfig:%)', idx, attrname, searchconfig;
                 dropped = array_append(dropped, searchconfig::text);
             END IF;
@@ -250,23 +277,23 @@ CREATE OR REPLACE FUNCTION create_attrindex_search(attrname text, replace_existi
     AS $$
 DECLARE
     searchconfig regconfig;
-    autoindex_languages text[];
+    attribute_autoindex_languages text[];
     idx text;
     created text[];
 BEGIN
-    autoindex_languages = get_autoindex_languages();
+    attribute_autoindex_languages = get_attribute_autoindex_languages();
 
-    IF autoindex_languages IS NOT NULL THEN
-        FOREACH searchconfig IN ARRAY autoindex_languages LOOP
+    IF attribute_autoindex_languages IS NOT NULL THEN
+        FOREACH searchconfig IN ARRAY attribute_autoindex_languages LOOP
             idx = 'ix_mediatum_node_attr_search_' || replace(replace(attrname, '-', '_'), '.', '_') || '_' || searchconfig;
 
             IF replace_existing THEN
-                EXECUTE 'DROP INDEX IF EXISTS ' || idx; 
+                EXECUTE 'DROP INDEX IF EXISTS ' || idx;
             END IF;
 
             IF (SELECT to_regclass(idx::cstring) IS NULL) THEN
                 EXECUTE 'CREATE INDEX ' || idx
-                || ' ON node USING gin(to_tsvector_safe(''' || searchconfig 
+                || ' ON node USING gin(to_tsvector_safe(''' || searchconfig
                 || ''', replace(attrs ->> ''' || attrname || ''', '';'', '' '')))';
                 RAISE NOTICE 'created attribute fts index % (attr:%, searchconfig:%)', idx, attrname, searchconfig;
                 created = array_append(created, searchconfig::text);
@@ -285,13 +312,13 @@ CREATE OR REPLACE FUNCTION recreate_all_tsvectors_attrs() RETURNS void
     AS $$
 DECLARE
     searchconfig regconfig;
-    autoindex_languages text[];
+    attribute_autoindex_languages text[];
 BEGIN
-    autoindex_languages = get_autoindex_languages();
+    attribute_autoindex_languages = get_attribute_autoindex_languages();
 
-    IF autoindex_languages IS NOT NULL THEN
+    IF attribute_autoindex_languages IS NOT NULL THEN
         DELETE FROM fts WHERE searchtype = 'attrs';
-        FOREACH searchconfig IN ARRAY autoindex_languages LOOP
+        FOREACH searchconfig IN ARRAY attribute_autoindex_languages LOOP
             -- TODO: replace with proper upsert after 9.5
             EXECUTE 'DROP INDEX IF EXISTS fts_attrs_' || searchconfig;
             INSERT INTO fts (nid, config, searchtype, tsvec)

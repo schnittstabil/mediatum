@@ -22,6 +22,7 @@ from utils.utils import find_free_port
 from utils.postgres import schema_exists, table_exists
 from core.database.postgres.permission import AccessRulesetToRule
 import sys
+from core.search.config import get_fulltext_autoindex_languages, get_attribute_autoindex_languages
 
 # set this to True or False to override debug config settings
 DEBUG = None
@@ -201,7 +202,7 @@ class PostgresSQLAConnector(object):
 
         res = conn.execute("SELECT version()")
         version = res.fetchone()
-        res =  conn.execute("SHOW search_path")
+        res = conn.execute("SHOW search_path")
         search_path = res.fetchone()
         logg.info("db connection test succeeded, search_path is '%s', version is: '%s'", search_path[0], version[0])
         conn.close()
@@ -383,19 +384,20 @@ class PostgresSQLAConnector(object):
 
     def init_fulltext_search(self):
         from core.database.postgres.setting import Setting
-        from core.search.config import fts_config_exists
         s = self.session
-        autoindex_languages_from_config = [l.strip() for l in config.get("search.autoindex_languages", "").split(",") if l.strip()]
-        autoindex_languages = []
 
-        for lang in autoindex_languages_from_config:
-            if fts_config_exists(lang):
-                autoindex_languages.append(lang)
-            else:
-                logg.warn("postgres search config '%s' not found, ignored", lang)
+        fulltext_autoindex_languages = get_fulltext_autoindex_languages()
 
-        autoindex_languages_setting = Setting(key=u"search.autoindex_languages", value=autoindex_languages)
-        s.merge(autoindex_languages_setting)
+        if fulltext_autoindex_languages:
+            fulltext_autoindex_languages_setting = Setting(key=u"search.fulltext_autoindex_languages", value=list(fulltext_autoindex_languages))
+            s.merge(fulltext_autoindex_languages_setting)
+
+        attribute_autoindex_languages = get_attribute_autoindex_languages()
+
+        if attribute_autoindex_languages:
+            attribute_autoindex_languages_setting = Setting(key=u"search.attribute_autoindex_languages", value=list(attribute_autoindex_languages))
+            s.merge(attribute_autoindex_languages_setting)
+
         s.commit()
 
     def run_psql_command(self, command, output=False, database=None):
