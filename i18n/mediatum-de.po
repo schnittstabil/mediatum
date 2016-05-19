@@ -61,6 +61,9 @@ msgstr "Zugriff verweigert"
 msgid "login_error_1"
 msgstr "Die Anmeldung ist fehlgeschlagen! Benutzername oder Passwort falsch."
 
+msgid "pass_change_info"
+msgstr "Bitte wenden Sie sich an den Support: ${email}"
+
 msgid "login_submit"
 msgstr "Anmelden"
 
