@@ -631,13 +631,14 @@ class Image(Content):
         if not self.has_data_access() or not self.has_read_access():
             return 404
 
-        use_zoom = config.getboolean("image.use_flash_zoom", True) and self.should_use_zoom
+        no_flash_requested = req.args.get("no_flash", type=int) == 1
+        use_flash_zoom = not no_flash_requested and config.getboolean("image.use_flash_zoom", True) and self.should_use_zoom
 
-        if use_zoom and not self.zoom_available:
+        if use_flash_zoom and not self.zoom_available:
             return 404
 
         d = {}
-        d["flash"] = use_zoom
+        d["flash"] = use_flash_zoom
         d["svg"] = self.svg_image is not None
         d["width"] = self.get("width")
         # we assume that width==origwidth, height==origheight
@@ -645,6 +646,8 @@ class Image(Content):
         d["height"] = self.get("height")
         d["image_url"] = self.preferred_image_url
         d['tileurl'] = "/tile/{}/".format(self.id)
+        if use_flash_zoom:
+            d["no_flash_url"] = "/fullsize?id={}&no_flash=1".format(self.id)
         req.writeTAL("contenttypes/image.html", d, macro="imageviewer")
 
     def popup_thumbbig(self, req):
