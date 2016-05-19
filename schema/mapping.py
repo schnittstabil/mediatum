@@ -19,7 +19,7 @@
 """
 
 from core import Node
-from core.xmlnode import add_node_to_xmldoc, readNodeXML
+from core.xmlnode import getNodeXML, readNodeXML
 from core.transition.postgres import check_type_arg
 
 from core import db
@@ -119,7 +119,8 @@ def exportMapping(name):
     if name == "all":
         return getNodeXML(q(Mappings).one())
     else:
-        return getNodeXML(getMapping(name))
+        id = q(Node).filter_by(name=unicode(name)).one().id
+        return getNodeXML(getMapping(id))
 
 
 def importMapping(filename):
