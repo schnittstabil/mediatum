@@ -13,7 +13,8 @@ LANGUAGES = [u"dutch", u"english"]
 
 @fixture
 def search_node(session, container_node):
-    session.query(Setting).get(u"search.autoindex_languages").value = LANGUAGES
+    session.query(Setting).get(u"search.fulltext_autoindex_languages").value = LANGUAGES
+    session.query(Setting).get(u"search.attribute_autoindex_languages").value = LANGUAGES
     session.flush()
     d1 = DocumentFactory(attrs={u"date": u"2015-08-18T12:48:24.894752", u"title": u"postgres ftw", u"lang": u"english"})
     d1.fulltext = u"The big blue elephant jumped over the crippled blue dolphin."

@@ -31,13 +31,11 @@ from sqlalchemy.orm import undefer
 from core.users import get_guest_user
 from core import config, search
 from core import Node, db, User
-import core.users as users
 from contenttypes import Collections, Home
-from contenttypes import Data
 from schema.schema import VIEW_DATA_ONLY, Metadatatype
 from utils.date import format_date
-from utils.pathutils import getBrowsingPathList, isDescendantOf
-from utils.utils import esc, intersection, getMimeType, modify_tex
+from utils.pathutils import getBrowsingPathList
+from utils.utils import esc, getMimeType, modify_tex
 import web.services.jsonnode as jsonnode
 from web.services.rssnode import template_rss_channel, template_rss_item, feed_channel_dict, try_node_date
 from web.services.serviceutils import attribute_name_filter
@@ -50,8 +48,10 @@ from itertools import izip_longest
 from sqlalchemy import Unicode, Float, Integer
 from utils.xml import xml_remove_illegal_chars
 from core.search import SearchQueryException
+from core.search.representation import FullMatch
 
 import core.oauth as oauth
+from core.search.config import get_service_search_languages
 
 
 logg = logging.getLogger(__name__)
@@ -62,7 +62,6 @@ configured_host = config.get("host.name", "")
 
 from web.services.cache import Cache
 from web.services.cache import date2string as cache_date2string
-import web.services.serviceutils as serviceutils
 
 resultcache = Cache(maxcount=25, verbose=True)
 
@@ -628,18 +627,14 @@ def get_node_data_struct(
         nodequery = node.children
 
     if searchquery:
-        try:
-            searchtree = search.parse_searchquery(searchquery)
-        except search.SearchQueryException:
-            # wrong search queries are interpreted as full search
-            # XXX: can we remove this?
-            try:
-                searchtree = search.parse_searchquery('full="{}"'.format(searchquery))
-            except SearchQueryException as e:
-                # we had enough, return error to client...
-                return _client_error_response(400, str(e))
+        search_languages = get_service_search_languages()
 
-        nodequery = apply_searchtree_to_query(nodequery, searchtree)
+        try:
+            searchtree = search.parse_searchquery_old_style(searchquery)
+        except search.SearchQueryException as e:
+            return _client_error_response(400, str(e))
+
+        nodequery = apply_searchtree_to_query(nodequery, searchtree, search_languages)
 
     if typefilter:
         nodequery = nodequery.filter((Node.type + "/" + Node.schema).op("~")(typefilter))

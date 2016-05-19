@@ -13,6 +13,7 @@ from core.search.representation import AttributeMatch, FullMatch, SchemaMatch, F
 from core.database.postgres import mediatumfunc, DeclarativeBase, integer_pk, integer_fk, C, FK
 from sqlalchemy.dialects.postgresql.base import TSVECTOR
 from core.database.postgres.node import Node
+from core.search.config import get_default_search_languages
 
 
 comparisons = {
@@ -24,33 +25,6 @@ comparisons = {
 }
 
 logg = logging.getLogger(__name__)
-
-
-# postgres search language configuration
-# XXX: maybe we could do that in the database so that an admin could change search parameters at runtime?
-global default_languages
-default_languages = None
-
-
-def fts_config_exists(config_name):
-    stmt = text("SELECT FROM pg_catalog.pg_ts_config WHERE cfgname = :config_name")
-    return db.session.execute(stmt, {"config_name": config_name}).fetchone() is not None
-
-
-def default_languages_from_config():
-    default_languages = set()
-    langs_from_config = config.get("search.default_languages", "simple").split(",")
-    for lang in langs_from_config:
-        if fts_config_exists(lang):
-            default_languages.add(lang)
-        else:
-            logg.warn("postgres search config '%s' not found, ignored")
-
-    if not default_languages:
-        logg.warn("no valid postgres search configs found, using 'simple' config")
-        default_languages.add("simple")
-
-    return default_languages
 
 
 class Fts(DeclarativeBase):
@@ -67,19 +41,26 @@ class Fts(DeclarativeBase):
     tsvec = C(TSVECTOR)
 
 
+def _rewrite_prefix_search(t):
+    # we must ignore searchterms starting with * or Postgres will complain
+    starpos = t.find(u"*")
+    # term starts with *: search term would be empty, Postgres doesn't like that
+    if starpos == 0:
+        return
+    return t[:starpos] + u":*"
+
+
+def _escape_postgres_ts_operators(t):
+    return t.replace(u"&", ur"\&").replace(u"|", ur"\|").replace(u"!", ur"\!").replace(u":", ur"\:").replace(u'"', ur'\"')
+
+
 def _prepare_searchstring(op, searchstring):
     terms = searchstring.strip().strip('"').strip().split()
-    def rewrite_prefix_search(t):
-        # we must ignore searchterms starting with * or Postgres will complain
-        starpos = t.find(u"*")
-        # term starts with *: search term would be empty, Postgres doesn't like that
-        if starpos == 0:
-            return
-        return t[:starpos] + u":*"
-
+    # escape chars with special meaning in postgres tsearch
+    terms = [_escape_postgres_ts_operators(t) for t in terms]
     # Postgres needs the form term:* for prefix search, we allow simple stars at the end of the word
-    rewritten_terms = [rewrite_prefix_search(t) if u"*" in t else t for t in terms]
-    rewritten_searchstring = op.join(t for t in rewritten_terms if t)
+    terms = [_rewrite_prefix_search(t) if u"*" in t else t for t in terms]
+    rewritten_searchstring = op.join(t for t in terms if t)
 
     if not rewritten_searchstring:
         raise SearchQueryException("invalid query for postgres full text search: " + searchstring)
@@ -169,10 +150,7 @@ def make_config_searchtype_cond(languages, searchtypes):
 def apply_searchtree_to_query(query, searchtree, languages=None):
 
     if languages is None:
-        if not default_languages:
-            global default_languages
-            default_languages = default_languages_from_config()
-        languages = default_languages
+        languages = get_default_search_languages()
 
     def walk(n):
         from core import Node

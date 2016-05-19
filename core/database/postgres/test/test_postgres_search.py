@@ -16,10 +16,22 @@ def test_prepare_searchstring_simple():
     assert res == u"python"
 
 
+def test_prepare_searchstring_empty():
+    searchstring = u""
+    with raises(SearchQueryException):
+        _prepare_searchstring("|", searchstring)
+
+
 def test_prepare_searchstring_or():
     searchstring = u'python nim scala'
     res = _prepare_searchstring("|", searchstring)
     assert res == u"python|nim|scala"
+
+
+def test_prepare_searchstring_and():
+    searchstring = u'python nim scala'
+    res = _prepare_searchstring("&", searchstring)
+    assert res == u"python&nim&scala"
 
 
 def test_prepare_searchstring_or_prefix():
@@ -43,28 +55,10 @@ def test_prepare_searchstring_leading_stars():
 def test_prepare_searchstring_leading_stars_only_in_one():
     searchstring = u"pyth* ni *la"
     res = _prepare_searchstring("|", searchstring)
-    assert res == "pyth:*|ni"
+    assert res == u"pyth:*|ni"
 
 
-def test_search_config_nothing(monkeypatch, session):
-    import core.database.postgres.search
-    monkeypatch.setattr(core.database.postgres.search, "config", {})
-    from core.database.postgres.search import default_languages_from_config
-    langs = default_languages_from_config()
-    assert langs == set(["simple"])
-
-
-def test_search_config_wrong(monkeypatch, session):
-    import core.database.postgres.search
-    monkeypatch.setattr(core.database.postgres.search, "config", {"search.default_languages": "invalid"})
-    from core.database.postgres.search import default_languages_from_config
-    langs = default_languages_from_config()
-    assert langs == set(["simple"])
-
-
-def test_search_config(monkeypatch, session):
-    import core.database.postgres.search
-    monkeypatch.setattr(core.database.postgres.search, "config", {"search.default_languages": "english,dutch"})
-    from core.database.postgres.search import default_languages_from_config
-    langs = default_languages_from_config()
-    assert langs == set(["english", "dutch"])
+def test_prepare_searchstring_postgres_operators():
+    searchstring=u'|&:"!'
+    res = _prepare_searchstring("|", searchstring)
+    assert res == ur'\|\&\:\"\!'

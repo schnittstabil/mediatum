@@ -8,56 +8,60 @@
 from utils.classmagic import Case
 
 
-class And(Case):
+class SearchTreeElement(Case):
+    pass
+
+
+class And(SearchTreeElement):
 
     def __init__(self, left, right): pass
 
 
-class Or(Case):
+class Or(SearchTreeElement):
 
     def __init__(self, left, right): pass
 
 
-class Not(Case):
+class Not(SearchTreeElement):
 
     def __init__(self, value): pass
 
 
-class FullMatch(Case):
+class FullMatch(SearchTreeElement):
 
     def __init__(self, searchterm): pass
 
 
-class FulltextMatch(Case):
+class FulltextMatch(SearchTreeElement):
 
     def __init__(self, searchterm): pass
 
 
-class AttributeMatch(Case):
+class AttributeMatch(SearchTreeElement):
 
     def __init__(self, attribute, searchterm): pass
 
 
-class AttributeCompare(Case):
+class AttributeCompare(SearchTreeElement):
 
     def __init__(self, attribute, op, compare_to): pass
 
 
-class TypeMatch(Case):
+class TypeMatch(SearchTreeElement):
 
     def __init__(self, nodetype): pass
 
 
-class SchemaMatch(Case):
+class SchemaMatch(SearchTreeElement):
 
     def __init__(self, schema): pass
 
 
-class AttributeNameMatch(Case):
+class AttributeNameMatch(SearchTreeElement):
 
     def __init__(self, attribute): pass
 
 
-class UpdateTimeMatch(Case):
+class UpdateTimeMatch(SearchTreeElement):
 
     def __init__(self, op, timestamp): pass
