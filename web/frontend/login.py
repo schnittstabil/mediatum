@@ -110,7 +110,8 @@ def login(req):
     user = users.user_from_session(req.session)
     navframe = frame.getNavigationFrame(req)
     navframe.feedback(req)
-    navframe.write(req, req.getTAL(theme.getTemplate("login.html"), {"error": error, "user": user}, macro="login"))
+    navframe.write(req, req.getTAL(theme.getTemplate("login.html"),
+                                   {"error": error, "user": user, "email": config.get("email.admin")}, macro="login"))
     return httpstatus.HTTP_OK
 
 

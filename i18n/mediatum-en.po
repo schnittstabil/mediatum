@@ -58,6 +58,9 @@ msgstr "access denied"
 msgid "login_error_1"
 msgstr "Login failed! Wrong name or password."
 
+msgid "pass_change_info"
+msgstr "Please contact support: ${email}"
+
 msgid "login_submit"
 msgstr "Login"
 
