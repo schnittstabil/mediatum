@@ -19,19 +19,24 @@
 """
 
 import os
+import pickle
 import re
 import xml.parsers.expat
-import core.config as config
 import logging
 import glob
 import codecs
 
+from sqlalchemy.orm.exc import NoResultFound
+
+from core import db, Node
+import core.config as config
+from lib.geoip.geoip import GeoIP, getFullCountyName
 from utils.date import parse_date, format_date, now, make_date
 from utils.utils import splitpath
 from utils.fileutils import importFile
-from lib.geoip.geoip import GeoIP, getFullCountyName
 
-import pickle
+
+q = db.query
 
 
 class LogItem:
@@ -173,10 +178,12 @@ class StatisticFile:
         return self.period_year
 
     def getName(self, id):
-        try:
-            return tree.getNode(id).getName()
-        except tree.NoSuchNodeError:
+        node = q(Node).get(id)
+
+        if node is None:
             return id
+
+        return node.name
 
     def getPeriodMonth(self):
         return self.period_month
