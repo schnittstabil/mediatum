@@ -105,7 +105,7 @@ def getContent(req, ids):
                     state = "error"
             basenode.files = []
             db.session.commit()
-            req.write(json.dumps({'state': state}))
+            req.write(json.dumps({'state': state}), ensure_ascii=False)
             return None
 
         if req.params.get('action') == "buildnode":  # create nodes
@@ -218,8 +218,9 @@ def getContent(req, ids):
             # standard file
             content = req.getTAL('web/edit/modules/upload.html', {'files': [filename], 'schemes': scheme_type}, macro="uploadfileok")
 
-            res = json.dumps({'state': state, 'newnodes': newnodes, 'errornodes':
-                              errornodes, 'new_tree_labels': new_tree_labels, 'ret': content})
+            res = {'state': state, 'newnodes': newnodes, 'errornodes':
+                              errornodes, 'new_tree_labels': new_tree_labels, 'ret': content}
+            res = json.dumps(res, ensure_ascii=False)
             req.write(res)
             return None
 
@@ -235,7 +236,7 @@ def getContent(req, ids):
                                                                   "identifier_importers": identifier_importers.values()},
                                  macro="addmeta")
 
-            req.write(json.dumps({'content': content}))
+            req.write(json.dumps({'content': content}), ensure_ascii=False)
             return None
 
         # deliver schemes for given contenttype
@@ -243,7 +244,7 @@ def getContent(req, ids):
             ret = []
             for scheme in get_permitted_schemas_for_datatype(req.params.get('contenttype')):
                 ret.append({'id': scheme.name, 'name': scheme.getLongName()})
-            req.write(json.dumps({'schemes': ret}))
+            req.write(json.dumps({'schemes': ret}), ensure_ascii=False)
             return None
 
         # create node with given type/schema
@@ -257,8 +258,9 @@ def getContent(req, ids):
             node.set("creator", user.login_name)
             node.set("creationtime",  ustr(time.strftime('%Y-%m-%dT%H:%M:%S', time.localtime(time.time()))))
             db.session.commit()
-            req.write(json.dumps({'newid': node.id,
-                                  'id': req.params.get('id')}))
+            res = {'newid': node.id,
+                   'id': req.params.get('id')}
+            req.write(json.dumps(res, ensure_ascii=False))
             return None
 
         # create node using given identifier (doi, ...)
@@ -297,7 +299,7 @@ def getContent(req, ids):
                 else:  # import failed, no new_node created
                     logg.info("... in %s.%s: import failed, no new_node created for identifier (%s)", __name__, funcname(), identifier)
 
-                req.write(json.dumps(res))
+                req.write(json.dumps(res, ensure_ascii=False))
 
             # return value will be logged when level is DEBUG
             return None
@@ -343,14 +345,14 @@ def getContent(req, ids):
                                       'ret': content,
                                       'state': state,
                                       'filename': req.params.get('file'),
-                                      'new_tree_labels': new_tree_labels}))
+                                      'new_tree_labels': new_tree_labels}, ensure_ascii=False))
                 return None
 
             if mime[1] == "other":  # file type not supported
                 req.write(json.dumps({'type': mime[1],
                                       'ret': req.getTAL('web/edit/modules/upload.html', {}, macro="uploadfileerror"),
                                       'state': 'error',
-                                      'filename': req.params.get('file')}))
+                                      'filename': req.params.get('file')}, ensure_ascii=False))
                 logg.debug("%s|%s.%s: added file to node %s (%s, %s) -> file type not supported",
                              get_user_id(req), __name__, funcname(), node.id, node.name, node.type)
                 return None
@@ -388,7 +390,7 @@ def getContent(req, ids):
                   'new_tree_labels': new_tree_labels
             }
 
-            req.write(json.dumps(_d))
+            req.write(json.dumps(_d, ensure_ascii=False))
             return None
     schemes = get_permitted_schemas()
 

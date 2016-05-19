@@ -87,7 +87,7 @@ def getContent(req, ids):
         schemafield = None
     if schemafield and schemafield.type != "metafield":
         schemafield = None
-   
+
     fields = None
     selectedfield = None
     isnewfield = False
@@ -156,7 +156,7 @@ def getContent(req, ids):
 
     data["schema"] = schema
 
-    def display(schemafield): 
+    def display(schemafield):
         if not schemafield or schemafield.type != 'metafield':
             return 0
         if not schemafield.Searchfield():
@@ -172,7 +172,7 @@ def getContent(req, ids):
 
     if any([openfield, isnewfield, delfield, delsubfield, createsub, schema, searchtypechanged, closefield]):
         content = req.getTAL("web/edit/modules/searchmask.html", data, macro="edit_search")
-        s = json.dumps({'content': content})
+        s = json.dumps({'content': content}, ensure_ascii=False)
         req.write(s)
         return None
 

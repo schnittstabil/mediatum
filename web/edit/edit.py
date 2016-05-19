@@ -455,7 +455,7 @@ def edit_tree(req):
 
         data.append(nodedata)
 
-    return req.write(json.dumps(data, indent=4))
+    return req.write(json.dumps(data, indent=4, ensure_ascii=False))
 
 
 def get_edit_menu_tabs(nodeclass):
@@ -495,7 +495,7 @@ def action(req):
             except:
                 logg.exception("exception ignored: could not make fancytree label for node %s", nid)
         res_dict = {'changednodes': changednodes}
-        req.write(json.dumps(res_dict, indent=4))
+        req.write(json.dumps(res_dict, indent=4, ensure_ascii=False))
         return
 
     else:
@@ -548,7 +548,7 @@ def action(req):
             'children': [],
         }
 
-        req.write(json.dumps(fancytree_nodedata))
+        req.write(json.dumps(fancytree_nodedata, ensure_ascii=False))
         logg.info("%s adding new container %s (%s) to %s (%s, %s)",
                   user.login_name, newnode.id, newnode.type, node.id, node.name, node.type)
         return
@@ -655,7 +655,7 @@ def action(req):
             except:
                 logg.exception("exception ignored: could not make fancytree label for node %s", nid)
         res_dict = {'changednodes': changednodes}
-        req.write(json.dumps(res_dict, indent=4))
+        req.write(json.dumps(res_dict, indent=4, ensure_ascii=False))
     else:
         try:
             req.write(dest.id)
