@@ -60,7 +60,7 @@ def getContent(req, ids):
                         data = fil.read()
                     logg.info("%s opened startpage %s for node %s (%s, %s)", user.login_name, filepath, node.id, node.name, node.type)
                     break
-            req.write(json.dumps({'filecontent': data}), ensure_ascii=False)
+            req.write(json.dumps({'filecontent': data}, ensure_ascii=False))
         if req.params.get('action') == "save":  # save filedata
             if req.params.get('filename') == "add":  # add new file
                 maxid = 0

@@ -62,7 +62,7 @@ def getContent(req, ids):
     if "action" in req.params:
         if req.params.get('action') == "resort":
             field = req.params.get('value', '').strip()
-            req.write(json.dumps({'state': 'ok', 'values': showdir(req, node, sortfield=field)}), ensure_ascii=False)
+            req.write(json.dumps({'state': 'ok', 'values': showdir(req, node, sortfield=field)}, ensure_ascii=False))
             return None
 
         elif req.params.get('action') == "save":  # save selection for collection

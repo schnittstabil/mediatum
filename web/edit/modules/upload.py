@@ -105,7 +105,7 @@ def getContent(req, ids):
                     state = "error"
             basenode.files = []
             db.session.commit()
-            req.write(json.dumps({'state': state}), ensure_ascii=False)
+            req.write(json.dumps({'state': state}, ensure_ascii=False))
             return None
 
         if req.params.get('action') == "buildnode":  # create nodes
@@ -236,7 +236,7 @@ def getContent(req, ids):
                                                                   "identifier_importers": identifier_importers.values()},
                                  macro="addmeta")
 
-            req.write(json.dumps({'content': content}), ensure_ascii=False)
+            req.write(json.dumps({'content': content}, ensure_ascii=False))
             return None
 
         # deliver schemes for given contenttype
@@ -244,7 +244,7 @@ def getContent(req, ids):
             ret = []
             for scheme in get_permitted_schemas_for_datatype(req.params.get('contenttype')):
                 ret.append({'id': scheme.name, 'name': scheme.getLongName()})
-            req.write(json.dumps({'schemes': ret}), ensure_ascii=False)
+            req.write(json.dumps({'schemes': ret}, ensure_ascii=False))
             return None
 
         # create node with given type/schema
