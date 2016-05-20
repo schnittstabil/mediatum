@@ -19,9 +19,12 @@ from core.auth import authenticate_user_credentials, logout_user
 from flask.ext import admin, login
 from flask.ext.admin import helpers, expose
 import os
+from web.newadmin.views.node import NodeView, FileView
+from web.newadmin.views.setting import SettingView
 
 q = db.query
 
+DEBUG = True
 
 class IndexView(admin.AdminIndexView):
     """Creates index view class for handling login."""
@@ -76,12 +79,23 @@ def make_app():
     admin_app = Flask("mediaTUM admin", template_folder=templates_dir)
     admin_app.debug = True
     admin_app.config["SECRET_KEY"] = "dev"
+
+    if DEBUG:
+        admin_app.debug = True
+        from werkzeug.debug import DebuggedApplication
+        admin_app.wsgi_app = DebuggedApplication(admin_app.wsgi_app, True)
+
     admin = Admin(admin_app, name="mediaTUM", template_mode="bootstrap3",
                   index_view=IndexView(), base_template='admin_base.html')
 
     admin.add_view(UserView())
     admin.add_view(UserGroupView())
     admin.add_view(AuthenticatorInfoView())
+
+    admin.add_view(NodeView())
+    admin.add_view(FileView())
+
+    admin.add_view(SettingView())
 
     return admin_app
 
