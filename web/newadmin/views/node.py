@@ -47,6 +47,8 @@ class NodeView(BaseAdminView):
 
 class FileView(BaseAdminView):
 
+    column_filters = ("path", "filetype", "mimetype")
+    column_editable_list = ("path", "filetype", "mimetype")
     form_columns = ("node", "path", "filetype", "mimetype")
     form_ajax_refs = {
         "node": {"fields": (Node.name, )}

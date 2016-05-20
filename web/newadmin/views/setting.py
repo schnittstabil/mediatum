@@ -15,6 +15,9 @@ class SettingView(BaseAdminView):
 
     form_columns = ("key", "value")
 
+    can_create = False
+    can_edit = False
+
     def __init__(self, session=db.session, *args, **kwargs):
 
         super(SettingView, self).__init__(Setting, session, *args, **kwargs)
