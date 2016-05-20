@@ -846,8 +846,13 @@ def content(req):
         t2 = current.split("_")[-1]
         if t2 in editModules.keys():
             c = editModules[t2].getContent(req, ids)
-            if c:
-                content["body"] += c  # use standard method of module
+
+            if isinstance(c, int):
+                # module returned a custom http status code instead of HTML content
+                return c
+
+            elif c:
+                content["body"] += c
             else:
                 logg.debug('empty content')
                 return
