@@ -501,22 +501,32 @@ supported_formats = [
 def _handle_oauth(res, fullpath, params, timetable):
     username = params.get('user')
     res['oauthuser'] = username
-    _user = q(User).filter_by(login_name=username)
+    # XXX: We allow duplicate login names, how can we solve this better here?
+    users = q(User).filter_by(login_name=username).all()
+
+    if not users:
+        logg.warn("oauth: invalid user given, login_name=%s", username, trace=False)
+        return
+    elif len(users) > 1:
+        logg.warn("oauth: multiple users found, refusing request, login_name=%s", username, trace=False)
+        return
+
+    user = users[0]
 
     # users.getUser(_username) returned user
-    timetable.append(['''oauth: users.getUser(%r) returned %r (%r, %r) -> groups: %r''' %
-                      (username, _user, _user.getName(), _user.id, _user.groups)])
+    timetable.append(['''oauth: users.getUser(%r) returned %r (%s, %s) -> groups: %s''' %
+                      (username, user, user.login_name, user.id, user.group_names)])
 
     valid = oauth.verify_request_signature(fullpath, params)
 
-    if not valid:
-        user = None
-    else:
-        user = _user
-        res['userid'] = user.id
     timetable.append(['''oauth: verify_request_signature returned %r for authname %r, userid: %r, groups: %r''' %
                       (valid, username, user.id, user.group_names)])
 
+    if not valid:
+        return
+
+    res['userid'] = user.id
+    res['oauthuser'] = user.login_name
     return user
 
 
@@ -571,8 +581,7 @@ def get_node_data_struct(
 
     # verify signature if a user is given, otherwise use guest user
     if params.get('user'):
-        user = _handle_oauth(params, timetable)
-        res['oauthuser'] = user.login_name
+        user = _handle_oauth(res, req.fullpath, params, timetable)
     else:
         user = get_guest_user()
         res['oauthuser'] = ''  # username supplied for authentication (login name) in query parameter user
