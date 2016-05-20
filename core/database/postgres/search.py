@@ -192,6 +192,6 @@ def apply_searchtree_to_query(query, searchtree, languages=None):
     searchcond, need_fts_join = walk(searchtree)
 
     if need_fts_join:
-        query = query.join(Fts)
+        query = query.outerjoin(Fts)
 
     return query.filter(searchcond)
