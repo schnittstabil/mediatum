@@ -21,7 +21,6 @@
 """
 import logging
 import os
-from subprocess import check_call
 import tempfile
 from PIL import Image as PILImage, ImageDraw
 
@@ -39,6 +38,7 @@ import lib.iptc.IPTC
 from lib.Exif import EXIF
 from utils.list import filter_scalar
 from utils.compat import iteritems
+import utils.process
 import zipfile
 from contextlib import contextmanager
 from StringIO import StringIO
@@ -65,9 +65,8 @@ def make_thumbnail_image(src_filepath, dest_filepath):
         temp_jpg_file.close()
         tmpjpg = temp_jpg_file.name
 
-        convert = config.get("external.convert", "convert")
         if pic.mode == "CMYK" and (src_filepath.endswith("jpg") or src_filepath.endswith("jpeg")) or pic.mode in ["P", "L"]:
-            check_call([convert, "-quality", "100", "-draw", 'rectangle 0,0 1,1', src_filepath, tmpjpg])
+            convert_image(src_filepath, tmpjpg, ["-quality", "100", "-draw", "rectangle 0,0 1,1"])
             pic = PILImage.open(tmpjpg)
 
         pic.load()
@@ -113,9 +112,8 @@ def make_presentation_image(src_filepath, dest_filepath):
         temp_jpg_file.close()
         tmpjpg = temp_jpg_file.name
 
-        convert = config.get("external.convert", "convert")
         if pic.mode == "CMYK" and (src_filepath.endswith("jpg") or src_filepath.endswith("jpeg")) or pic.mode in ["P", "L"]:
-            check_call([convert, "-quality", "100", "-draw", 'rectangle 0,0 1,1', src_filepath, tmpjpg])
+            convert_image(src_filepath, tmpjpg, ["-quality", "100", "-draw", "rectangle 0,0 1,1"])
             pic = PILImage.open(tmpjpg)
 
         pic.load()
@@ -147,8 +145,7 @@ def convert_image(src_filepath, dest_filepath, options=[]):
     """Create a PNG with filename `dest_filepath` from a file at `src_filepath`
     :param options: additional command line option list passed to convert
     """
-    convert = config.get("external.convert", "convert")
-    check_call([convert] + options + [src_filepath, dest_filepath])
+    utils.process.check_call(["convert"] + options + [src_filepath, dest_filepath])
 
 
 def get_image_dimensions(image):

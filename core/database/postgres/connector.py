@@ -7,7 +7,6 @@ import logging
 import atexit
 import pwd
 import os.path
-from subprocess import check_call, check_output, call
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, scoped_session
@@ -21,6 +20,7 @@ from core.database.init import init_database_values
 from utils.utils import find_free_port
 from utils.postgres import schema_exists, table_exists
 from core.database.postgres.permission import AccessRulesetToRule
+import utils.process
 import sys
 from core.search.config import get_fulltext_autoindex_languages, get_attribute_autoindex_languages
 
@@ -110,12 +110,12 @@ class PostgresSQLAConnector(object):
         dirpath = config.check_create_test_db_dir()
         # database role name must be the same as the process user
         user = pwd.getpwuid(os.getuid())[0]
-        code = call(["pg_ctl", "status", "-D", dirpath])
+        code = utils.process.call(["pg_ctl", "status", "-D", dirpath])
         if code:
             # error code > 0? database dir is not present or server not running
             if code == 4:
                 # dirpath is not a proper database directory, try to init it
-                check_call(["pg_ctl", "init", "-D", dirpath])
+                utils.process.check_call(["pg_ctl", "init", "-D", dirpath])
             elif code == 3:
                 # database directory is ok, but no server running
                 logg.info("using existing database directory %s", dirpath)
@@ -126,13 +126,13 @@ class PostgresSQLAConnector(object):
             port = find_free_port()
             socketdir = "/tmp"
             logg.info("starting temporary postgresql server on port %s as user %s", port, user)
-            check_call(["pg_ctl", "start", "-w", "-D", dirpath, "-o", "'-p {}'".format(port)])
+            utils.process.check_call(["pg_ctl", "start", "-w", "-D", dirpath, "-o", "'-p {}'".format(port)])
 
             # we have started the database server, it should be stopped automatically if mediaTUM exits
             def stop_db():
                 self.Session.close_all()
                 self.engine.dispose()
-                check_call(["pg_ctl", "stop", "-D", dirpath])
+                utils.process.check_call(["pg_ctl", "stop", "-D", dirpath])
 
             atexit.register(stop_db)
         else:
@@ -426,9 +426,9 @@ class PostgresSQLAConnector(object):
         env = dict(os.environ, PGPASSWORD=self.passwd)
 
         if output:
-            return check_output(args, env=env)
+            return utils.process.check_output(args, env=env)
         else:
-            check_call(args, env=env)
+            utils.process.check_call(args, env=env)
 
     # test helpers
 

@@ -19,7 +19,6 @@
 
 import logging
 import shutil
-import subprocess
 from PIL import Image, ImageDraw
 from contenttypes.data import Content
 from lib.audio import File as AudioFile
@@ -31,6 +30,7 @@ from core.styles import getContentStyles
 from core.transition.postgres import check_type_arg_with_schema
 from core import File
 from core import db
+import utils.process
 
 logg = logging.getLogger(__name__)
 
@@ -40,7 +40,7 @@ def makeAudioThumb(self, audiofile):
     path, ext = splitfilename(audiofile.abspath)
     if not audiofile.abspath.endswith(".mp3"):
         ret = path + ".mp3"
-        subprocess.call(("lame", "-V", "4", "-q", audiofile.abspath, ret))
+        utils.process.call(("lame", "-V", "4", "-q", audiofile.abspath, ret))
     self.files.append(File(path + ".mp3", "mp3", "audio/mpeg"))
     return ret
 
