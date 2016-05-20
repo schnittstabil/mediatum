@@ -27,6 +27,7 @@ from sqlalchemy_continuum import versioning_manager
 from sqlalchemy_continuum.utils import version_class
 from werkzeug.utils import cached_property
 from core.search.representation import SearchTreeElement
+from utils.date import format_date
 
 
 logg = logging.getLogger(__name__)
@@ -441,7 +442,7 @@ class Node(DeclarativeBase, NodeMixin):
 
                 # XXX: Actually, we could use the transaction time instead of writing an update time.
                 # But this is the old way, keep it because the application expects it.
-                node[u"updatetime"] = datetime.datetime.now().isoformat()
+                node[u"updatetime"] = format_date()
                 return tx
 
             def __exit__(self, exc_type, exc_value, traceback):
