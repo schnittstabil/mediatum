@@ -31,12 +31,12 @@ def getContent(req, ids):
     if req.params.get("style","")=="popup":
         req.write(objlist(req))
         return ""
-    
+
     user = current_user
     if "license" in user.hidden_edit_functions:
         req.setStatus(httpstatus.HTTP_FORBIDDEN)
         return req.getTAL("web/edit/edit.html", {}, macro="access_error")
-        
+
     node = q(Node).get(ids[0])
     return req.getTAL("web/edit/modules/license.html", {"node":node, "nodes": [node]}, macro="edit_license_info")
 
@@ -47,6 +47,6 @@ def objlist(req):
         req.setStatus(httpstatus.HTTP_FORBIDDEN)
         return req.getTAL("web/edit/edit.html", {}, macro="access_error")
 
-    return req.getTAL("web/edit/modules/license.html", {"children": node.children,
+    return req.getTAL("web/edit/modules/license.html", {"children": node.all_children,
                                                         'hash_function': get_hash},
                       macro="edit_license")
