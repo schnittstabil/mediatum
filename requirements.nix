@@ -400,6 +400,7 @@ in {
       # other
       pkgs.ffmpeg
       imagemagick
+      pkgs.pdftk
       pkgs.graphviz-nox
       pkgs.icu
       pkgs.perlPackages.ImageExifTool
