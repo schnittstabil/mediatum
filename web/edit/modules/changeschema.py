@@ -33,30 +33,9 @@ q = db.query
 logg = logging.getLogger(__name__)
 
 
-def elemInList(list, name):
-    for item in list:
-        if item.__name__.lower() == name:
-            return True
-    return False
-
-
-def getTypes(datatypes):
-    res = []
-    for dtype in datatypes:
-        if dtype.__name__.lower() not in ['content']:
-            res.append(dtype)
-    return res
-
-
-def getContainers(datatypes):
-    res = []
-    datatypes = getTypes(datatypes)
-    for dtype in datatypes:
-        if hasattr(dtype, "isContainer"):
-            if dtype.isContainer():
-                res.append(dtype)
-    db.session.commit()
-    return res
+def _redirect_to_view(req):
+    req["Location"] = "{}?id={}&tab=changeschema".format(req.fullpath, req.args["id"])
+    return httpstatus.HTTP_MOVED_TEMPORARILY
 
 
 @dec_entry_log
@@ -72,56 +51,56 @@ def getContent(req, ids):
     schemes = get_permitted_schemas()
     long_scheme_names = {scheme.name: scheme.getLongName() for scheme in schemes}
 
-    # find allowed datatypes
-    dtypes = []
-    datatypes = Data.get_all_datatypes()
-    for scheme in schemes:
-        for dtype in scheme.getDatatypes():
-            if dtype not in dtypes:
-                for t in datatypes:
-                    if t.__name__.lower() == dtype and not elemInList(dtypes, t.__name__.lower()):
-                        dtypes.append(t)
 
-    dtypes.sort(key=lambda x: translate(x.__name__, request=req).lower())
-
-    admissible_objtypes = getTypes(datatypes)
-    admissible_datatypes = [t for t in admissible_objtypes if issubclass(t, Content)]
-    admissible_containers = [n for n in admissible_objtypes if issubclass(t, Container)]
-
-    admissible_datatypes.sort(key=lambda x: translate(x.__name__, request=req).lower())
-    admissible_containers.sort(key=lambda x: translate(x.__name__, request=req).lower())
-
-    available_schemes = [s for s in schemes if node.type in s.getDatatypes()]
+    if isinstance(node, Container):
+        admissible_containers = [s.__name__.lower()
+                                 for s
+                                 in Container.get_all_subclasses(filter_classnames=["container", "collections", "home", "root"])]
+    else:
+        admissible_content_types = [s.__name__.lower()
+                                    for s
+                                    in Content.get_all_subclasses(filter_classnames=["content"])]
 
     # filter schemes for special datatypes
     if req.params.get("objtype", "") != "":
         new_type = req.params.get('objtype', '')
         new_schema = req.params.get('schema', '')
 
-        schemes = [scheme for scheme in schemes if new_type in scheme.getDatatypes()]
+        if not new_schema:
+            return _redirect_to_view(req)
 
         if new_type != node.type or new_schema != node.schema:
-            logg.info("{} changed node schema for node {} '{}' from '{}' to '{}'".format(user.login_name,
+
+
+            if isinstance(node, Container):
+                if not new_type in admissible_containers:
+                    logg.warn(u"changeschema: illegal container type %s", new_type)
+                    return httpstatus.HTTP_BAD_REQUEST
+            else:
+                if not new_type in admissible_content_types:
+                    logg.warn(u"changeschema: illegal content type %s", new_type)
+                    return httpstatus.HTTP_BAD_REQUEST
+
+            available_schema_names = [s.name for s in schemes if new_type in s.getDatatypes()]
+
+            if not new_schema in available_schema_names:
+                    logg.warn(u"changeschema: illegal schema %s", new_schema)
+                    return httpstatus.HTTP_BAD_REQUEST
+
+            logg.info(u"{} changed node schema for node {} '{}' from '{}' to '{}'".format(user.login_name,
                                                                                          node.id,
                                                                                          node.name,
                                                                                          node.type,
                                                                                          new_type))
-            # we must save the node id in order to reload the node later
-            reload_node_id = node.id
-
             node.type = new_type
             node.schema = new_schema
 
             db.session.commit()
-            # XXX: redirect after database modifications would be better, but we try to continue with old data...
 
-            # reload the node (it could be an object of another class now)
-            db.session.expunge(node)
-            node = q(Node).get(reload_node_id)
+            return _redirect_to_view(req)
 
-            available_schemes = [s for s in schemes if new_type in s.getDatatypes()]
-
-    if "action" in req.params.keys():
+    elif "action" in req.params.keys():
+        available_schemes = [s for s in schemes if node.type in s.getDatatypes()]
         if req.params.get("action").startswith("get_schemes_for_"):
             new_type = req.params.get("action").replace("get_schemes_for_", "").lower()
             available_schemes = [s for s in schemes if new_type in s.getDatatypes()]
@@ -132,26 +111,28 @@ def getContent(req, ids):
                          macro="changeschema_selectscheme")
         return ""
 
-    containers = getContainers(datatypes)
-
-    d = {'id': req.params.get('id'),
-         'error': error,
-         'node': node,
-         'current_type': node.type,
-         'current_schema': node.schema,
-         # XXX: this is the only line that uses getTypeAlias. What is the real meaning?
-         'type_alias': node.getTypeAlias(),
-         'is_container': int(node.isContainer()),
-         'nodes': [node]}
-
-    if not node.isContainer():
-        d['long_current_schema'] = long_scheme_names[node.schema]
-
-    if node.type in [dtype.__name__.lower() for dtype in containers]:
-        d['schemes'] = []
-        d['datatypes'] = admissible_containers  # containers
     else:
-        d['schemes'] = available_schemes
-        d['datatypes'] = admissible_datatypes  # dtypes
+        d = {'id': req.params.get('id'),
+             'error': error,
+             'node': node,
+             'current_type': node.type,
+             'current_schema': node.schema,
+             # XXX: this is the only line that uses getTypeAlias. What is the real meaning?
+             'type_alias': node.getTypeAlias(),
+             'is_container': int(node.isContainer()),
+             'nodes': [node]}
 
-    return req.getTAL("web/edit/modules/changeschema.html", d, macro="changeschema_popup")
+        d['long_current_schema'] = long_scheme_names.get(node.schema)
+
+        available_schemes = [s for s in schemes if node.type in s.getDatatypes()]
+
+        if isinstance(node, Container):
+            admissible_containers.sort(key=lambda x: translate(x, request=req).lower())
+            d['schemes'] = available_schemes
+            d['datatypes'] = admissible_containers
+        else:
+            admissible_content_types.sort(key=lambda x: translate(x, request=req).lower())
+            d['schemes'] = available_schemes
+            d['datatypes'] = admissible_content_types
+
+        return req.getTAL("web/edit/modules/changeschema.html", d, macro="changeschema_popup")
