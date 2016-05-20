@@ -85,7 +85,15 @@ def make_app():
 
     return admin_app
 
+
 app = make_app()
+
+
+@app.after_request
+def request_finished_db_session(response):
+    from core import db
+    db.session.close()
+    return response
 
 
 def init_login():
