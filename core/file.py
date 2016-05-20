@@ -88,3 +88,10 @@ class FileMixin(object):
     def getSize(self):
         warn("use File.size instead", DeprecationWarning)
         return self.size
+
+    def __repr__(self):
+        return "File for Node #{} ({}:{}|{}) at {}".format(
+            self.nid, self.path, self.filetype, self.mimetype, hex(id(self)))
+
+    def __unicode__(self):
+        return u"{} {} for # {} in {}".format(self.filetype, self.mimetype, self.nid, self.path)

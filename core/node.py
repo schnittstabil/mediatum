@@ -212,6 +212,14 @@ class NodeMixin(object):
     def __repr__(self):
         return u"Node<{} '{}'> ({})".format(self.id, self.name, object.__repr__(self)).encode("utf8")
 
+    def __unicode__(self):
+        if self.schema:
+            typestr = self.type + "/" + self.schema
+        else:
+            typestr = self.type
+
+        return u"# {} {} \"{}\"".format(self.id, typestr, self.name)
+
     # some additional methods from dict
 
     def __contains__(self, key):

@@ -55,10 +55,6 @@ class File(DeclarativeBase, FileMixin):
 
     node = rel(Node, backref=bref("files", lazy="dynamic", cascade="all, delete-orphan", passive_deletes=True, query_class=AppenderQueryWithLen))
 
-    def __repr__(self):
-        return "File for Node #{} ({}:{}|{}) at {}".format(
-            self.nid, self.path, self.filetype, self.mimetype, hex(id(self)))
-
 
 @event.listens_for(File, 'after_delete')
 def unlink_physical_file_on_delete(mapper, connection, target):
