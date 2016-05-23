@@ -32,10 +32,9 @@ from core.translation import t, addLabels
 from metadata.upload import getFilelist
 from schema.schema import getMetaType, Metafield
 from utils.fileutils import getImportDir
-from utils.utils import join_paths
+from utils.utils import join_paths, desc
 from utils.date import format_date, now
 
-import utils.utils as utils
 import core.config as config
 import utils.process
 
@@ -264,7 +263,7 @@ class WorkflowStep_AddFormPage(WorkflowStep):
                     else:
                         logg.warning("workflowstep %s (%s): could not find attribute for pdf form field '%s' - node: '%s' (%s)",
                                        current_workflow_step.name, current_workflow_step.id, fieldname, node.name, node.id)
-                    fields.append((fieldname, remove_tags(utils.desc(value))))
+                    fields.append((fieldname, remove_tags(desc(value))))
 
         if not pdf_form_separate and fnode and f_retrieve_path and os.path.isfile(f_retrieve_path):
             pages = fillPDFForm(f_retrieve_path, fields, input_is_fullpath=True, editable=pdf_fields_editable)
