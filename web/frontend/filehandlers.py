@@ -111,7 +111,7 @@ def send_image(req):
     except ValueError:
         return 400
 
-    version_id = version_id_from_req()
+    version_id = version_id_from_req(req)
 
     node = get_node_or_version(nid, version_id, Content)
 
@@ -167,7 +167,7 @@ def send_original_file(req):
     except ValueError:
         return 400
 
-    version_id = version_id_from_req()
+    version_id = version_id_from_req(req)
 
     node = get_node_or_version(nid, version_id, Data)
 
@@ -192,7 +192,7 @@ def send_file(req):
         nidstr = nidstr[:-13]
 
     nid = userinput.string_to_int(nidstr)
-    version_id = version_id_from_req()
+    version_id = version_id_from_req(req)
 
     node = get_node_or_version(nid, version_id, Data)
 
@@ -243,7 +243,7 @@ def send_file(req):
 def send_attachment(req):
     try:
         nid = node_id_from_req_path(req)
-        version_id = version_id_from_req()
+        version_id = version_id_from_req(req)
     except ValueError:
         return 400
 
@@ -268,7 +268,7 @@ def send_attfile(req):
         return 400
 
     nid = userinput.string_to_int(parts[0])
-    version_id = version_id_from_req()
+    version_id = version_id_from_req(req)
 
     if nid is None:
         return 400

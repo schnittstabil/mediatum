@@ -73,7 +73,7 @@ def create_current_version(current_version_node):
     version_id = current_version_node.system_attrs[u"version.id"]
     operation_type = Operation.UPDATE
     TransactionMeta = versioning_manager.transaction_meta_cls
-    tx.meta_relation[u"tag"] = TransactionMeta(key=u"tag", value=u"v" + unicode(version_id))
+    tx.meta_relation[u"tag"] = TransactionMeta(key=u"tag", value=unicode(version_id))
 
     if u"version.comment" in current_version_node.system_attrs:
         tx.meta_relation[u"comment"] = TransactionMeta(key=u"comment", value=current_version_node.system_attrs[u"version.comment"])
