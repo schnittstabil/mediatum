@@ -396,7 +396,7 @@ def upload_for_html(req):
 
 
 def get_special_dir_type(node):
-    return node.get("system.used_as", None)
+    return node.system_attrs.get("used_as", None)
 
 
 def get_edit_label(node, lang):
