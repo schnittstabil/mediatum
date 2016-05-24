@@ -61,7 +61,11 @@ def filebrowser(node, req):
             file = {}
             if not os.path.isdir(config.get("paths.datadir") + path):  # file
                 file["mimetype"], file["type"] = getMimeType(config.get("paths.datadir") + path)
-                file["icon"] = fileicons[file["mimetype"]]
+                icon = fileicons.get(file["mimetype"])
+                if not icon:
+                    icon = fileicons["other"]
+
+                file["icon"] = icon
                 file["path"] = path
                 file["name"] = os.path.basename(path)
                 if os.path.exists(config.get("paths.datadir") + path):
