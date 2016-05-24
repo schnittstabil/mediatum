@@ -30,6 +30,8 @@ logg = logging.getLogger(__name__)
 
 @check_type_arg_with_schema
 class Imagestream(image.Image):
+    """XXX: Imagestream doesn't work with versioning, but that shouldn't be needed
+    """
 
     def getFiles(node):
         files = []

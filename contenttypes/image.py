@@ -30,7 +30,7 @@ from core.attachment import filebrowser
 from core.translation import t
 from core.styles import getContentStyles
 from core.transition.postgres import check_type_arg_with_schema
-from contenttypes.data import Content
+from contenttypes.data import Content, prepare_node_data
 from utils.utils import isnewer, iso2utf8, utf8_decode_escape
 from utils.compat import iteritems
 
@@ -275,7 +275,7 @@ class Image(Content):
 
     # prepare hash table with values for TAL-template
     def _prepareData(self, req):
-        obj = super(Image, self)._prepareData(req)
+        obj = prepare_node_data(self, req)
         if obj["deleted"]:
             # no more processing needed if this object version has been deleted
             # rendering has been delegated to current version

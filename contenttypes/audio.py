@@ -20,7 +20,7 @@
 import logging
 import shutil
 from PIL import Image, ImageDraw
-from contenttypes.data import Content
+from contenttypes.data import Content, prepare_node_data
 from lib.audio import File as AudioFile
 from utils.utils import splitfilename
 from utils.date import parse_date, format_date, make_date
@@ -142,7 +142,7 @@ class Audio(Content):
 
     # prepare hash table with values for TAL-template
     def _prepareData(self, req):
-        obj = super(Audio, self)._prepareData(req)
+        obj = prepare_node_data(self, req)
         if obj["deleted"]:
             # no more processing needed if this object version has been deleted
             # rendering has been delegated to current version

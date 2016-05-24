@@ -374,6 +374,17 @@ class Data(Node):
         return self.name
 
 
+def _get_node_metadata_html(node, req):
+    """Renders HTML data for displaying metadata using the the fullview mask.
+    :rtype: unicode
+    """
+    mask = node.getFullView(lang(req))
+    if mask is not None:
+        return mask.getViewHTML([node], VIEW_HIDE_EMPTY, lang(req))  # hide empty elements
+    else:
+        return t(req, "no_metadata_to_display")
+
+
 def child_node_url(child_id, **kwargs):
     """XXX: this shouldn't be here, child display should not be a responsibility of content types!"""
     from core.webconfig import node_url
@@ -388,50 +399,41 @@ def child_node_url(child_id, **kwargs):
     return node_url(**params)
 
 
+def prepare_node_data(node, req):
+    """Prepare data needed for displaying this object.
+    :returns: representation dictionary
+    :rtype: dict
+    """
+
+    if node.get('deleted') == 'true':
+        # If this object is marked as deleted version, render the active version instead.
+        active_version = node.getActiveVersion()
+        data = prepare_node_data(active_version, req)
+        data["deleted"] = True
+        return data
+
+    data = {}
+    data["deleted"] = False
+    data["metadata"] = _get_node_metadata_html(node, req)
+    data['node'] = node
+    data['children'] = node.children.filter_read_access().all()
+    # XXX: this is a hack, remove child display from contenttypes!
+    data['child_node_url'] = child_node_url
+    data['path'] = req.params.get("path", "")
+    return data
+
+
 class Content(Data, SchemaMixin):
 
     """(Abstract) base class for all content node types.
     """
-
-    def _get_metadata_html(self, req):
-        """Renders HTML data for displaying metadata using the the fullview mask.
-        :rtype: unicode
-        """
-        mask = self.getFullView(lang(req))
-        if mask is not None:
-            return mask.getViewHTML([self], VIEW_HIDE_EMPTY, lang(req))  # hide empty elements
-        else:
-            return t(req, "no_metadata_to_display")
-
-    def _prepareData(self, req):
-        """Prepare data needed for displaying this object.
-        :returns: representation dictionary
-        :rtype: dict
-        """
-
-        if self.get('deleted') == 'true':
-            # If this object is marked as deleted version, render the active version instead.
-            active_version = self.getActiveVersion()
-            data = active_version._prepareData()
-            data["deleted"] = True
-            return data
-
-        data = {}
-        data["deleted"] = False
-        data["metadata"] = self._get_metadata_html(req)
-        data['node'] = self
-        data['children'] = self.children.filter_read_access().all()
-        # XXX: this is a hack, remove child display from contenttypes!
-        data['child_node_url'] = child_node_url
-        data['path'] = req.params.get("path", "")
-        return data
 
 
 @check_type_arg_with_schema
 class Other(Content):
 
     def _prepareData(self, req):
-        obj = super(Other, self)._prepareData(req)
+        obj = prepare_node_data(self, req)
         if obj["deleted"]:
             # no more processing needed if this object version has been deleted
             # rendering has been delegated to current version

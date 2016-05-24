@@ -26,7 +26,7 @@ from subprocess import CalledProcessError
 import tempfile
 
 from mediatumtal import tal
-from contenttypes.data import Content
+from contenttypes.data import Content, prepare_node_data
 from contenttypes.image import make_thumbnail_image, make_presentation_image
 from core.transition.postgres import check_type_arg_with_schema
 from core import db, File, config
@@ -68,7 +68,7 @@ class Video(Content):
         return [u"presentation", u"thumb", u"video"]
 
     def _prepareData(self, req, words=""):
-        obj = super(Video, self)._prepareData(req)
+        obj = prepare_node_data(self, req)
         if obj["deleted"]:
             # no more processing needed if this object version has been deleted
             # rendering has been delegated to current version

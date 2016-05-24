@@ -29,12 +29,53 @@ from core.translation import lang, t
 from core.styles import getContentStyles
 from lib.pdf import parsepdf
 from core.attachment import filebrowser
-from contenttypes.data import Content
+from contenttypes.data import Content, prepare_node_data
 from core.transition.postgres import check_type_arg_with_schema
 from core import File
 from core import db
 
 logg = logging.getLogger(__name__)
+
+
+def _prepare_document_data(node, req, words=""):
+    obj = prepare_node_data(node, req)
+    if obj["deleted"]:
+        # no more processing needed if this object version has been deleted
+        # rendering has been delegated to current version
+        return obj
+
+    files, sum_size = filebrowser(node, req)
+
+    obj['attachment'] = files
+    obj['sum_size'] = sum_size
+    obj['bibtex'] = False
+
+    if node.getMask(u"bibtex"):
+        obj['bibtex'] = True
+
+    if node.has_object():
+        obj['canseeoriginal'] = node.has_data_access()
+        if node.system_attrs.get('origname') == "1":
+            obj['documentlink'] = u'/doc/{}/{}'.format(node.id, node.name)
+            obj['documentdownload'] = u'/download/{}/{}'.format(node.id, node.name)
+        else:
+            obj['documentlink'] = u'/doc/{}/{}.pdf'.format(node.id, node.id)
+            obj['documentdownload'] = u'/download/{}/{}.pdf'.format(node.id, node.id)
+    else:
+        obj['canseeoriginal'] = False
+    obj['documentthumb'] = u'/thumb2/{}'.format(node.id)
+    if "oogle" not in (req.get_header("user-agent") or ""):
+        obj['print_url'] = u'/print/{}'.format(node.id)
+    else:
+        # don't confuse search engines with the PDF link
+        obj['print_url'] = None
+        obj['documentdownload'] = None
+
+    full_style = req.args.get("style", "full_standard")
+    if full_style:
+        obj['style'] = full_style
+
+    return obj
 
 
 @check_type_arg_with_schema
@@ -53,46 +94,7 @@ class Document(Content):
         return "menulayout(view);menumetadata(metadata;files;admin;lza);menuclasses(classes);menusecurity(acls)"
 
     def _prepareData(self, req, words=""):
-        obj = super(Document, self)._prepareData(req)
-        if obj["deleted"]:
-            # no more processing needed if this object version has been deleted
-            # rendering has been delegated to current version
-            return obj
-
-        node = self
-
-        files, sum_size = filebrowser(node, req)
-
-        obj['attachment'] = files
-        obj['sum_size'] = sum_size
-        obj['bibtex'] = False
-
-        if node.getMask(u"bibtex"):
-            obj['bibtex'] = True
-
-        if node.has_object():
-            obj['canseeoriginal'] = node.has_data_access()
-            if node.get('system.origname') == "1":
-                obj['documentlink'] = u'/doc/{}/{}'.format(node.id, node.name)
-                obj['documentdownload'] = u'/download/{}/{}'.format(node.id, node.name)
-            else:
-                obj['documentlink'] = u'/doc/{}/{}.pdf'.format(node.id, node.id)
-                obj['documentdownload'] = u'/download/{}/{}.pdf'.format(node.id, node.id)
-        else:
-            obj['canseeoriginal'] = False
-        obj['documentthumb'] = u'/thumb2/{}'.format(node.id)
-        if "oogle" not in (req.get_header("user-agent") or ""):
-            obj['print_url'] = u'/print/{}'.format(node.id)
-        else:
-            # don't confuse search engines with the PDF link
-            obj['print_url'] = None
-            obj['documentdownload'] = None
-
-        full_style = req.args.get("style", "full_standard")
-        if full_style:
-            obj['style'] = full_style
-
-        return obj
+        return _prepare_document_data(self, req)
 
     """ format big view with standard template """
     def show_node_big(self, req, template="", macro=""):
