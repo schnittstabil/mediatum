@@ -19,12 +19,11 @@ from contenttypes import Content
 from contenttypes.data import Data
 from schema.schema import existMetaField
 from web.frontend.filehelpers import sendZipFile, splitpath, build_transferzip, node_id_from_req_path, split_image_path,\
-    preference_sorted_image_mimetypes
+    preference_sorted_image_mimetypes, version_id_from_req, get_node_or_version
 from utils import userinput
 import utils.utils
 from utils.utils import getMimeType
 import tempfile
-from werkzeug.http import parse_accept_header
 from utils.compat import iterkeys
 from core.transition import httpstatus
 
@@ -42,15 +41,27 @@ def _send_thumbnail(thumb_type, req):
     if not Node.req_has_access_to_node_id(nid, u"read"):
         return 404
 
-    # XXX: better to use scalar(), but we must ensure that we have no dupes first
-    for f in q(File).filter_by(nid=nid, filetype=thumb_type):
-        if os.path.isfile(f.abspath):
-            return req.sendFile(f.abspath, f.mimetype)
+    version_id = version_id_from_req(req)
 
-    try:
-        ntype, schema = q(Data.type, Data.schema).filter_by(id=nid).one()
-    except NoResultFound:
-       return 404
+    if version_id:
+        version = get_node_or_version(nid, version_id, Data)
+
+        for f in version.files.filter_by(filetype=thumb_type):
+            if f.exists:
+                return req.sendFile(f.abspath, f.mimetype)
+
+        ntype, schema = version.type, version.schema
+    else:
+        # no version id given, use a bit more efficient variant for real nodes
+        # XXX: better to use scalar(), but we must ensure that we have no dupes first
+        for f in q(File).filter_by(nid=nid, filetype=thumb_type):
+            if os.path.isfile(f.abspath):
+                return req.sendFile(f.abspath, f.mimetype)
+
+        try:
+            ntype, schema = q(Data.type, Data.schema).filter_by(id=nid).one()
+        except NoResultFound:
+            return 404
 
     for p in athana.getFileStorePaths("/img/"):
         for test in ["default_thumb_%s_%s.*" % (ntype, schema),
@@ -74,7 +85,9 @@ def _send_file_with_type(filetype, mimetype, req):
     except ValueError:
         return 400
 
-    node = q(Content).get(nid)
+    version_id = version_id_from_req(req)
+    node = get_node_or_version(nid, version_id, Content)
+
     if node is None or not node.has_data_access():
         return 404
 
@@ -98,7 +111,10 @@ def send_image(req):
     except ValueError:
         return 400
 
-    node = q(Content).get(nid)
+    version_id = version_id_from_req()
+
+    node = get_node_or_version(nid, version_id, Content)
+
     if node is None or not node.has_data_access():
         return 404
 
@@ -151,7 +167,10 @@ def send_original_file(req):
     except ValueError:
         return 400
 
-    node = q(Content).get(nid)
+    version_id = version_id_from_req()
+
+    node = get_node_or_version(nid, version_id, Data)
+
     if node is None or not node.has_data_access():
         return 404
 
@@ -173,7 +192,9 @@ def send_file(req):
         nidstr = nidstr[:-13]
 
     nid = userinput.string_to_int(nidstr)
-    node = q(Data).get(nid)
+    version_id = version_id_from_req()
+
+    node = get_node_or_version(nid, version_id, Data)
 
     if (node is None
             or isinstance(node, Container) and not node.has_read_access()
@@ -222,10 +243,12 @@ def send_file(req):
 def send_attachment(req):
     try:
         nid = node_id_from_req_path(req)
+        version_id = version_id_from_req()
     except ValueError:
         return 400
 
-    node = q(Data).get(nid)
+    node = get_node_or_version(nid, version_id, Data)
+
     if (node is None
             or isinstance(node, Container) and not node.has_read_access()
             or isinstance(node, Content) and not node.has_data_access()):
@@ -245,11 +268,12 @@ def send_attfile(req):
         return 400
 
     nid = userinput.string_to_int(parts[0])
+    version_id = version_id_from_req()
 
     if nid is None:
         return 400
 
-    node = q(Data).get(nid)
+    node = get_node_or_version(nid, version_id, Data)
 
     # XXX: why do we want to send attachments from containers?
     if (node is None

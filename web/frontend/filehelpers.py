@@ -9,7 +9,7 @@ import os
 import re
 import random
 import zipfile
-from core import config, db
+from core import config, db, Node
 from contenttypes import Content
 from utils.utils import getMimeType, get_filesize
 from utils import userinput
@@ -54,6 +54,21 @@ def node_id_from_req_path(req):
         raise ValueError("invalid node id")
 
     return nid
+
+
+def version_id_from_req(req):
+    return req.args.get("v", type=int)
+
+
+def get_node_or_version(nid, version_id=None, nodeclass=Node):
+    node = q(nodeclass).get(nid)
+
+    version = None
+
+    if version_id:
+        version = node.get_tagged_version(unicode(version_id))
+
+    return version if version is not None else node
 
 
 def sendZipFile(req, path):
