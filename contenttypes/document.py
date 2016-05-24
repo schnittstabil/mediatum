@@ -61,11 +61,23 @@ def _prepare_document_data(node, req, words=""):
         else:
             obj['documentlink'] = u'/doc/{}/{}.pdf'.format(node.id, node.id)
             obj['documentdownload'] = u'/download/{}/{}.pdf'.format(node.id, node.id)
+
+            if not node.isActiveVersion():
+                obj['documentlink'] += "?v=" + node.tag
+                obj['documentdownload'] += "?v=" + node.tag
+
     else:
         obj['canseeoriginal'] = False
+
     obj['documentthumb'] = u'/thumb2/{}'.format(node.id)
+    if not node.isActiveVersion():
+        obj['documentthumb'] += "?v=" + node.tag
+
+
     if "oogle" not in (req.get_header("user-agent") or ""):
         obj['print_url'] = u'/print/{}'.format(node.id)
+    if not node.isActiveVersion():
+        obj['print_url'] += "?v=" + node.tag
     else:
         # don't confuse search engines with the PDF link
         obj['print_url'] = None
