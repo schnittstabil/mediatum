@@ -265,13 +265,42 @@ class Image(Content):
 
         return int(self.get("width") or 0) > Image.ZOOM_SIZE or int(self.get("height") or 0) > Image.ZOOM_SIZE
 
+    def _add_version_tag_to_url(self, url):
+        if not self.isActiveVersion():
+            return url + "?v=" + self.tag
+
+        return url
+
     def image_url_for_mimetype(self, mimetype):
         try:
             file_ext = Image.EXTENSION_FOR_MIMETYPE[mimetype]
         except KeyError:
             raise ValueError("unsupported image mimetype " + mimetype)
 
-        return u"/image/{}.{}".format(self.id, file_ext)
+        url = u"/image/{}.{}".format(self.id, file_ext)
+
+        return self._add_version_tag_to_url(url)
+
+    @property
+    def preferred_image_url(self):
+        url = u"/image/" + unicode(self.id)
+        return self._add_version_tag_to_url(url)
+
+    @property
+    def presentation_url(self):
+        url = u"/thumb2/" + unicode(self.id)
+        return self._add_version_tag_to_url(url)
+
+    def get_image_formats(self):
+        image_files = self.files.filter_by(filetype=u"image")
+        image_formats = {}
+        for img_file in image_files:
+            image_formats[img_file.mimetype] = {
+                "url": self.image_url_for_mimetype(img_file.mimetype),
+                "display_size": humanize.filesize.naturalsize(img_file.size)
+            }
+
+        return image_formats
 
     # prepare hash table with values for TAL-template
     def _prepareData(self, req):
@@ -302,27 +331,13 @@ class Image(Content):
         obj['zoom'] = self.zoom_available
         obj['attachment'] = files
         obj['sum_size'] = sum_size
+        obj['presentation_url'] = self.presentation_url
 
         full_style = req.args.get(u"style", u"full_standard")
         if full_style:
             obj['style'] = full_style
 
         return obj
-
-    @property
-    def preferred_image_url(self):
-        return u"/image/" + unicode(self.id)
-
-    def get_image_formats(self):
-        image_files = self.files.filter_by(filetype=u"image")
-        image_formats = {}
-        for img_file in image_files:
-            image_formats[img_file.mimetype] = {
-                "url": self.image_url_for_mimetype(img_file.mimetype),
-                "display_size": humanize.filesize.naturalsize(img_file.size)
-            }
-
-        return image_formats
 
     """ format big view with standard template """
     def show_node_big(self, req, template="", macro=""):
