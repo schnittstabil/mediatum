@@ -277,5 +277,9 @@ class NodeVersionMixin(NodeMixin):
         return self.version_parent
 
     @property
+    def system_attrs(self):
+        return self.version_parent.system_attrs
+
+    @property
     def versions(self):
         return self.version_parent.versions
