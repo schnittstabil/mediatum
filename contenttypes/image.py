@@ -292,7 +292,7 @@ class Image(Content):
                 if archive_state == Archive.NOT_PRESENT:
                     obj['archive_fetch_url'] = u"/archive/{}".format(self.id)
                 elif archive_state == Archive.PRESENT:
-                    obj['highres_url'] = u"/file/{}/hurz.tif".format(self.id)
+                    obj['highres_url'] = u"/file/{nid}/{nid}.tif".format(nid=self.id)
 
         files, sum_size = filebrowser(self, req)
 
