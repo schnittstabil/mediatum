@@ -50,6 +50,7 @@ def _finish_change(node, change_file, user, uploadfile, req):
         file = importFile(uploadfile.filename, uploadfile.tempname)  # add new file
         file.filetype = node.get_upload_filetype()
         node.files.append(file)
+        node.event_files_changed()
         logg.info(u"%s changed file of node %s to %s (%s)", user.login_name, node.id, uploadfile.filename, uploadfile.tempname)
 
     attpath = ""
