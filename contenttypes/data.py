@@ -148,6 +148,13 @@ class Data(Node):
         """
         return "view"
 
+    @property
+    def has_upload_file(self):
+        """Is True when the node has a file with type `self.get_upload_filetype`.
+        """
+        # XXX: should be scalar(), but we don't really try to avoid duplicates atm
+        return self.files.filter_by(filetype=self.get_upload_filetype()).first() is not None
+
     def show_node_big(self, req, template="", macro=""):
         if template == "":
             styles = getContentStyles("bigview", contenttype=self.type)
