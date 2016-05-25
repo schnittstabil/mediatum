@@ -19,10 +19,11 @@
 
 import os
 import core.config as config
-from core import File
+from core import File, Node
 
 from utils.utils import getMimeType, format_filesize
 from core.styles import theme
+from sqlalchemy_continuum.utils import version_class
 
 fileicons = {'directory': 'mmicon_dir.gif',
              'application/pdf': 'mmicon_pdf.gif',
@@ -49,7 +50,12 @@ fileicons = {'directory': 'mmicon_dir.gif',
 def filebrowser(node, req):
     filesize = 0
     ret = list()
-    paths = [t[0] for t in node.files.with_entities(File.path).filter_by(filetype=u"attachment")]
+    if isinstance(node, Node):
+        file_entity = File
+    else:
+        file_entity = version_class(File)
+
+    paths = [t[0] for t in node.files.with_entities(file_entity.path).filter_by(filetype=u"attachment")]
 
     if len(paths) == 1 and os.path.isdir(config.get("paths.datadir") + paths[0]):
         # single file with no path
@@ -84,7 +90,7 @@ def filebrowser(node, req):
         # no attachment directory -> test for single file
         file = {}
 
-        for f in node.files.filter(~File.filetype.in_(node.get_sys_filetypes())):
+        for f in node.files.filter(~file_entity.filetype.in_(node.get_sys_filetypes())):
             file["mimetype"], file["type"] = getMimeType(f.getName())
             file["icon"] = fileicons[file["mimetype"]]
             file["path"] = f.path
