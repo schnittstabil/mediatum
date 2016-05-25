@@ -190,10 +190,14 @@
                 <form method="post" enctype="multipart/form-data">
                             <b><tal:block i18n:translate="edit_files_change"/>:</b>
                             <p>
-                                <input type="radio" name="change_file" value="yes" checked="checked" onclick="setInput('')" style="border:1px solid white"/><tal:block i18n:translate="edit_files_change"/>
-                                <br/>
-                                <input type="radio" name="change_file" value="no" onclick="setInput('')" style="border:1px solid white"/><tal:block i18n:translate="edit_files_add_obj"/>
-                                <br/>
+                                <tal:block tal:condition="python:node.has_upload_file">
+                                    <input type="radio" name="change_file" value="yes" checked="checked" onclick="setInput('')" style="border:1px solid white"/><tal:block i18n:translate="edit_files_change"/>
+                                    <br/>
+                                </tal:block>
+                                <tal:block tal:condition="python:not node.has_upload_file">
+                                    <input type="radio" name="change_file" value="no" checked="checked" onclick="setInput('')" style="border:1px solid white"/><tal:block i18n:translate="edit_files_add_obj"/>
+                                    <br/>
+                                </tal:block>
                                 <input type="radio" name="change_file" value="attdir" onclick="setInput('dir')" style="border:1px solid white"/><tal:block i18n:translate="edit_files_add_attdir"/>
                                 <br/>
                                 <input type="radio" name="change_file" value="attfile" onclick="setInput('')" style="border:1px solid white"/><tal:block i18n:translate="edit_files_add_attfile"/>
