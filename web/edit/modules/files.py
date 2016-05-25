@@ -41,17 +41,21 @@ logg = logging.getLogger(__name__)
 
 def _finish_change(node, change_file, user, uploadfile, req):
 
-    if change_file == "yes":  # remove old files
+
+    if change_file in ["yes", "no"]:
+
+        # sys files are always cleared to delete remaining thumbnails, presentation images etc.
         for f in node.files:
             if f.filetype in node.get_sys_filetypes():
                 node.files.remove(f)
 
-    if change_file in ["yes", "no"]:
         file = importFile(uploadfile.filename, uploadfile.tempname)  # add new file
         file.filetype = node.get_upload_filetype()
         node.files.append(file)
+        # this should re-create all dependent files
         node.event_files_changed()
         logg.info(u"%s changed file of node %s to %s (%s)", user.login_name, node.id, uploadfile.filename, uploadfile.tempname)
+        return
 
     attpath = ""
     for f in node.files:
