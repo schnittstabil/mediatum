@@ -27,3 +27,14 @@ def test_urlencode_params_to_query():
                         ])
 def test_build_url_from_path_and_param(path, params, expected):
     assert utils.url.build_url_from_path_and_params(path, params) == expected
+
+
+def test_add_params_to_url_start_with_plain_url():
+    params = {"b": "test"}
+    assert utils.url.add_query_params_to_url("http://example.com", params) == "http://example.com?b=test"
+
+
+def test_add_params_to_url_existing_params():
+    params = {"a": 5}
+    res = utils.url.add_query_params_to_url("http://example.com?b=test", params)
+    assert res == "http://example.com?a=5&b=test" or res == "http://example.com?b=test&a=5"
