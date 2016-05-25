@@ -3,9 +3,11 @@
     :copyright: (c) 2014 by the mediaTUM authors
     :license: GPL3, see COPYING for details
 """
+import urlparse
 from warnings import warn
 from utils.date import format_date, parse_date, STANDARD_FORMAT, now
 from sqlalchemy.orm import object_session
+from utils.url import add_query_params_to_url
 
 
 class NodeMixin(object):
@@ -159,6 +161,12 @@ class NodeMixin(object):
         if self.get('creationtime'):
             return format_date(parse_date(self.get('creationtime')), '%d.%m.%Y, %H:%M:%S')
         return ''
+
+    def _add_version_tag_to_url(self, url):
+        if not self.isActiveVersion():
+            url = add_query_params_to_url(url, {"v": self.tag})
+
+        return url
 
     def get_special(self, valuename, default=u""):
         '''Attribute getter with special cases for attributes of the node object; 'node.id', 'node.name'/'nodename', 'node.type', 'orderpos'

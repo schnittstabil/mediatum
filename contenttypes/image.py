@@ -265,12 +265,6 @@ class Image(Content):
 
         return int(self.get("width") or 0) > Image.ZOOM_SIZE or int(self.get("height") or 0) > Image.ZOOM_SIZE
 
-    def _add_version_tag_to_url(self, url):
-        if not self.isActiveVersion():
-            return url + "?v=" + self.tag
-
-        return url
-
     def image_url_for_mimetype(self, mimetype):
         try:
             file_ext = Image.EXTENSION_FOR_MIMETYPE[mimetype]
