@@ -11,16 +11,19 @@ msgid "edit_linktext"
 msgstr "here"
 
 msgid "edit_nodeinformation"
-msgstr "node-information"
+msgstr "Node Information"
 
 msgid "edit_id"
-msgstr "id"
+msgstr "ID"
 
 msgid "edit_objecttype"
-msgstr "object type"
+msgstr "Object type"
 
 msgid "edit_schema"
-msgstr "meta schmeme"
+msgstr "Metadata schema"
+
+msgid "edit_orderpos"
+msgstr "Order position"
 
 msgid "edit_objectname"
 msgstr "Name"

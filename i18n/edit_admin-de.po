@@ -20,9 +20,6 @@ msgstr "Speichern"
 msgid "edit_admin_noattribute"
 msgstr "Kein solches Attribut für dieses Object"
 
-msgid "edit_clearfromcache"
-msgstr "Knoten aus Cache löschen"
-
 msgid "edit_admin_searchdata"
 msgstr "Suchindex-Daten"
 

@@ -56,31 +56,22 @@
                     <div id="entry">
                         <div class="label" i18n:translate="edit_id">TEXT</div>
                         <div class="content" tal:content="python:node.id">TEXT</div>
-                        <input i18n:attributes="title edit_clearfromcache" name="del_cache" type="image" src="/img/update_index.gif"/>
                     </div>
-
-                    <tal:block tal:define="type python:node.type" tal:condition="python:type.find('/')>0">
+                    <div id="entry">
+                        <div class="label" i18n:translate="edit_objectname">TEXT</div>
+                        <div class="content" tal:content="python:node.name">TEXT</div>
+                    </div>
                     <div id="entry">
                         <div class="label" i18n:translate="edit_objecttype">TEXT</div>
-                        <div class="content" tal:content="python:type.split('/')[0]">TEXT</div>
+                        <div class="content" tal:content="python:node.type">TEXT</div>
                     </div>
                     <div id="entry">
                         <div class="label" i18n:translate="edit_schema">TEXT</div>
-                        <div class="content" tal:content="python:type.split('/')[1]">TEXT</div>
+                        <div class="content" tal:content="python:node.schema">TEXT</div>
                     </div>
                     <div id="entry">
                         <div class="label" i18n:translate="edit_orderpos">TEXT</div>
-                        <div class="content" tal:content="python:node.getOrderPos()">TEXT</div>
-                    </div>
-                    </tal:block>
-                    <div id="entry" tal:define="type python:node.getType().getName()" tal:condition="python:type.find('/')<0">
-                        <div class="label" i18n:translate="edit_objectname">TEXT</div>
-                        <div class="content" tal:content="python:u'{} ({})'.format(type, node.type)">TEXT</div>
-                    </div>
-                    <div id="entry">
-                        <div class="label" i18n:translate="edit_localread">TEXT</div>
-                        <div class="content" tal:content="python:node.getLocalRead()">TEXT</div>
-                        <input name="del_localread" i18n:attributes="title edit_admin_localread_del_title" type="image" src="/img/erase.gif"/>
+                        <div class="content" tal:content="python:node.orderpos">TEXT</div>
                     </div>
                 </div>
 

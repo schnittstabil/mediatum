@@ -19,9 +19,6 @@ msgstr "Save attribute"
 msgid "edit_admin_noattribute"
 msgstr "No such attribute for this object set"
 
-msgid "edit_clearfromcache"
-msgstr "Clear node from cache"
-
 msgid "edit_admin_searchdata"
 msgstr "Search index data"
 
