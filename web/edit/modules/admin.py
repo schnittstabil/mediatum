@@ -25,6 +25,8 @@ from utils.date import format_date, parse_date
 from core.transition import httpstatus
 from core import Node, db
 from core.transition import current_user
+from collections import OrderedDict
+from utils.compat import iteritems
 
 q = db.query
 logg = logging.getLogger(__name__)
@@ -66,11 +68,9 @@ def getContent(req, ids):
     else:
         fields = []
 
-    attrs = node.attrs.items()
-
-    metafields = {}
-    technfields = {}
-    obsoletefields = {}
+    metafields = OrderedDict()
+    technfields = OrderedDict()
+    obsoletefields = OrderedDict()
 
     tattr = {}
     try:
@@ -79,7 +79,7 @@ def getContent(req, ids):
         pass
     tattr = formatTechAttrs(tattr)
 
-    for key, value in attrs:
+    for key, value in sorted(iteritems(node.attrs), key=lambda t: t[0]):
         if key in fieldnames:
             metafields[key] = formatdate(value, getFormat(fields, key))
         elif key in tattr.keys():
