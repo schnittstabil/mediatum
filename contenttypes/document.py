@@ -70,8 +70,10 @@ def _prepare_document_data(node, req, words=""):
         obj['canseeoriginal'] = False
 
     obj['documentthumb'] = u'/thumb2/{}'.format(node.id)
+    obj['tag'] = node.tagged_versions[-1].tag if node.tagged_versions.count() > 0 else None
     if not node.isActiveVersion():
         obj['documentthumb'] += "?v=" + node.tag
+        obj['tag'] = node.tag
 
 
     if "oogle" not in (req.get_header("user-agent") or ""):
