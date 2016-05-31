@@ -326,6 +326,12 @@ class Image(Content):
         obj['attachment'] = files
         obj['sum_size'] = sum_size
         obj['presentation_url'] = self.presentation_url
+        obj['tag'] = self.tagged_versions[-1].tag if self.tagged_versions.count() > 0 else None
+        obj['fullsize'] = str(self.id)
+        if not self.isActiveVersion():
+            obj['tag'] = self.tag
+            obj['fullsize'] += "&v=" + self.tag
+        obj['fullsize'] = '"' + obj['fullsize'] + '"'
 
         full_style = req.args.get(u"style", u"full_standard")
         if full_style:
