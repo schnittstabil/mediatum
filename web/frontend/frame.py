@@ -177,7 +177,7 @@ class Searchlet(Portlet):
                 self.searchmaskitem_ids[pos] = searchmaskitem_id
 
                 searchmaskitem = self.searchmask.children.filter_by(id=searchmaskitem_id).scalar() if searchmaskitem_id else None
-                field = searchmaskitem.children.scalar() if searchmaskitem else None
+                field = searchmaskitem.children.first() if searchmaskitem else None
 
                 value_argname = "query" + str(pos)
 
@@ -227,7 +227,7 @@ class Searchlet(Portlet):
         try:
             searchmaskitem_id = self.searchmaskitem_ids[pos]
             searchmaskitem = self.searchmask.children.filter_by(id=searchmaskitem_id).scalar() if searchmaskitem_id else None
-            field = searchmaskitem.children.scalar() if searchmaskitem else None
+            field = searchmaskitem.children.first() if searchmaskitem else None
             g = None
             if field is None:  # All Metadata
                 # quick&dirty
