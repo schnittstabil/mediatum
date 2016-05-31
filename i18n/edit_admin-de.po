@@ -37,3 +37,12 @@ msgstr "Volltext Suche"
 
 msgid "edit_admin_nosearchdata"
 msgstr "- keine Suchdaten vorhanden -"
+
+msgid "edit_system_attrs"
+msgstr "Systemattribute"
+
+msgid "edit_notice_adding_system_attrs"
+msgstr "Wenn der Attributname mit 'system.' beginnt, wird ein Systemattribut hinzugefügt."
+
+msgid "edit_admin_del_attribute"
+msgstr "Attribut löschen"

@@ -40,7 +40,19 @@ def getContent(req, ids):
         return req.getTAL("web/edit/edit.html", {}, macro="access_error")
 
     if req.params.get("type", "") == "addattr" and req.params.get("new_name", "") != "" and req.params.get("new_value", "") != "":
-        node.attrs[req.params.get("new_name")] = req.params.get("new_value", "")
+        attrname = req.form.get("new_name")
+        attrvalue = req.form.get("new_value")
+        if attrname.startswith("system."):
+            if current_user.is_admin:
+                node.system_attrs[attrname[7:]] = attrvalue
+            else:
+            # non-admin user may not add / change system attributes, silently ignore the request.
+            # XXX: an error msg would be better
+                logg.warn("denied writing a system attribute because user is not an admin user, node=%s attrname=%s current_user=%s",
+                          node.id, attrname, current_user.id)
+                return httpstatus.HTTP_FORBIDDEN
+
+        node.set(attrname, attrvalue)
         db.session.commit()
         logg.info("new attribute %s for node %s added", req.params.get("new_name", ""), node.id)
 
@@ -51,11 +63,27 @@ def getContent(req, ids):
             logg.info("localread attribute of node %s updated", node.id)
             break
 
-        # remove  attribute
+        # removing attributes only allowed for admin user
+
+        # remove attribute
         if key.startswith("attr_"):
+            if not current_user.is_admin:
+                return httpstatus.HTTP_FORBIDDEN
+
             del node.attrs[key[5:-2]]
             db.session.commit()
             logg.info("attribute %s of node %s removed", key[5:-2], node.id)
+            break
+
+        # remove system attribute
+        if key.startswith("system_attr_"):
+            if not current_user.is_admin:
+                return httpstatus.HTTP_FORBIDDEN
+
+            attrname = key[12:-2]
+            del node.system_attrs[attrname]
+            db.session.commit()
+            logg.info("system attribute %s of node %s removed", attrname, node.id)
             break
 
     metadatatype = node.metadatatype
@@ -71,6 +99,7 @@ def getContent(req, ids):
     metafields = OrderedDict()
     technfields = OrderedDict()
     obsoletefields = OrderedDict()
+    system_attrs = []
 
     tattr = {}
     try:
@@ -80,12 +109,17 @@ def getContent(req, ids):
     tattr = formatTechAttrs(tattr)
 
     for key, value in sorted(iteritems(node.attrs), key=lambda t: t[0].lower()):
-        if key in fieldnames:
-            metafields[key] = formatdate(value, getFormat(fields, key))
-        elif key in tattr.keys():
-            technfields[key] = formatdate(value)
-        else:
-            obsoletefields[key] = value
+        if value or current_user.is_admin:
+            # display all values for admins, even if they are "empty" (= a false value)
+            if key in fieldnames:
+                metafields[key] = formatdate(value, getFormat(fields, key))
+            elif key in tattr.keys():
+                technfields[key] = formatdate(value)
+            else:
+                obsoletefields[key] = value
+
+    for key, value in sorted(iteritems(node.system_attrs), key=lambda t: t[0].lower()):
+        system_attrs.append((key, value))
 
     # remove all technical attributes
     if req.params.get("type", "") == "technical":
@@ -99,12 +133,13 @@ def getContent(req, ids):
                                                       "node": node,
                                                       "obsoletefields": obsoletefields,
                                                       "metafields": metafields,
+                                                      "system_attrs": system_attrs,
                                                       "fields": fields,
                                                       "technfields": technfields,
                                                       "tattr": tattr,
                                                       "fd": formatdate,
                                                       "gf": getFormat,
-                                                      "adminuser": current_user.is_admin,
+                                                      "user_is_admin": current_user.is_admin,
                                                       "canedit": node.has_write_access()},
                       macro="edit_admin_file")
 

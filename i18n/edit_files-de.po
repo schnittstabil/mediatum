@@ -58,9 +58,6 @@ msgstr "(dabei werden alle Operationen ausgeführt, die notwendig sind, um Techn
 msgid "edit_files_obsolete"
 msgstr "nicht verwendete Metadatenfelder"
 
-msgid "edit_files_obsolete_del_title"
-msgstr "Attribut löschen"
-
 msgid "edit_files_metafields"
 msgstr "Metadatenfelder"
 
