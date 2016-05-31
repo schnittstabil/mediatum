@@ -150,7 +150,7 @@ def _handle_edit_metadata(req, ids, mask, maskname, nodes):
                     if value != node.name:
                         flag_nodename_changed = ustr(node.id)
                     for node in nodes:
-                        node.setName(value)
+                        node.name = value
             value = req.params.get(field_name, None)
             if value is not None:
                 for node in nodes:
