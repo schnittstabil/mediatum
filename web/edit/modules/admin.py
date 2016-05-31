@@ -79,7 +79,7 @@ def getContent(req, ids):
         pass
     tattr = formatTechAttrs(tattr)
 
-    for key, value in sorted(iteritems(node.attrs), key=lambda t: t[0]):
+    for key, value in sorted(iteritems(node.attrs), key=lambda t: t[0].lower()):
         if key in fieldnames:
             metafields[key] = formatdate(value, getFormat(fields, key))
         elif key in tattr.keys():
