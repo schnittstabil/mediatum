@@ -104,7 +104,7 @@
             &nbsp;&nbsp;
         </div>
         <div id="div_image" name="div_image" style="height: 100%; width: 100%;">
-            <img tal:attributes="src python:image_url+'.svg'" id="myimage" width="200px" />
+            <img tal:attributes="src python:image_url" id="myimage" width="200px" />
         </div>
     </body>
     <body tal:condition="python:not flash and not svg"
