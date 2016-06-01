@@ -304,6 +304,7 @@ class Workflows(Node):
         return self.name
 
 
+@check_type_arg
 class Workflow(Node):
 
     def show_node_big(node, req, template="workflow/workflow.html", macro="object_list"):
@@ -406,6 +407,7 @@ class Workflow(Node):
 workflow_lock = thread.allocate_lock()
 
 
+@check_type_arg
 class WorkflowStep(Node):
 
     def getId(self):
