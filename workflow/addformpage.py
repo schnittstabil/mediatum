@@ -151,7 +151,7 @@ def fillPDFForm(formPdf, fields, outputPdf="filled.pdf", input_is_fullpath=False
 
         # fill data in form pdf and generate pdf
         pdftkcmd = ["pdftk", formPdf, "fill_form", fdffilename, "output", outputPdf]
-        if editable:
+        if not editable:
             pdftkcmd.append("flatten")
         utils.process.call(pdftkcmd)
 
