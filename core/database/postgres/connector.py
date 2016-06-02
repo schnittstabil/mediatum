@@ -338,6 +338,7 @@ class PostgresSQLAConnector(object):
         nodes_exist = s.execute(stmt).fetchone()[0]
         if not nodes_exist:
             init_database_values(s, default_admin_password=default_admin_password)
+            s.commit()
             return True
         return False
 
