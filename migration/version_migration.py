@@ -38,7 +38,7 @@ def create_alias_version(current_version_node, old_version_node):
     operation_type = Operation.INSERT if version_id == 1 else Operation.UPDATE
     TransactionMeta = versioning_manager.transaction_meta_cls
     tx.meta_relation[u"alias_id"] = TransactionMeta(key=u"alias_id", value=unicode(old_version_node.id))
-    tx.meta_relation[u"tag"] = TransactionMeta(key=u"tag", value=u"v" + unicode(version_id))
+    tx.meta_relation[u"tag"] = TransactionMeta(key=u"tag", value=unicode(version_id))
     if u"version.comment" in old_version_node.system_attrs:
         tx.meta_relation[u"comment"] = TransactionMeta(key=u"comment", value=old_version_node.system_attrs[u"version.comment"])
     s.add(tx)
