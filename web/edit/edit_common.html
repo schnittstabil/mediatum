@@ -31,6 +31,7 @@
 
     <div id="scrollcontainer">
 
+        <div id="scrollcontent">
         <div tal:condition="unpublishedlink">
             <p class="error">
                 <tal:block i18n:translate="unpublished_objects1"/>
@@ -38,7 +39,6 @@
                 <tal:block i18n:translate="edit_publish_warning"/>
             </p>
         </div>
-        <div id="scrollcontent">
         <tal:block tal:repeat="node nodelist">
             <div tal:attributes="class python:'showcontent' if not node.get('faulty') else 'showcontent_error'">
                 <div style="position:absolute; left:0px; top:0px; width:296px; height:20px">
