@@ -2,6 +2,7 @@
 import json
 import logging
 import datetime
+from core.transition import httpstatus
 from functools import wraps
 
 logg = logging.getLogger(__name__)
@@ -50,6 +51,7 @@ def dec_handle_exception(func):
             errormsg = str(e)
             response = response_template % dict(iso_datetime_now=iso_datetime_now, errormsg=errormsg)
             response = response.strip()  # remove whitespaces for at least from xml response
+            req.setStatus(httpstatus.HTTP_INTERNAL_SERVER_ERROR)
             req.write(response)
-            return '501'  # internal server error: 500
+            return None  # do not send status code 500, ..., athana would overwrite response
     return wrapper
