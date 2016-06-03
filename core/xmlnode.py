@@ -163,7 +163,7 @@ class _NodeLoader:
         try:
             result = etree.XML(xml, parser)
         except Exception as e:
-            logg.exception("\tfile not well-formed in line %s, %s", e.lineno, e.offset)
+            logg.exception("\tfile not well-formed. %s", e)
             return
 
         mappings = q(Mappings).scalar()
@@ -284,9 +284,9 @@ class _NodeLoader:
             attr_name = attrs["name"]
             if "value" in attrs:
                 if attr_name in ["valuelist"]:
-                    node.setAttribute(attr_name, attrs["value"].replace("\n\n", "\n").replace("\n", ";").replace(";;", ";"))
+                    node.set(attr_name, attrs["value"].replace("\n\n", "\n").replace("\n", ";").replace(";;", ";"))
                 else:
-                    node.setAttribute(attr_name, attrs["value"])
+                    node.set(attr_name, attrs["value"])
             else:
                 self.attributename = attr_name
             db.session.commit()
@@ -306,7 +306,7 @@ class _NodeLoader:
                 mimetype = None
 
             filename = attrs["filename"]
-            node.files.append(File(name=filename, type=datatype, mimetype=mimetype))
+            node.files.append(File(path=filename, filetype=datatype, mimetype=mimetype))
             db.session.commit()
 
     def xml_end_element(self, name):
