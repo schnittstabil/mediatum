@@ -198,10 +198,10 @@
         <form>
             <div>
                 <div id="buttons">
-                    <button i18n:attributes="title memo_bold_title" type="button" id="style" onclick="insert('<b>','</b>')"><img src="/module/editor/skins/silver/toolbar/bold.gif" alt="bold"/></button>
-                    <button i18n:attributes="title memo_italic_title" type="button" id="style" onclick="insert('<em>','</em>')"><img src="/module/editor/skins/silver/toolbar/italic.gif" alt="italic"/></button>
-                    <button i18n:attributes="title memo_sub_title" type="button" id="style" onclick="insert('<sub>','</sub>')"><img src="/module/editor/skins/silver/toolbar/subscript.gif" alt="subscript"/></button>
-                    <button i18n:attributes="title memo_sup_title" type="button" id="style" onclick="insert('<sup>','</sup>')"><img src="/module/editor/skins/silver/toolbar/superscript.gif" alt="superscript"/></button>
+                    <button i18n:attributes="title memo_bold_title" type="button" id="style" onclick="insert('<b>','</b>')"><img src="/img/bold.gif" alt="bold"/></button>
+                    <button i18n:attributes="title memo_italic_title" type="button" id="style" onclick="insert('<em>','</em>')"><img src="/img/italic.gif" alt="italic"/></button>
+                    <button i18n:attributes="title memo_sub_title" type="button" id="style" onclick="insert('<sub>','</sub>')"><img src="/img/subscript.gif" alt="subscript"/></button>
+                    <button i18n:attributes="title memo_sup_title" type="button" id="style" onclick="insert('<sup>','</sup>')"><img src="/img/superscript.gif" alt="superscript"/></button>
                 </div>
                 <span i18n:translate="memo_valuelabel">TEXT</span><br/><textarea name="value" id="value" rows="4" onkeyup="setFormated(this)"> </textarea>
             </div>
@@ -210,7 +210,7 @@
                 <span i18n:translate="memo_formatedvalue">TEXT</span><br/>
                 <div id="formatedvalue"> </div>
                 <div style="float:right;text-align:right">
-                    <button type="button" tal:attributes="onclick python:u'save(\'\')'.format(name)" i18n:translate="memo_done">TEXT</button><br/><br/>
+                  <button type="button" tal:attributes="onclick python:u'save(\'{}\')'.format(name)" i18n:translate="memo_done">TEXT</button><br/><br/>
                     <button type="button" onclick="window.close()" i18n:translate="memo_cancel">TEXT</button>
                 </div> 
             </div>
