@@ -50,7 +50,6 @@ def dec_handle_exception(func):
         return func
     @wraps(func)
     def wrapper(req):
-        print req, req.params
         try:
             http_status_code = func(req)
             return http_status_code
@@ -65,7 +64,7 @@ def dec_handle_exception(func):
             response_template, response_mimetype = supported_formats.get(response_format, supported_formats.get('xml'))
             req.reply_headers['Content-Type'] = response_mimetype
             response = response_template % dict(iso_datetime_now=iso_datetime_now, errormsg=u"%s: %s" % (XID, errormsg))
-            response = response.strip()  # remove whitespaces for at least from xml response
+            response = response.strip()  # remove whitespaces at least from xml response
             req.setStatus(httpstatus.HTTP_INTERNAL_SERVER_ERROR)
             req.write(response)
             return None  # do not send status code 500, ..., athana would overwrite response
