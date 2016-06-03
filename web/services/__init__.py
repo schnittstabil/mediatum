@@ -2,10 +2,13 @@
 import json
 import logging
 import datetime
+import core.config as config
 from core.transition import httpstatus
 from functools import wraps
 
 logg = logging.getLogger(__name__)
+
+TESTING = config.get("host.type") == "testing"
 
 
 template_exception2xml = '''
@@ -36,6 +39,8 @@ supported_formats = { 'xml': [template_exception2xml, 'text/xml'],
 
 
 def dec_handle_exception(func):
+    if TESTING:
+        return func
     @wraps(func)
     def wrapper(req):
         print req, req.params
