@@ -1,4 +1,8 @@
-﻿
+﻿# -*- coding: utf-8 -*-
+"""
+    :copyright: (c) 2016 by the mediaTUM authors
+    :license: GPL3, see COPYING for details
+"""
 import json
 import logging
 import datetime
@@ -29,7 +33,7 @@ template_exception2template_test = template_exception2csv
 
 template_exception2rss = template_exception2xml
 
-
+# {'format_name': [template, mime-type]}
 supported_formats = { 'xml': [template_exception2xml, 'text/xml'],
     'json': [template_exception2json, 'application/json'],
     'csv': [template_exception2csv, 'text/csv'],
