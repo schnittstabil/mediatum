@@ -77,9 +77,6 @@ def request_handler(req):
     matched = False
     req_path = req.path
 
-    if 'raise_exception' in req.params:
-        raise ValueError(req.params.get('raise_exception'))
-
     for method, pattern, handler_func, rewrite_target, url_flags, data in urls:
         if method and method == req.command:
             m = re.match(pattern, req_path)
