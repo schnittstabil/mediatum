@@ -57,14 +57,18 @@ def dec_handle_exception(func):
             iso_datetime_now = datetime.datetime.now().isoformat()
             errormsg = str(e)
             hashed_errormsg = hashlib.md5(errormsg).hexdigest()[0:6]
+            # http://stackoverflow.com/questions/2257441/random-string-generation-with-upper-case-letters-and-digits
             random_string = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
             XID = u"%s__%s__%s" % (iso_datetime_now, hashed_errormsg, random_string)
+
             logg.exception(u"exception (XID=%r) while handling request %r, %r" % (XID, req.path, req.params))
+
             response_format = req.params.get('format', '').lower()
             response_template, response_mimetype = supported_formats.get(response_format, supported_formats.get('xml'))
-            req.reply_headers['Content-Type'] = response_mimetype
             response = response_template % dict(iso_datetime_now=iso_datetime_now, errormsg=u"%s: %s" % (XID, errormsg))
             response = response.strip()  # remove whitespaces at least from xml response
+
+            req.reply_headers['Content-Type'] = response_mimetype
             req.setStatus(httpstatus.HTTP_INTERNAL_SERVER_ERROR)
             req.write(response)
             return None  # do not send status code 500, ..., athana would overwrite response
