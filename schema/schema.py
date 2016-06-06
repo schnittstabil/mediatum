@@ -1071,9 +1071,6 @@ class Mask(Node):
         if hasattr(node, "event_metadata_changed"):
             node.event_metadata_changed()
 
-        node["updatetime"] = format_date()
-
-
     def getMappingHeader(self):
         from .mapping import Mapping
         if self.getMasktype() == "export":
