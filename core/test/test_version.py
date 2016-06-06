@@ -108,6 +108,7 @@ def test_change_file(container_node):
     # Changing the current file affects only the current node's File, not the node version's File.
     assert node.versions[0].files.one().path == u"test"
     assert node.files.one().path == u"changed"
+    assert node.versions[-1].next is None
 
 
 def test_change_attr(content_node):
@@ -120,6 +121,8 @@ def test_change_attr(content_node):
     s.commit()
     assert node.versions.count() == 3
     assert node.versions[1].get(u"attr") == u"test"
+    assert node.versions[-1].next is None
+
 
 
 def test_delete_attr(content_node):
@@ -146,6 +149,7 @@ def test_revert_attrs(content_node):
     node.versions[0].revert()
     s.commit()
     assert u"attr" not in node
+    assert node.versions[-1].next is None
 
 
 def test_call_nodeclass_method(content_node):
@@ -232,6 +236,7 @@ def test_create_new_tagged_version(content_node_versioned, some_user):
     assert u"orderpos" in new_version.changeset
     assert new_version.changeset[u"orderpos"] == [42, 100]
     assert u"updatetime" in new_version.changeset[u"attrs"][1]
+    assert new_version.next is None
 
 
 def test_create_new_tagged_version_initial_version_tag(content_node_versioned):
