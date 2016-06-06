@@ -43,6 +43,7 @@ except:
     pass
 
 from . import handlers
+from .. import dec_handle_exception
 
 
 logg = logging.getLogger(__name__)
@@ -68,12 +69,14 @@ urls = [
 request_count = 0
 
 
+@dec_handle_exception
 def request_handler(req):
     global request_count
 
     handle_starttime = time.time()
     matched = False
     req_path = req.path
+
     for method, pattern, handler_func, rewrite_target, url_flags, data in urls:
         if method and method == req.command:
             m = re.match(pattern, req_path)
