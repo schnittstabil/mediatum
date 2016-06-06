@@ -1042,7 +1042,7 @@ class Mask(Node):
         for item in self.all_maskitems:
             field = item.metafield
 
-            if field and field.type == "metafield" and req.params.get(field.name, "").find("?") != 0:
+            if field and req.params.get(field.name, "").find("?") != 0:
                 t = getMetadataType(field.get("type"))
 
                 if field.name in req.params.keys():
