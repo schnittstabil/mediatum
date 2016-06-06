@@ -1072,7 +1072,6 @@ class Mask(Node):
             node.event_metadata_changed()
 
         node["updatetime"] = format_date()
-        db.session.commit()
 
 
     def getMappingHeader(self):
