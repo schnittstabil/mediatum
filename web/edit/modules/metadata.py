@@ -96,7 +96,7 @@ class SystemMask:
         pass
 
 
-def _handle_edit_metadata(req, ids, mask, maskname, nodes):
+def _handle_edit_metadata(req, mask, nodes):
     # check and save items
     user = user_from_session(req.session)
     userdir = user.home_dir
@@ -137,9 +137,9 @@ def _handle_edit_metadata(req, ids, mask, maskname, nodes):
     else:
         for field in mask.metaFields():
             logg.debug("in %s.%s: (hasattr(mask,'i_am_not_a_mask')) field: %s, field.id: %s, field.name: %s, mask: %s, maskname: %s",
-                __name__, funcname(), field, field.id, field.name, mask, maskname)
+                __name__, funcname(), field, field.id, field.name, mask, mask.name)
             field_name = field.name
-            if field_name == 'nodename' and maskname == 'settings':
+            if field_name == 'nodename' and mask.name == 'settings':
                 if '__nodename' in req.params:
                     field_name = '__nodename'  # no multilang here !
                 elif getDefaultLanguage() + '__nodename' in req.params:
@@ -261,7 +261,7 @@ def getContent(req, ids):
         raise NotImplementedError("delete version not implemented, later...")
 
     if "edit_metadata" in req.params:
-        flag_nodename_changed = _handle_edit_metadata(req, ids, mask, maskname, nodes)
+        flag_nodename_changed = _handle_edit_metadata(req, mask, nodes)
         logg.debug("%s change metadata %s", user.login_name, idstr)
         logg.debug(pf(req.params))
 
