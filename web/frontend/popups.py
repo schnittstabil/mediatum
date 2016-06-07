@@ -48,8 +48,8 @@ def popup_fullsize(req):
     version_id = req.params.get("v")
     version = node.get_tagged_version(unicode(version_id))
 
-    c = ContentNode(version) if version is not None else ContentNode(node)
-    return c.node.popup_fullsize(req)
+    node_or_version = version if version else node
+    return node_or_version.popup_fullsize(req)
 #
 # execute thumbBig method from node-type
 #
