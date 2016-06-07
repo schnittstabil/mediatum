@@ -248,7 +248,7 @@ class Image(Content):
     def get_upload_filetype(cls):
         return u"original"
 
-    @cached_property
+    @property
     def svg_image(self):
         return self.files.filter_by(filetype=u"image", mimetype=u"image/svg+xml").scalar()
 
@@ -326,7 +326,8 @@ class Image(Content):
         obj['attachment'] = files
         obj['sum_size'] = sum_size
         obj['presentation_url'] = self.presentation_url
-        obj['tag'] = self.tagged_versions[-1].tag if self.tagged_versions.count() > 0 else None
+        versions = self.tagged_versions.all()
+        obj['tag'] = versions[-1].tag if len(versions) > 0 else None
         obj['fullsize'] = str(self.id)
         if not self.isActiveVersion():
             obj['tag'] = self.tag
@@ -651,7 +652,7 @@ class Image(Content):
 
         d = {}
         d["flash"] = use_flash_zoom
-        d["svg"] = self.svg_image is not None
+        d["svg_url"] = self.image_url_for_mimetype(u"image/svg+xml") if self.svg_image else None
         d["width"] = self.get("width")
         # we assume that width==origwidth, height==origheight
         # XXX: ^ wrong!
