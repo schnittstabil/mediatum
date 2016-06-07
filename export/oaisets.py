@@ -23,8 +23,7 @@ from collections import OrderedDict
 from utils.utils import esc
 from utils.pathutils import isDescendantOf
 from .oaisetgroup import OAISetGroup as OAISetGroup
-from core import Node
-from core import db
+from core import db, config, Node
 
 q = db.query
 
@@ -119,5 +118,6 @@ def getGroup(group_identifier):
 
 
 def init():
-    registerGroupGetterFunc('mediatum', get_set_groups)
-    loadGroups()
+    if config.getboolean("oai.activate", True):
+        registerGroupGetterFunc('mediatum', get_set_groups)
+        loadGroups()

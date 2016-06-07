@@ -47,6 +47,7 @@ use_logstash=false
 mapping_name=marc21
 
 [oai]
+activate=false
 formats=mediatum # format for testing
 schema.mediatum=http://mediatum/no-schema-defined
 namespace.mediatum=http://www.mediatum.org/oai/mediatum
