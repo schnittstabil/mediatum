@@ -21,7 +21,7 @@ sys.path += ["../", "."]
 import time
 
 from core.init import basic_init
-basic_init()
+basic_init(prefer_config_filename="stats.log")
 
 
 from core.stats import buildStat

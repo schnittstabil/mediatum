@@ -48,23 +48,26 @@ def get_default_data_dir():
     return default_data_dir
 
 
-def get_config_filepath():
+def get_config_filepath(config_filename=None):
     """Looks for a config file and returns its path if found, in the following order:
     1. MEDIATUM_CONFIG env var
-    3. <mediatum_install_dir>/mediatum.cfg (for example, the git working dir in development)
-    2. ~/.config/mediatum/mediatum.cfg
+    3. <mediatum_install_dir>/<config_filename> (for example, the git working dir in development)
+    2. ~/.config/mediatum/<config_filename>
     4. None (use default config)
     """
+    
+    if config_filename is None:
+        config_filename = "mediatum.cfg"
 
     env_config_filepath = os.getenv("MEDIATUM_CONFIG")
     if env_config_filepath:
         return env_config_filepath
 
-    basedir_config_filepath = os.path.join(basedir, "mediatum.cfg")
+    basedir_config_filepath = os.path.join(basedir, config_filename)
     if os.path.exists(basedir_config_filepath):
         return basedir_config_filepath
 
-    home_config_filepath = os.path.join(os.path.expanduser("~/.config/mediatum"), "mediatum.cfg")
+    home_config_filepath = os.path.join(os.path.expanduser("~/.config/mediatum"), config_filename)
     if os.path.exists(home_config_filepath):
         return home_config_filepath
 
@@ -222,9 +225,24 @@ def fix_dirpaths():
                 settings[confkey] += "/"
 
 
-def initialize(config_filepath=None):
+def initialize(config_filepath=None, prefer_config_filename=None):
+    '''
+    :param config_filepath: absolute path to the config file. Overrides default config file locations.
+    :param prefer_config_filename: name of an alternative config file. Uses mediatum.cfg if nothing is given or file doesn't exist. 
+        This file name is searched in the mediatum basedir and ~/.config/mediatum, in that order.
+    '''
+    
+    if config_filepath and prefer_config_filename:
+        raise Exception("specify config_filepath or prefer_config_filename, but not both!")
+    
+    if not config_filepath and prefer_config_filename:
+        # no path given, try preferred config file name first
+        config_filepath = get_config_filepath(prefer_config_filename)
+        
     if not config_filepath:
+        # (still) no path, try (again) with default config name
         config_filepath = get_config_filepath()
+        
 
     global settings, languages, is_default_config
 

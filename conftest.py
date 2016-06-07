@@ -33,7 +33,7 @@ from core.init import add_ustr_builtin, init_db_connector, load_system_types, lo
 # we are doing a 'basic_init()' here for testing that's a bit different from core.init_basic_init()
 # maybe this can be converted to a new init state or replaced by basic_init()
 
-config.initialize(os.path.join(config.basedir, "test_mediatum.cfg"))
+config.initialize(config_filepath=os.path.join(config.basedir, "test_mediatum.cfg"))
 add_ustr_builtin()
 import utils.log
 utils.log.initialize()

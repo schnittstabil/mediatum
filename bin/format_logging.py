@@ -24,7 +24,7 @@ import time
 import codecs
 
 from core.init import basic_init
-basic_init()
+basic_init(prefer_config_filename="format_logging.log")
 
 
 import core.config

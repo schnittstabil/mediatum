@@ -172,12 +172,12 @@ from utils.compat import *
 # set this to INFO for SQL statement echo, DEBUG for even more info from SQLAlchemy
 SQLALCHEMY_LOGGING = logging.WARN
 SQL_LOGGING = logging.WARN
-ROOT_LOGLEVEL = logging.INFO
-LOG_FILEPATH = os.path.join(tempfile.gettempdir(), "mediatumipython.log")
 
 # / log settings #
 
-initmodule.basic_init(ROOT_LOGLEVEL, log_filepath=LOG_FILEPATH, use_logstash=False)
+INIT_ARGS = dict(prefer_config_filename="mediatumipython.cfg")
+
+initmodule.basic_init(**INIT_ARGS)
 initmodule.register_workflow()
 
 from core.database.postgres.node import t_noderelation
@@ -765,11 +765,11 @@ class MediatumMagics(Magics):
         args = parse_argstring(self.init, line)
         new_state = args.state
         if new_state == "basic":
-            initmodule.basic_init()
+            initmodule.basic_init(**INIT_ARGS)
         elif new_state == "full":
             # drop reassignment warnings because we want to reassign node classes when plugins are loaded later, for example
             warnings.filterwarnings("ignore", "Reassigning polymorphic.*")
-            initmodule.full_init()
+            initmodule.full_init(**INIT_ARGS)
         else:
             print("current init state is: " + initmodule.get_current_init_state())
 

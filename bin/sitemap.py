@@ -34,7 +34,7 @@ from lxml import etree
 from math import ceil
 
 from core.init import full_init
-full_init()
+full_init(prefer_config_filename="sitemap.log")
 
 import core.users as users
 from core import Node

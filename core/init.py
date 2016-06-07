@@ -269,14 +269,15 @@ def update_nodetypes_in_db():
     s.commit()
 
 
-def basic_init(root_loglevel=None, config_filepath=None, log_filepath=None, use_logstash=None, force_test_db=None, automigrate=False):
+def basic_init(root_loglevel=None, config_filepath=None, prefer_config_filename=None, log_filepath=None, 
+               use_logstash=None, force_test_db=None, automigrate=False):
     init_state = "basic"
     if init_state_reached(init_state):
         return
 
     add_ustr_builtin()
     import core.config
-    core.config.initialize(config_filepath)
+    core.config.initialize(config_filepath, prefer_config_filename)
     import utils.log
     utils.log.initialize(root_loglevel, log_filepath, use_logstash)
     log_basic_sys_info()
@@ -308,12 +309,11 @@ def _additional_init():
     db.session.rollback()
 
 
-
-def full_init(root_loglevel=None, config_filepath=None, log_filepath=None, use_logstash=None, force_test_db=None, automigrate=False):
+def full_init(root_loglevel=None, config_filepath=None, prefer_config_filename=None, log_filepath=None, use_logstash=None, force_test_db=None, automigrate=False):
     init_state = "full"
     if init_state_reached(init_state):
         return
 
-    basic_init(root_loglevel, config_filepath, log_filepath, use_logstash, force_test_db, automigrate)
+    basic_init(root_loglevel, config_filepath, log_filepath, prefer_config_filename, use_logstash, force_test_db, automigrate)
     _additional_init()
     _set_current_init_state(init_state)

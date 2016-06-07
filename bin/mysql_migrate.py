@@ -41,9 +41,8 @@ from core import init, plugins
 from collections import OrderedDict
 from utils.postgres import vacuum_analyze_tables
 
-LOG_FILEPATH = os.path.join(tempfile.gettempdir(), "mediatum_mysql_migrate.log")
+init.basic_init(prefer_config_filename="mysql_migrate.cfg")
 
-init.basic_init(root_loglevel=logging.INFO, log_filepath=LOG_FILEPATH)
 plugins.init_plugins()
 
 import core.database.postgres

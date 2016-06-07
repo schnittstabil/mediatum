@@ -28,9 +28,8 @@ from sqlalchemy_continuum import remove_versioning
 
 sys.path.append(".")
 
-LOG_FILEPATH = os.path.join(tempfile.gettempdir(), "mediatum_manage.log")
 from core import init
-init.basic_init(root_loglevel=logging.DEBUG, log_filepath=LOG_FILEPATH)
+init.basic_init(prefer_config_filename="manage.log")
 
 from core.database.postgres import db_metadata, mediatumfunc
 from core.database.postgres.alchemyext import exec_sqlfunc, disable_triggers, enable_triggers
