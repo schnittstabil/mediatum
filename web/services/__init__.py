@@ -59,13 +59,23 @@ def dec_handle_exception(func):
             hashed_errormsg = hashlib.md5(errormsg).hexdigest()[0:6]
             # http://stackoverflow.com/questions/2257441/random-string-generation-with-upper-case-letters-and-digits
             random_string = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
-            XID = u"%s__%s__%s" % (iso_datetime_now, hashed_errormsg, random_string)
+            xid = u"%s__%s__%s" % (iso_datetime_now, hashed_errormsg, random_string)
 
-            logg.exception(u"exception (XID=%r) while handling request %r, %r" % (XID, req.path, req.params))
+            log_extra = {"xid": xid,
+                         "req_args": dict(req.args),
+                         "req_path": req.path,
+                         "errorhash": hashed_errormsg}
+            
+            if req.method == "POST":
+                log_extra["req_form"] = dict(req.form)
+                log_extra["req_files"] = dict(req.files)
+            
+            logg.exception(u"exception (xid=%s) while handling request %s %s, %s", 
+                           xid, req.method, req.path, dict(req.args), extra=log_extra)
 
             response_format = req.params.get('format', '').lower()
             response_template, response_mimetype = supported_formats.get(response_format, supported_formats.get('xml'))
-            response = response_template % dict(iso_datetime_now=iso_datetime_now, errormsg=u"%s: %s" % (XID, errormsg))
+            response = response_template % dict(iso_datetime_now=iso_datetime_now, errormsg=u"%s: %s" % (xid, errormsg))
             response = response.strip()  # remove whitespaces at least from xml response
 
             req.reply_headers['Content-Type'] = response_mimetype
