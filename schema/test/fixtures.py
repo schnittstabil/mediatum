@@ -126,3 +126,19 @@ def content_node_with_mdt(some_mdt_with_masks, content_node):
     content_node.schema = some_mdt_with_masks.name
     return content_node
 
+
+@fixture
+def simple_mask_with_maskitems(session):
+    mask = MaskFactory()
+    mi1 = FieldMaskitemFactory(name=u"testattr")
+    mi2 = FieldMaskitemFactory(name=u"newattr")
+    mi3 = FieldMaskitemFactory(name=u"nodename")
+    mf1 = TextMetafieldFactory(name=u"testattr")
+    mf2 = TextMetafieldFactory(name=u"newattr")
+    mf3 = TextMetafieldFactory(name=u"nodename")
+    mi1.metafield = mf1
+    mi2.metafield = mf2
+    mi3.metafield = mf3
+    mask.children.extend([mi1, mi2, mi3])
+    session.flush()
+    return mask
