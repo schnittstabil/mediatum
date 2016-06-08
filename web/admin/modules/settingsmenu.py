@@ -155,6 +155,9 @@ def adminModuleActions(req):
         root = q(Root).one()
         if key == "adminmodules_default":
             root.system_attrs["admin.menu"] = config.get("admin.defaultmenu", "")
+            if not root.system_attrs["admin.menu"]:
+                # load default admin.menu
+                adminNavigation()
             break
 
         elif key.startswith("move|") and req.params.get(key) != "":
