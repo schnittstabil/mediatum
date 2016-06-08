@@ -42,6 +42,7 @@ de=i18n/mediatum-de.po
 file=../mediatum_data/mediatum.log
 level=DEBUG
 use_logstash=false
+tal_extension=true
 
 [marc21]
 mapping_name=marc21
