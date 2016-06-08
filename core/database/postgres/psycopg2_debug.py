@@ -13,6 +13,7 @@ from psycopg2.extensions import connection as _connection
 from psycopg2.extensions import cursor as _cursor
 from werkzeug.datastructures import OrderedMultiDict
 from decorator import contextmanager
+from utils.compat import iteritems
 
 # used for SQL formatting, if present
 try:
@@ -70,11 +71,12 @@ class StatementHistory(object):
         self.last_duration = None
         self.last_timestamp = None
 
-    def append(self, stmt, timestamp, duration):
+    def append(self, stmt, timestamp, duration, notices):
         self.last_statement = stmt
         self.last_timestamp = timestamp
         self.last_duration = duration
-        self._statements.add(stmt, (timestamp, duration))
+        self.last_notices = notices
+        self._statements.add(stmt, (timestamp, duration, notices))
 
     def clear(self):
         # clear() does not work on OrderedMultiDict, bug in werkzeug?
@@ -85,8 +87,12 @@ class StatementHistory(object):
         return self._statements.keys()
 
     @property
+    def statements_with_all_infos(self):
+        return iteritems(self._statements)
+    
+    @property
     def statements_with_time(self):
-        return self._statements.items()
+        return ((k, v[0]) for k, v in iteritems(self._statements))
 
     def format_statement(self, stmt, highlight=True, time=0, duration=0, pygments_style=DEFAULT_PYGMENTS_STYLE, formatter_cls=None):
         show_time = time and duration
@@ -149,8 +155,9 @@ def make_debug_connection_factory(log_statement_trace=False):
         """
 
         def log(self, msg, timestamp, duration, curs):
-            sql_log.debug(msg, trace=log_statement_trace, extra={"duration": duration, "timestamp": timestamp})
-            self._history.append(msg, timestamp, duration)
+            notices = [notice.strip() for notice in self.notices]
+            sql_log.debug(msg, trace=log_statement_trace, extra={"duration": duration, "timestamp": timestamp, "notices": notices})
+            self._history.append(msg, timestamp, duration, notices)
 
         def _check(self):
             if not hasattr(self, "_history"):
