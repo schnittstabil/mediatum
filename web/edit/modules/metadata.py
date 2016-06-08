@@ -101,6 +101,7 @@ def _handle_edit_metadata(req, mask, nodes):
     user = user_from_session(req.session)
     userdir = user.home_dir
     flag_nodename_changed = -1
+    form = req.form
 
     for node in nodes:
         if not node.has_write_access() or node is userdir:
@@ -108,9 +109,9 @@ def _handle_edit_metadata(req, mask, nodes):
             return req.getTAL("web/edit/edit.html", {}, macro="access_error")
 
     if not hasattr(mask, "i_am_not_a_mask"):
-        if req.params.get('generate_new_version'):
+        if form.get('generate_new_version'):
             # Create new node version
-            comment = u'({})\n{}'.format(t(req, "document_new_version_comment"), req.params.get('version_comment', ''))
+            comment = u'({})\n{}'.format(t(req, "document_new_version_comment"), form.get('version_comment', ''))
 
             for node in nodes:
                 with node.new_tagged_version(comment=comment, user=user):
@@ -140,18 +141,18 @@ def _handle_edit_metadata(req, mask, nodes):
                 __name__, funcname(), field, field.id, field.name, mask, mask.name)
             field_name = field.name
             if field_name == 'nodename' and mask.name == 'settings':
-                if '__nodename' in req.params:
+                if '__nodename' in form:
                     field_name = '__nodename'  # no multilang here !
-                elif getDefaultLanguage() + '__nodename' in req.params:
+                elif getDefaultLanguage() + '__nodename' in form:
                     # no multilang here !
                     field_name = getDefaultLanguage() + '__nodename'
-                value = req.params.get(field_name, None)
+                value = form.get(field_name, None)
                 if value:
                     if value != node.name:
                         flag_nodename_changed = ustr(node.id)
                     for node in nodes:
                         node.name = value
-            value = req.params.get(field_name, None)
+            value = form.get(field_name, None)
             if value is not None:
                 for node in nodes:
                     node.set(field.name, value)
