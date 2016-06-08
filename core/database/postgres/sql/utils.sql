@@ -35,3 +35,18 @@ END IF;
 END;
 $BODY$;
 
+
+CREATE OR REPLACE FUNCTION msgtest() RETURNS VOID
+    LANGUAGE plpgsql
+    IMMUTABLE
+    SET search_path = :search_path
+    AS $f$
+BEGIN
+    RAISE DEBUG 'TEST DEBUG %', 1;
+    RAISE LOG 'TEST LOG %', 2;
+    RAISE INFO 'TEST INFO %', 3;
+    RAISE NOTICE 'TEST NOTICE %', 4;
+    RAISE WARNING 'TEST WARNING %', 5;
+    RAISE EXCEPTION 'TEST EXCEPTION %', 6;
+END;
+$f$;
