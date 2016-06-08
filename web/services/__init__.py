@@ -6,11 +6,10 @@
 import json
 import logging
 import datetime
-import hashlib
-import random
-import string
+
 import core.config as config
 from core.transition import httpstatus
+from utils.log import make_xid_and_errormsg_hash
 from functools import wraps
 
 logg = logging.getLogger(__name__)
@@ -56,10 +55,7 @@ def dec_handle_exception(func):
         except Exception, e:
             iso_datetime_now = datetime.datetime.now().isoformat()
             errormsg = str(e)
-            hashed_errormsg = hashlib.md5(errormsg).hexdigest()[0:6]
-            # http://stackoverflow.com/questions/2257441/random-string-generation-with-upper-case-letters-and-digits
-            random_string = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
-            xid = u"%s__%s__%s" % (iso_datetime_now, hashed_errormsg, random_string)
+            xid, hashed_errormsg = make_xid_and_errormsg_hash(errormsg)
 
             log_extra = {"xid": xid,
                          "req_args": dict(req.args),

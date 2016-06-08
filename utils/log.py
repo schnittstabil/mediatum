@@ -26,7 +26,11 @@ import traceback
 from logging import LogRecord
 
 from core import config
+from .date import format_date
 import os
+import hashlib
+import random
+import string
 
 ROOT_STREAM_LOGFORMAT = '%(asctime)s [%(process)d/%(threadName)s] %(name)s %(levelname)s | %(message)s'
 # this also logs filename and line number, which is great for debugging
@@ -300,3 +304,17 @@ def initialize(level=None, log_filepath=None, use_logstash=None):
         file_handler.setFormatter(logging.Formatter(ROOT_FILE_LOGFORMAT))
         root_logger.addHandler(file_handler)
         logg.info('--- logging everything to %s ---', log_filepath)
+
+
+def make_xid_and_errormsg_hash(errormsg):
+    """Builds a unique string (exception ID) that may be exposed to the user without revealing to much.
+    Added to the logging of an event should make it easier to relate.
+
+    :param errormsg: str
+    """
+    date_now = format_date()
+    hashed_errormsg = hashlib.md5(errormsg).hexdigest()[0:6]
+    # http://stackoverflow.com/questions/2257441/random-string-generation-with-upper-case-letters-and-digits
+    random_string = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
+    xid = "%s__%s__%s" % (date_now, hashed_errormsg, random_string)
+    return xid, hashed_errormsg

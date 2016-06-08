@@ -4126,12 +4126,48 @@ class AthanaHandler:
         s = None
         try:
             status = handler_func(req)
-        except:
+        except Exception, e:
+            import core.config as config
             request = req.request
-            logg.error("Error in page: '%s %s', session '%s'",
-                       request.type, request.uri, request.session.id, exc_info=1)
-            s = "<pre>" + traceback.format_exc() + "</pre>"
+            if config.get('host.type') != 'testing':
+                from utils.log import make_xid_and_errormsg_hash
+                errormsg = str(e)
+                xid, hashed_errormsg = make_xid_and_errormsg_hash(errormsg)
+
+                mail_to_address = str(config.get('email.support', ''))
+                if not mail_to_address:
+                    logg.warning("no email.support configurated in mediatum.cfg")
+
+                log_extra = {"xid": xid,
+                             "req_args": dict(req.args),
+                             "req_path": req.path,
+                             "errorhash": hashed_errormsg}
+
+                if req.method == "POST":
+                    log_extra["req_form"] = dict(req.form)
+                    log_extra["req_files"] = dict(req.files)
+
+                logg.exception(u"exception (xid=%s) while handling request %s %s, %s",
+                               xid, req.method, req.path, dict(req.args), extra=log_extra)
+
+                from .translation import translate
+                if mail_to_address:
+                    msg = translate("core_snipped_internal_server_error_with_mail", request=req).replace('${email}', mail_to_address)
+                else:
+                    msg = translate("core_snipped_internal_server_error_without_mail", request=req)
+                s = msg.replace('${XID}', xid)
+                s = s.encode('utf8')
+
+                request.reply_headers['charset'] = 'utf-8'
+                request.reply_headers['Content-Type'] = 'text/html; encoding=utf-8; charset=utf-8'
+
+            else:
+                logg.error("Error in page: '%s %s', session '%s'",
+                           request.type, request.uri, request.session.id, exc_info=1)
+                s = "<pre>" + traceback.format_exc() + "</pre>"
+
             return request.error(500, s)
+
         finally:
             for handler in _request_finished_handlers:
                 handler(req)
