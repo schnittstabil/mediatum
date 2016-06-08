@@ -30,6 +30,7 @@ from core.styles import theme
 from core import db
 from core import Node
 from contenttypes import Container
+from content import ContentNode
 
 #
 # execute fullsize method from node-type
@@ -44,7 +45,11 @@ def popup_fullsize(req):
     node = q(Node).get(req.params["id"])
     if not isinstance(node, Node):
         return 404
-    return node.popup_fullsize(req)
+    version_id = req.params.get("v")
+    version = node.get_tagged_version(unicode(version_id))
+
+    node_or_version = version if version else node
+    return node_or_version.popup_fullsize(req)
 #
 # execute thumbBig method from node-type
 #

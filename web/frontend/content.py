@@ -38,6 +38,7 @@ from contenttypes.container import Container
 from mediatumtal import tal
 from schema.schema import Metadatatype
 from core.database.postgres import mediatumfunc
+from sqlalchemy_continuum.utils import version_class
 import json
 
 
@@ -658,7 +659,8 @@ class ContentNode(Content):
         return "(%d/%d)" % (int(self.nr) + 1, self.num)
 
     def select_style_link(self, style):
-        return node_url(self.id, style=style)
+        version = self.node.tag if isinstance(self.node, version_class(Node)) else None
+        return node_url(self.id, version=version, style=style)
 
     @ensure_unicode_returned(name="web.frontend.content:html")
     def html(self, req):

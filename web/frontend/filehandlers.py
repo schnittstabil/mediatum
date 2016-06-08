@@ -46,7 +46,7 @@ def _send_thumbnail(thumb_type, req):
     if version_id:
         version = get_node_or_version(nid, version_id, Data)
 
-        for f in version.files.filter_by(filetype=thumb_type):
+        for f in version.files.filter_by(filetype=thumb_type, transaction_id=version.transaction_id):
             if f.exists:
                 return req.sendFile(f.abspath, f.mimetype)
 
@@ -92,8 +92,10 @@ def _send_file_with_type(filetype, mimetype, req):
         return 404
 
     file_query = node.files.filter_by(filetype=filetype)
+    if version_id:
+        file_query = file_query.filter_by(transaction_id=node.transaction_id)
     if mimetype:
-        file_query.filter_by(mimetype=mimetype)
+        file_query = file_query.filter_by(mimetype=mimetype)
 
     fileobj = file_query.scalar()
     if fileobj is not None:

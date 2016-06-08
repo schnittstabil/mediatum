@@ -94,7 +94,7 @@
         </script>
     </head>
 
-    <body tal:condition="python:svg"
+    <body tal:condition="python:svg_url"
           tal:attributes="onload python:u'load_svg(\'{}\', \'{}\')'.format(width, height)" style="padding: 0px; border: 0px; margin: 0px;">
         <div id="nav" align="left" name="nav" style="position:absolute; width: 300px; height:200px; margin:5px;">
             <a href="#" onclick="zoom(1);" i18n:attributes="title popup_fullview_decrease"><img src="/img/pmud-minus.png" border="0"/></a>
@@ -104,10 +104,10 @@
             &nbsp;&nbsp;
         </div>
         <div id="div_image" name="div_image" style="height: 100%; width: 100%;">
-            <img tal:attributes="src python:image_url+'.svg'" id="myimage" width="200px" />
+            <img tal:attributes="src python:svg_url" id="myimage" width="200px" />
         </div>
     </body>
-    <body tal:condition="python:not flash and not svg"
+    <body tal:condition="python:not flash and not svg_url"
           tal:attributes="onload python:u'load_image(\'{}\')'.format(image_url)" style="padding: 0px; border: 0px; margin: 0px;">
         <div id="nav" align="right" name="nav" style="position:absolute; width: 300px; height:200px; margin:5px;">
             <a href="#" onclick="zoom(1);" i18n:attributes="title popup_fullview_decrease"><img src="/img/pmud-minus.png" border="0"/></a>
@@ -120,7 +120,7 @@
             <img tal:attributes="src image_url" id="myimage" width="200px"/>
         </div>
     </body>
-    <body tal:condition="python:flash and not svg">
+    <body tal:condition="python:flash and not svg_url">
         <a tal:attributes="href no_flash_url" i18n:translate="image_no_flash_link">TEXT</a>
 
         <object classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000"

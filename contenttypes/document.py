@@ -70,14 +70,14 @@ def _prepare_document_data(node, req, words=""):
         obj['canseeoriginal'] = False
 
     obj['documentthumb'] = u'/thumb2/{}'.format(node.id)
+    versions = node.tagged_versions.all()
+    obj['tag'] = versions[-1].tag if len(versions) > 0 else None
     if not node.isActiveVersion():
         obj['documentthumb'] += "?v=" + node.tag
-
+        obj['tag'] = node.tag
 
     if "oogle" not in (req.get_header("user-agent") or ""):
         obj['print_url'] = u'/print/{}'.format(node.id)
-    if not node.isActiveVersion():
-        obj['print_url'] += "?v=" + node.tag
     else:
         # don't confuse search engines with the PDF link
         obj['print_url'] = None
