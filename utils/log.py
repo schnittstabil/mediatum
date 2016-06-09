@@ -208,7 +208,7 @@ class TraceLogger(logging.Logger):
 
             extra["trace"] = "".join(final_tracelines)
 
-            if self.use_tal_extension is None:
+            if self.use_tal_extension is None and config.settings is not None:
                 self.use_tal_extension = config.getboolean("logging.tal_extension", True)
 
             if self.use_tal_extension:
