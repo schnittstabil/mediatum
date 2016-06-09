@@ -29,7 +29,7 @@ from sqlalchemy_continuum import remove_versioning
 sys.path.append(".")
 
 from core import init
-init.basic_init(prefer_config_filename="manage.log")
+init.basic_init(prefer_config_filename="manage.cfg")
 
 from core.database.postgres import db_metadata, mediatumfunc
 from core.database.postgres.alchemyext import exec_sqlfunc, disable_triggers, enable_triggers
