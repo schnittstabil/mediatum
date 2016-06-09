@@ -189,7 +189,10 @@ def getAllMetaFields():
 # returns field for given name and metatype
 #
 def getMetaField(pid, name):
-    return getMetaType(pid).children.filter_by(name=name).scalar()
+    metatype = getMetaType(pid)
+    if metatype is None:
+        return None
+    return metatype.children.filter_by(name=name).scalar()
 
 #
 # check existance of field for given metadatatype

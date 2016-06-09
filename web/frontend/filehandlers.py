@@ -196,7 +196,7 @@ def send_file(req):
     nid = userinput.string_to_int(nidstr)
     version_id = version_id_from_req(req)
 
-    node = get_node_or_version(nid, version_id, Data)
+    node = get_node_or_version(nid, version_id)
 
     if (node is None
             or isinstance(node, Container) and not node.has_read_access()
