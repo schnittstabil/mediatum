@@ -18,6 +18,7 @@
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
+import datetime
 import logging
 import sys
 import logstash
@@ -312,7 +313,8 @@ def make_xid_and_errormsg_hash(errormsg):
 
     :param errormsg: str
     """
-    date_now = format_date()
+    # : and - interferes with elasticsearch query syntax, better use underscores in the datetime string
+    date_now = datetime.datetime.now().strftime("%Y_%m_%dT%H_%M_%S")
     hashed_errormsg = hashlib.md5(errormsg).hexdigest()[0:6]
     # http://stackoverflow.com/questions/2257441/random-string-generation-with-upper-case-letters-and-digits
     random_string = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
