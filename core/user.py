@@ -170,4 +170,4 @@ class GuestUser(UserMixin):
     def get_db_object(self):
         from core import User
         from core import db
-        return db.query(User).filter_by(login_name=config.get("user.guestuser", u"guest")).one()
+        return db.query(User).filter_by(login_name=config.get_guest_name()).one()

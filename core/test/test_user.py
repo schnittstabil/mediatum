@@ -123,8 +123,7 @@ def test_user_hidden_edit_functions(some_user, some_group):
 
 def test_guest_user_in_default_data(default_data):
     q = db.session.query
-    guest_username = config.get("user.guestuser")
-    assert q(User).filter_by(login_name=guest_username).one()
+    assert q(User).filter_by(login_name=config.get_guest_name()).one()
 
 
 def test_admin_user_in_default_data(default_data):
