@@ -591,7 +591,7 @@ def get_node_data_struct(
         res['userid'] = user.id
     else:
         res['userid'] = ''  # unique id for authenticated user if applicable (node.id for internal, dirid for dynamic users)
-        res['username'] = ''  # name of the user, may be "guest" or personal name
+        res['username'] = ''  # name of the user, may be the name of the guest user or a personal name
 
     result_shortlist = []
 
