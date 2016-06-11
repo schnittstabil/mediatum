@@ -4126,27 +4126,23 @@ class AthanaHandler:
         s = None
         try:
             status = handler_func(req)
-        except Exception, e:
+        except Exception as e:
             import core.config as config
             request = req.request
             if config.get('host.type') != 'testing':
-                from utils.log import make_xid_and_errormsg_hash
-                from .translation import translate
+                from utils.log import make_xid_and_errormsg_hash, extra_log_info_from_req
+                from core.translation import translate
                 errormsg = str(e)
                 xid, hashed_errormsg = make_xid_and_errormsg_hash(errormsg)
 
-                mail_to_address = str(config.get('email.support', ''))
+                mail_to_address = config.get('email.support')
                 if not mail_to_address:
-                    logg.warning("no email.support configurated in mediatum.cfg")
+                    logg.warn("no support mail address configured, consider setting it with `email.support`", trace=False)
 
                 log_extra = {"xid": xid,
-                             "req_args": dict(req.args),
-                             "req_path": req.path,
                              "errorhash": hashed_errormsg}
-
-                if req.method == "POST":
-                    log_extra["req_form"] = dict(req.form)
-                    log_extra["req_files"] = dict(req.files)
+                
+                log_extra["req"] = extra_log_info_from_req(req)
 
                 logg.exception(u"exception (xid=%s) while handling request %s %s, %s",
                                xid, req.method, req.path, dict(req.args), extra=log_extra)
@@ -4156,9 +4152,10 @@ class AthanaHandler:
                 else:
                     msg = translate("core_snipped_internal_server_error_without_mail", request=req)
                 s = msg.replace('${XID}', xid)
-                s = s.encode('utf8')
 
-                return request.error(500, s, content_type='text/html; encoding=utf-8; charset=utf-8')
+                req.reply_headers["X-XID"] = xid
+                    
+                return request.error(500, s.encode("utf8"), content_type='text/html; encoding=utf-8; charset=utf-8')
 
             else:
                 logg.error("Error in page: '%s %s', session '%s'",

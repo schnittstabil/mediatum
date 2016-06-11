@@ -320,3 +320,29 @@ def make_xid_and_errormsg_hash(errormsg):
     random_string = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
     xid = "%s__%s__%s" % (date_now, hashed_errormsg, random_string)
     return xid, hashed_errormsg
+
+
+def extra_log_info_from_req(req, add_user_info=True):
+    
+    extra = {"args": dict(req.args),
+                 "path": req.path,
+                 "method": req.method}
+
+    if req.method == "POST":
+        extra["form"] = dict(req.form)
+        extra["files"] = dict(req.files)
+
+    if add_user_info:
+        from core.users import user_from_session
+        user = user_from_session(req.session)
+        extra["user_is_anonymous"] = user.is_anonymous
+        
+        if not user.is_anonymous:
+            extra["user_id"] = user.id
+            
+        extra["user_is_editor"] = user.is_editor
+        extra["user_is_admin"] = user.is_admin
+        
+        extra["headers"] = { k.lower(): v for k, v in [h.split(": ", 1) for h in req.header] }
+    
+    return extra

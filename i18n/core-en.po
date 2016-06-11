@@ -1,5 +1,5 @@
 msgid "core_snipped_internal_server_error_without_mail"
-msgstr "<h1>mediatum</h1><p><b>An internal server error has occured.</b></p>If you wish a feedback, mail the following XID (eXception ID) <p>XID: <b><i>${XID}</i></b></p> to the support team."
+msgstr "<h1>mediatum</h1><p><b>An internal server error has occured.</b></p>If you want feedback regarding this issue, mail the following XID (eXception ID) <p>XID: <b><i>${XID}</i></b></p> to the support team."
 
 msgid "core_snipped_internal_server_error_with_mail"
-msgstr "<h1>mediatum</h1><p><b>An internal server error has occured.</b></p>If you wish a feedback, mail the following XID (eXception ID) <p>XID: <b><i>${XID}</i></b></p> to the <a href='mailto:${email}?subject=athana exception XID ${XID}'>support team</a>"
+msgstr "<h1>mediatum</h1><p><b>An internal server error has occured.</b></p>If you want feedback regarding this issue, mail the following XID (eXception ID) <p><b><i>${XID}</i></b></p> to the <a href='mailto:${email}?subject=XID ${XID}'>support team &lt;${email}&gt;</a>"
