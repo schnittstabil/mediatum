@@ -128,7 +128,7 @@ class User(DeclarativeBase, TimeStamp, UserMixin):
 
     @property
     def is_guest(self):
-        return self.name == config.get_guest_name() and self.authenticator_id == 0
+        return self.login_name == config.get_guest_name() and self.authenticator_id == 0
     
     @property
     def is_workflow_editor(self):
