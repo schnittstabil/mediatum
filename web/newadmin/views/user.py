@@ -11,6 +11,7 @@ from wtforms.fields.core import StringField
 from web.newadmin.views import BaseAdminView
 from wtforms.ext.sqlalchemy.fields import QuerySelectMultipleField
 from flask.ext.admin import form
+from core.auth import INTERNAL_AUTHENTICATOR_KEY
 
 
 logg = logging.getLogger(__name__)
@@ -19,7 +20,6 @@ logg = logging.getLogger(__name__)
 def _link_format_node_id_column(node_id):
     # XXX: just for testing, this should link to this instance
     return Markup('<a href="https://mediatum.ub.tum.de/node?id={0}">{0}</a>'.format(node_id))
-
 
 class UserView(BaseAdminView):
 
@@ -42,11 +42,16 @@ class UserView(BaseAdminView):
 
     form_extra_fields = {
         "groups": QuerySelectMultipleField(query_factory=lambda: db.query(UserGroup),
-                                           widget=form.Select2Widget(multiple=True))
+                                           widget=form.Select2Widget(multiple=True)),
+        "password": StringField()
     }
 
     def __init__(self, session=None, *args, **kwargs):
         super(UserView, self).__init__(User, session, category="User", *args, **kwargs)
+
+    def on_model_change(self, form, user, is_created):
+        if form.password.data and user.authenticator_info.authenticator_key == INTERNAL_AUTHENTICATOR_KEY:
+            user.change_password(form.password.data)
 
 
 class UserGroupView(BaseAdminView):

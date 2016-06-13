@@ -91,6 +91,7 @@ class User(DeclarativeBase, TimeStamp, UserMixin):
     email = C(EmailType)
     password_hash = C(String)
     salt = C(String)
+    password = u''
 
     # user activity
     last_login = C(DateTime)
