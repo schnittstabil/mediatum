@@ -111,7 +111,7 @@ def login(req):
     navframe = frame.getNavigationFrame(req)
     navframe.feedback(req)
     navframe.write(req, req.getTAL(theme.getTemplate("login.html"),
-                                   {"error": error, "user": user, "email": config.get("email.admin")}, macro="login"))
+                                   {"error": error, "user": user, "email": config.get("email.support")}, macro="login"))
     return httpstatus.HTTP_OK
 
 
@@ -161,89 +161,3 @@ def pwdchange(req):
 
 def pwdforgotten(req):
     raise NotImplementedError("must be rewritten")
-
-    navframe = frame.getNavigationFrame(req)
-    navframe.feedback(req)
-
-    if req.params.get("action", "") == "activate":  # do activation of new password
-        id, key = req.params.get("key").replace("/", "").split('-')
-        targetuser = users.getUser(id)
-
-        if targetuser.get("newpassword.activation_key") == key:
-            newpassword = targetuser.get("newpassword.password")
-
-            if newpassword:
-                targetuser.set("password", newpassword)
-                logg.info("password reset for user '%s' (id=%s) reset", targetuser.name, targetuser.id)
-                targetuser.removeAttribute("newpassword.password")
-                targetuser.set("newpassword.time_activated", date.format_date())
-                logg.info("new password activated for user: %s - was requested: %s by %s",
-                          targetuser.name, targetuser.get("newpassword.time_requested"), targetuser.get("newpassword.request_ip"))
-
-                navframe.write(
-                    req, req.getTAL(
-                        theme.getTemplate("login.html"), {
-                            "username": targetuser.getName()}, macro="pwdforgotten_password_activated"))
-                return httpstatus.HTTP_OK
-
-            else:
-                logg.error("invalid key: wrong key or already used key")
-                navframe.write(
-                    req, req.getTAL(
-                        theme.getTemplate("login.html"), {
-                            "message": "pwdforgotten_password_invalid_key"}, macro="pwdforgotten_message"))
-                return httpstatus.HTTP_OK
-
-    elif "user" in req.params:  # create email with activation information
-        username = req.params.get("user", "")
-
-        if username == '':
-            req.params['error'] = "pwdforgotten_noentry"
-
-        else:
-            targetuser = users.getUser(username)
-
-            if not targetuser or not targetuser.canChangePWD():
-                logg.info("new password requested for non-existing user: %s", username)
-                req.params['error'] = "pwdforgotten_nosuchuser"
-
-            else:
-                password = users.makeRandomPassword()
-                randomkey = mkKey()
-
-                targetuser.set("newpassword.password", hashlib.md5(password).hexdigest())
-                targetuser.set("newpassword.time_requested", date.format_date())
-                targetuser.set("newpassword.activation_key", randomkey)
-                targetuser.set("newpassword.request_ip", req.ip)
-
-                v = {}
-                v["name"] = targetuser.getName()
-                v["host"] = config.get("host.name")
-                v["login"] = targetuser.getName()
-                v["language"] = lang(req)
-                v["activationlink"] = v["host"] + "/pwdforgotten?action=activate&key=%s-%s" % (targetuser.id, randomkey)
-                v["email"] = targetuser.getEmail()
-                v["userid"] = targetuser.getName()
-
-                # going to send the mail
-                try:
-                    mailtext = req.getTAL(theme.getTemplate("login.html"), v, macro="emailtext")
-                    mailtext = mailtext.strip().replace("[$newpassword]", password).replace("[wird eingesetzt]", password)
-
-                    mail.sendmail(config.get("email.admin"), targetuser.getEmail(), t(lang(req), "pwdforgotten_email_subject"), mailtext)
-                    logg.info("new password requested for user: %s - activation email sent", username)
-                    navframe.write(
-                        req, req.getTAL(
-                            theme.getTemplate("login.html"), {
-                                "message": "pwdforgotten_butmailnowsent"}, macro="pwdforgotten_message"))
-                    return httpstatus.HTTP_OK
-
-                except mail.SocketError:
-                    logg.exception("new password requested for user: %s - failed to send activation email", username)
-                    return req.getTAL(
-                        theme.getTemplate("login.html"), {"message": "pwdforgotten_emailsenderror"}, macro="pwdforgotten_message")
-
-    # standard operation
-    navframe.write(req, req.getTAL(theme.getTemplate("login.html"), {
-                   "error": req.params.get("error"), "user": users.getUserFromRequest(req)}, macro="pwdforgotten"))
-    return httpstatus.HTTP_OK
