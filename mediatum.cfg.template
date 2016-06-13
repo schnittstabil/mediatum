@@ -23,6 +23,7 @@ debug_show_trace=true
 [email]
 admin=admin@example.com
 workflow=admin@example.com
+support=support@example.com
 
 [ftp]
 activate=false

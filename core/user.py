@@ -19,6 +19,7 @@
 """
 from warnings import warn
 import core.config as config
+import flask_login
 
 
 class UserMixin(object):
@@ -92,7 +93,8 @@ class UserMixin(object):
         raise NotImplementedError("obsolete, use User.can_change_password")
 
     def isGuest(self):
-        return self.name == config.get("user.guestecser")
+        warn("deprecated, use User.is_anonymous instead", DeprecationWarning)
+        return self.is_anonymous
 
     def isAdmin(self):
         warn("deprecated, use User.is_admin instead", DeprecationWarning)
@@ -141,7 +143,7 @@ class UserMixin(object):
         return self.id
 
 
-class GuestUser(UserMixin):
+class GuestUser(UserMixin, flask_login.AnonymousUserMixin):
 
     """
     This is a lame attempt at caching the information for the guest user ;)
@@ -170,4 +172,4 @@ class GuestUser(UserMixin):
     def get_db_object(self):
         from core import User
         from core import db
-        return db.query(User).filter_by(login_name=config.get("user.guestuser", u"guest")).one()
+        return db.query(User).filter_by(login_name=config.get_guest_name()).one()

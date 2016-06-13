@@ -71,6 +71,10 @@ def get_config_filepath(config_filename=None):
     if os.path.exists(home_config_filepath):
         return home_config_filepath
 
+    
+def get_guest_name():
+    return settings.get("user.guestuser", "guest")
+
 
 def get(key, default=None):
     return settings.get(key, default)

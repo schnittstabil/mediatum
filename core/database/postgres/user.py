@@ -127,6 +127,10 @@ class User(DeclarativeBase, TimeStamp, UserMixin):
         return any(g.is_admin_group for g in self.groups)
 
     @property
+    def is_guest(self):
+        return self.name == config.get_guest_name() and self.authenticator_id == 0
+    
+    @property
     def is_workflow_editor(self):
         return any(g.is_workflow_editor_group for g in self.groups)
 
@@ -183,13 +187,31 @@ class User(DeclarativeBase, TimeStamp, UserMixin):
 
     # Flask-Login integration functions
     def is_authenticated(self):
-        return True
+        return not self.is_guest
 
     def is_active(self):
-        return True
+        return not self.is_guest
 
+    @property
     def is_anonymous(self):
-        return False
+        return self.is_guest
+    
+    def __eq__(self, other):
+        '''
+        Checks the equality of two `UserMixin` objects using `get_id`.
+        '''
+        if isinstance(other, UserMixin):
+            return self.get_id() == other.get_id()
+        return NotImplemented
+
+    def __ne__(self, other):
+        '''
+        Checks the inequality of two `UserMixin` objects using `get_id`.
+        '''
+        equal = self.__eq__(other)
+        if equal is NotImplemented:
+            return NotImplemented
+        return not equal
 
     def get_id(self):
         return unicode(self.id)

@@ -18,6 +18,7 @@
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
+import datetime
 import logging
 import sys
 import logstash
@@ -26,7 +27,11 @@ import traceback
 from logging import LogRecord
 
 from core import config
+from .date import format_date
 import os
+import hashlib
+import random
+import string
 
 ROOT_STREAM_LOGFORMAT = '%(asctime)s [%(process)d/%(threadName)s] %(name)s %(levelname)s | %(message)s'
 # this also logs filename and line number, which is great for debugging
@@ -300,3 +305,44 @@ def initialize(level=None, log_filepath=None, use_logstash=None):
         file_handler.setFormatter(logging.Formatter(ROOT_FILE_LOGFORMAT))
         root_logger.addHandler(file_handler)
         logg.info('--- logging everything to %s ---', log_filepath)
+
+
+def make_xid_and_errormsg_hash(errormsg):
+    """Builds a unique string (exception ID) that may be exposed to the user without revealing to much.
+    Added to the logging of an event should make it easier to relate.
+
+    :param errormsg: str
+    """
+    # : and - interferes with elasticsearch query syntax, better use underscores in the datetime string
+    date_now = datetime.datetime.now().strftime("%Y_%m_%dT%H_%M_%S")
+    hashed_errormsg = hashlib.md5(errormsg).hexdigest()[0:6]
+    # http://stackoverflow.com/questions/2257441/random-string-generation-with-upper-case-letters-and-digits
+    random_string = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
+    xid = "%s__%s__%s" % (date_now, hashed_errormsg, random_string)
+    return xid, hashed_errormsg
+
+
+def extra_log_info_from_req(req, add_user_info=True):
+    
+    extra = {"args": dict(req.args),
+                 "path": req.path,
+                 "method": req.method}
+
+    if req.method == "POST":
+        extra["form"] = dict(req.form)
+        extra["files"] = dict(req.files)
+
+    if add_user_info:
+        from core.users import user_from_session
+        user = user_from_session(req.session)
+        extra["user_is_anonymous"] = user.is_anonymous
+        
+        if not user.is_anonymous:
+            extra["user_id"] = user.id
+            
+        extra["user_is_editor"] = user.is_editor
+        extra["user_is_admin"] = user.is_admin
+        
+        extra["headers"] = { k.lower(): v for k, v in [h.split(": ", 1) for h in req.header] }
+    
+    return extra

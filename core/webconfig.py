@@ -277,6 +277,11 @@ def initContexts():
 
     import web.newadmin
     athana.add_wsgi_context("/f/", web.newadmin.app)
+    
+    # testing global exception handler
+    context = athana.addContext("/_test", ".")
+    file = context.addFile("web/handlers/handlertest.py")
+    file.addHandler("error").addPattern("/error")
 
 def flush(req):
     athana.flush()

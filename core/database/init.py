@@ -75,7 +75,7 @@ def init_database_values(s, default_admin_password=None):
                      can_change_password=True
                      )
 
-    guestuser = User(login_name=config.get(u"user.guestuser", u"guest"),
+    guestuser = User(login_name=config.get_guest_name(),
                      email=u"guest@mediatum",
                      authenticator_info=internal_auth
                      )

@@ -193,7 +193,7 @@ def admin_user(some_user):
 def guest_user(internal_authenticator_info):
     guest_group = UserGroupFactory(is_editor_group=False, is_workflow_editor_group=False, is_admin_group=False)
     from core import config
-    user = UserFactory(login_name=config.get(u"user.guestuser", u"guest"))
+    user = UserFactory(login_name=config.get_guest_name())
     user.groups.append(guest_group)
     user.authenticator_info = internal_authenticator_info
     return user

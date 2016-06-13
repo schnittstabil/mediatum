@@ -40,7 +40,7 @@ def check_database():
             raise InvalidDatabase("corrupt database: node table contains multiple root nodes.")
 
     # user check
-    guest_user_login_name = config.get("user.guestuser", u"guest")
+    guest_user_login_name = config.get_guest_name()
     possible_guest_users = q(User).filter_by(login_name=guest_user_login_name).all()
     if not possible_guest_users:
         raise InvalidDatabase("guest user named '" + guest_user_login_name +"' not found."\

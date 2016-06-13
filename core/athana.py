@@ -964,7 +964,7 @@ class http_request(object):
         self.reply_code = code
         return 'HTTP/%s %d %s' % (self.version, code, message)
 
-    def error(self, code, s=None):
+    def error(self, code, s=None, content_type='text/html'):
         self.reply_code = code
         self.outgoing = []
         message = self.responses[code]
@@ -974,7 +974,7 @@ class http_request(object):
                 'message': message,
             }
         self['Content-Length'] = len(s)
-        self['Content-Type'] = 'text/html'
+        self['Content-Type'] = content_type
         # make an error reply
         self.push(s)
         self.done()
@@ -4126,12 +4126,44 @@ class AthanaHandler:
         s = None
         try:
             status = handler_func(req)
-        except:
+        except Exception as e:
+            import core.config as config
             request = req.request
-            logg.error("Error in page: '%s %s', session '%s'",
-                       request.type, request.uri, request.session.id, exc_info=1)
-            s = "<pre>" + traceback.format_exc() + "</pre>"
-            return request.error(500, s)
+            if config.get('host.type') != 'testing':
+                from utils.log import make_xid_and_errormsg_hash, extra_log_info_from_req
+                from core.translation import translate
+                errormsg = str(e)
+                xid, hashed_errormsg = make_xid_and_errormsg_hash(errormsg)
+
+                mail_to_address = config.get('email.support')
+                if not mail_to_address:
+                    logg.warn("no support mail address configured, consider setting it with `email.support`", trace=False)
+
+                log_extra = {"xid": xid,
+                             "errorhash": hashed_errormsg}
+                
+                log_extra["req"] = extra_log_info_from_req(req)
+
+                logg.exception(u"exception (xid=%s) while handling request %s %s, %s",
+                               xid, req.method, req.path, dict(req.args), extra=log_extra)
+
+                if mail_to_address:
+                    msg = translate("core_snipped_internal_server_error_with_mail", request=req).replace('${email}', mail_to_address)
+                else:
+                    msg = translate("core_snipped_internal_server_error_without_mail", request=req)
+                s = msg.replace('${XID}', xid)
+
+                req.reply_headers["X-XID"] = xid
+                    
+                return request.error(500, s.encode("utf8"), content_type='text/html; encoding=utf-8; charset=utf-8')
+
+            else:
+                logg.error("Error in page: '%s %s', session '%s'",
+                           request.type, request.uri, request.session.id, exc_info=1)
+                s = "<pre>" + traceback.format_exc() + "</pre>"
+
+                return request.error(500, s)
+
         finally:
             for handler in _request_finished_handlers:
                 handler(req)
