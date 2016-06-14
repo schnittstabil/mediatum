@@ -243,14 +243,12 @@ def update_node(req, path, params, data, id):
 
     node.name = node_name
 
-    # set provided metadata
-    for key, value in metadata.iteritems():
-        node.set(u(key), u(value))
+    # XXX: set legacy update attributes
+    metadata["updateuser"] = user.getName()
+    metadata["updatetime"] = format_date()
 
-    # service flags
-    node.set("updateuser", user.getName())
-    node.set("updatetime", format_date())
-
+    node.attrs.update(metadata)
+    
     db.session.commit()
 
     d = {
@@ -262,7 +260,7 @@ def update_node(req, path, params, data, id):
     # we need to write in case of POST request, send as buffer wil not work
     req.write(s)
 
-    req.reply_headers['updatetime'] = node.get('updatetime')
+    req.reply_headers['updatetime'] = node.updatetime
 
     logg.info("update_node: OK %s" % entry_msg)
 
