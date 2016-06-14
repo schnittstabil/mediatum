@@ -538,7 +538,7 @@
                 </td>
             </tr>
         </table>
-        <input tal:attributes="value python:id=='' and 'save_newdetail' or 'save_editdetail'" type="hidden" name="form_op" id="form_op"/>                        
+        <input tal:attributes="value python:id is None and 'save_newdetail' or 'save_editdetail'" type="hidden" name="form_op" id="form_op"/>
         <input tal:attributes="value id" type="hidden" name="stepid"/>
         <input type="hidden" name="acttype" value="step"/>
         <input tal:attributes="value python:workflow.id" type="hidden" name="parent"/>
