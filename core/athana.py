@@ -4132,15 +4132,15 @@ class AthanaHandler:
             if config.get('host.type') != 'testing':
                 from utils.log import make_xid_and_errormsg_hash, extra_log_info_from_req
                 from core.translation import translate
-                errormsg = str(e)
-                xid, hashed_errormsg = make_xid_and_errormsg_hash(errormsg)
+                xid, hashed_errormsg, hashed_tb = make_xid_and_errormsg_hash()
 
                 mail_to_address = config.get('email.support')
                 if not mail_to_address:
                     logg.warn("no support mail address configured, consider setting it with `email.support`", trace=False)
 
                 log_extra = {"xid": xid,
-                             "errorhash": hashed_errormsg}
+                             "error_hash": hashed_errormsg,
+                             "trace_hash": hashed_tb}
                 
                 log_extra["req"] = extra_log_info_from_req(req)
 

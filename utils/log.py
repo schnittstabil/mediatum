@@ -307,7 +307,7 @@ def initialize(level=None, log_filepath=None, use_logstash=None):
         logg.info('--- logging everything to %s ---', log_filepath)
 
 
-def make_xid_and_errormsg_hash(errormsg):
+def make_xid_and_errormsg_hash():
     """Builds a unique string (exception ID) that may be exposed to the user without revealing to much.
     Added to the logging of an event should make it easier to relate.
 
@@ -315,11 +315,14 @@ def make_xid_and_errormsg_hash(errormsg):
     """
     # : and - interferes with elasticsearch query syntax, better use underscores in the datetime string
     date_now = datetime.datetime.now().strftime("%Y_%m_%dT%H_%M_%S")
-    hashed_errormsg = hashlib.md5(errormsg).hexdigest()[0:6]
+    error_msg = str(sys.exc_value)
+    formatted_traceback = "\n".join(traceback.format_tb(sys.exc_traceback))
+    hashed_errormsg = hashlib.md5(error_msg).hexdigest()[:6]
+    hashed_tb = hashlib.md5(formatted_traceback).hexdigest()[:6]
     # http://stackoverflow.com/questions/2257441/random-string-generation-with-upper-case-letters-and-digits
-    random_string = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
-    xid = "%s__%s__%s" % (date_now, hashed_errormsg, random_string)
-    return xid, hashed_errormsg
+    random_string = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(4))
+    xid = "%s__%s__%s__%s" % (date_now, hashed_tb, hashed_errormsg, random_string)
+    return xid, hashed_errormsg, hashed_tb
 
 
 def extra_log_info_from_req(req, add_user_info=True):
