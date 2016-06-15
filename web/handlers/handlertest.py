@@ -5,8 +5,14 @@
     
     Various handlers for testing handlers.
 """
-from __future__ import absolute_import
+import random
+import string
 
 
 def error(req):
     raise Exception("this is a test!")
+
+
+def error_variable_msg(req):
+    random_string = ''.join(random.choice(string.ascii_uppercase) for _ in range(6))
+    raise Exception("this is a test exception with random stuff:" + random_string)
