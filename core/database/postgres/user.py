@@ -63,7 +63,7 @@ class UserGroup(DeclarativeBase, TimeStamp, UserGroupMixin):
 
     @property
     def user_names(self):
-        _user_names = [u.__repr__() for u in self.users]
+        _user_names = [unicode(u) for u in self.users]
         return sorted(_user_names, key=unicode.lower)
 
     def __unicode__(self):
@@ -227,7 +227,7 @@ class User(DeclarativeBase, TimeStamp, UserMixin):
                                      self.authenticator_info.name)
 
     def __repr__(self):
-        return self.__unicode__()
+        return u"User<{} '{}'> ({})".format(self.id, self.login_name, object.__repr__(self)).encode("utf8")
 
     __table_args__ = (UniqueConstraint(login_name, authenticator_id),)
 
