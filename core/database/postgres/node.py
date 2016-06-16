@@ -440,9 +440,6 @@ class Node(DeclarativeBase, NodeMixin):
                 if comment:
                     tx.meta[u"comment"] = comment
 
-                # XXX: Actually, we could use the transaction time instead of writing an update time.
-                # But this is the old way, keep it because the application expects it.
-                node[u"updatetime"] = format_date()
                 return tx
 
             def __exit__(self, exc_type, exc_value, traceback):

@@ -160,3 +160,6 @@ def finish():
     s.execute(node_stmt.format(tx_id, Operation.INSERT))
     s.execute(nodefile_stmt.format(tx_id=tx_id, optype=Operation.INSERT))
         
+    # Reset issued_at times automatically set in the migration because saving the migration time 
+    # will confuse code relying on the fact that issued_at is the time when the object / metadata was actually changed or created.
+    s.execute("UPDATE transaction SET issued_at = NULL")

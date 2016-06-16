@@ -380,8 +380,17 @@ def app():
     app = AthanaFlaskStyleApp("test")
     return app
 
+
 @yield_fixture
 def req(app, guest_user):
     with app.test_request_context() as ctx:
         yield ctx.request
 
+
+@yield_fixture
+def enable_athana_continuum_plugin():
+    from core.database.postgres import athana_continuum_plugin
+    athana_continuum_plugin.disabled = False
+    yield
+    athana_continuum_plugin.disabled = True
+    

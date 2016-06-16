@@ -16,6 +16,8 @@ from core.test.factories import DirectoryFactory
 def session(session_unnested):
     """XXX: sqlalchemy-continuum goes crazy if run with the normal session fixture.
     This here works but leaves rows in the database that must removed in the teardown function for this module.
+    Adding more tests can lead to failures because data from previous tests could interfere with newly created objects.
+    It would be better to clean up after each test or find out why continuum doesn't work with the normal session fixture.
     """
     yield session_unnested
 
@@ -235,7 +237,6 @@ def test_create_new_tagged_version(content_node_versioned, some_user):
     new_version = node.versions[-1]
     assert u"orderpos" in new_version.changeset
     assert new_version.changeset[u"orderpos"] == [42, 100]
-    assert u"updatetime" in new_version.changeset[u"attrs"][1]
     assert new_version.next is None
 
 
@@ -269,3 +270,5 @@ def test_create_new_tagged_version_dirty(content_node_versioned):
             node.orderpos = 100
 
     assert "Refusing" in einfo.value.message
+    
+    

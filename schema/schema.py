@@ -1040,7 +1040,7 @@ class Mask(Node):
         return len(mandfields) == 0
 
 
-    def update_node(self, node, req):
+    def update_node(self, node, req, user=None):
         ''' update given node with given request values '''
         form = req.form
         # collect all changes first and apply them at the end because SQLAlchemy would issue an UPDATE for each attr assignment
@@ -1073,6 +1073,13 @@ class Mask(Node):
 
                 if hasattr(t, "event_metafield_changed"):
                     t.event_metafield_changed(node, field)
+
+        node.set_legacy_update_attributes(user)
+
+        if user is not None:
+            updated_attrs["updateuser"] = user.getName()
+
+        updated_attrs["updatetime"] = format_date()
 
         node.attrs.update(updated_attrs)
 

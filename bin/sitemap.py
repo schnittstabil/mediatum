@@ -222,7 +222,7 @@ def create():
         if node.has_read_access(user=guest_user):
             for node_type in node_dict.keys():
                 if node_type in q(Node).get(node.id).type:
-                    node_dict[node_type].append((unicode(node.id), q(Node).get(node.id).get('updatetime')))
+                    node_dict[node_type].append((unicode(node.id), q(Node).get(node.id).updatetime))
 
     # Reassign node_dict to a dict where empty values were removed
     node_dict = dict((k, v) for k, v in node_dict.iteritems() if v)

@@ -34,6 +34,7 @@ from core import db
 from core import File
 from contenttypes import Home, Collections
 from core.systemtypes import Root
+from utils.date import format_date
 
 q = db.query
 logg = logging.getLogger(__name__)
@@ -113,13 +114,14 @@ def _handle_change(node, req):
 
             with node.new_tagged_version(comment=version_comment_full, user=user):
                 _finish_change(node, change_file, user, uploadfile, req)
-                node.set("updateuser", user.login_name)
+                node.set_legacy_update_attributes(user)
 
             req.setStatus(httpstatus.HTTP_MOVED_TEMPORARILY)
             return req.getTAL("web/edit/modules/metadata.html", {'url': '?id={}&tab=files'.format(node.id), 'pid': None}, macro="redirect")
     else:
         # no new version
         _finish_change(node, change_file, user, uploadfile, req)
+        node.set_legacy_update_attributes(user)
 
 
 def getContent(req, ids):

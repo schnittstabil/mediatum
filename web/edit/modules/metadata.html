@@ -157,7 +157,7 @@
                       <td><a href="/" tal:attributes="href python:node_url(v.id, v.tag)" target="frontend"
                              tal:content="python:u'V' + v.tag">Version</a></td>
                         <td>
-                        <div tal:content="python:v.getUpdatedDate()"></div>
+                        <div tal:content="python:v.pretty_format_update_time"></div>
                         <div tal:content="python:v.comment"></div>
                         </td>
                         <td>
