@@ -27,6 +27,7 @@ from core.transition import httpstatus
 from core import Node, db
 from contenttypes import Container
 from core.users import user_from_session
+import datetime
 
 q = db.query
 logg = logging.getLogger(__name__)
@@ -39,13 +40,13 @@ def get_datelists(nodes):
     update_date = []
     if len(nodes) == 1:
         for node in nodes:
-            if node.get("updatetime"):
+            if node.updatetime:
                 try:
                     date = parse_date(
-                        node.get("updatetime"), "%Y-%m-%dT%H:%M:%S")
+                        node.updatetime, "%Y-%m-%dT%H:%M:%S")
                     datestr = format_date(date, format='%d.%m.%Y %H:%M:%S')
                 except:
-                    datestr = node.get("updatetime")
+                    datestr = node.updatetime
                 update_date.append([node.get("updateuser"), datestr])
 
     creation_date = []

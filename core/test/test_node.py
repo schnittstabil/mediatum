@@ -13,6 +13,9 @@ from core import Node
 from contenttypes.container import Collection
 from core.test.asserts import assert_deprecation_warning, assert_sorted, assert_deprecation_warning_allow_multiple
 from core.test.factories import NodeFactory
+from datetime import date
+import datetime
+from utils.date import format_date
 
 
 legacy_methods = [
@@ -287,4 +290,24 @@ def test_data_get_class_for_typestring():
     from contenttypes import Data
     data_cls = Node.get_class_for_typestring("data")
     assert data_cls is Data
+
+
+def test_updatetime_legacy(some_node):
+    node = some_node
+    formatted_date = format_date(datetime.datetime.now()) 
+    node.attrs["updatetime"] =  formatted_date
+    assert node.updatetime == formatted_date
+
+
+def test_updateuser_legacy(some_node):
+    node = some_node
+    node.attrs["updateuser"] =  u"me"
+    assert node.updateuser == u"me"
+    
+
+def test_updatetime(session, some_node):
+    node = some_node
+    session.flush()
+    assert node.updatetime
+
 

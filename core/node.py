@@ -3,11 +3,13 @@
     :copyright: (c) 2014 by the mediaTUM authors
     :license: GPL3, see COPYING for details
 """
-import urlparse
+import logging
 from warnings import warn
-from utils.date import format_date, parse_date, STANDARD_FORMAT, now
-from sqlalchemy.orm import object_session
+from utils.date import format_date, parse_date, STANDARD_FORMAT
 from utils.url import add_query_params_to_url
+
+
+logg = logging.getLogger(__name__)
 
 
 class NodeMixin(object):
@@ -153,13 +155,13 @@ class NodeMixin(object):
         """nodes are always 'active'"""
         return self
 
-    def getUpdatedDate(self, format=None):
-        if format is None:
-            format = STANDARD_FORMAT
-        if self.get('updatetime'):
-            return format_date(parse_date(self.get('updatetime')), '%d.%m.%Y, %H:%M:%S')
-        if self.get('creationtime'):
-            return format_date(parse_date(self.get('creationtime')), '%d.%m.%Y, %H:%M:%S')
+    @property
+    def pretty_format_update_time(self):
+        """XXX: move this somewhere else!"""
+        if self.updatetime:
+            return format_date(parse_date(self.updatetime), '%d.%m.%Y, %H:%M:%S')
+        if self.creationtime:
+            return format_date(parse_date(self.creationtime), '%d.%m.%Y, %H:%M:%S')
         return ''
 
     def _add_version_tag_to_url(self, url):
@@ -167,10 +169,40 @@ class NodeMixin(object):
             url = add_query_params_to_url(url, {"v": self.tag})
 
         return url
+    
+    @property
+    def updatetime(self):
+        """
+        For compatibility purposes. Old mediatum used an attribute called "updatetime" to store the update time.
+        Now we can use the time from sqlalchemy-continuum if we want to know when the node was changed to its current state.
+        """
+        return self.get_special("updatetime")
 
+    
+    @property
+    def updateuser(self):
+        """
+        For compatibility purposes. Old mediatum used an attribute called "updateuser" to store the name of the updating user.
+        Now we can use the user id from sqlalchemy-continuum if we want to know who changed the node to its current state.
+        Old mediatum displayed a readable name, so we do the same here. This doesn't have to be a unique name!
+        """
+        return self.get_special("updateuser")
+    
+    @property
+    def creator(self):
+        return self.get_special("creator")
+    
+    @property
+    def creationtime(self):
+        return self.get_special("creationtime")
+    
+    
     def get_special(self, valuename, default=u""):
-        '''Attribute getter with special cases for attributes of the node object; 'node.id', 'node.name'/'nodename', 'node.type', 'orderpos'
-        This works like the old Node.get method.'''
+        '''Attribute getter with special cases for attributes of the node object and update information:
+         * 'node.id', 'node.name'/'nodename', 'node.type', 'orderpos'
+         * 'updatetime', 'updateuser'
+        This can be used like the old Node.get method.'''
+        
         if valuename.startswith('node'):
             if valuename == 'nodename' or valuename == "node.name":
                 return self.name
@@ -180,10 +212,29 @@ class NodeMixin(object):
                 return self.type
             elif valuename == 'node.orderpos':
                 return self.orderpos
+            
+        elif valuename in ("updateuser", "updatetime", "creationtime", "creator"):
+
+            # legacy: use value from attributes if present
+            if valuename in self.attrs:
+                return self.attrs[valuename]
+             
+            # future: use information from sqlalchemy-continuum
+            if valuename in ("creationtime", "creator"):
+                return getattr(self.versions[0], valuename) 
+
+            if valuename in ("updateuser", "updatetime"):
+                return getattr(self.versions[-1], valuename) 
+            
         else:
             return self.get(valuename, default)
 
-
+    def set_legacy_update_attributes(self, user):
+        # XXX: We still set the update attributes as normal attributes like before. 
+        # It'd be better to replace this by the transaction attributes provided by sqlalchemy-continuum.
+        self.attrs["updateuser"] = user.getName()
+        self.attrs["updatetime"] = format_date()
+        
     # access stuff
 
     def has_access(self, accesstype, req=None, user=None, ip=None, date=None):
@@ -291,3 +342,62 @@ class NodeVersionMixin(NodeMixin):
     @property
     def versions(self):
         return self.version_parent.versions
+    
+    @property
+    def updatetime(self):
+        # Migrated versions may contain a updatetime attribute that must be used instead because
+        # transaction.issued_at is set to the migration time, not update time.
+        legacy_updatetime = self.attrs.get("updatetime")
+        if legacy_updatetime:
+            return legacy_updatetime
+
+        continuum_time = self.transaction.issued_at
+        if continuum_time is not None:
+            return format_date(continuum_time)
+       
+        return u"" 
+
+    @property
+    def creationtime(self):
+        # Migrated versions may contain a creationtime attribute that must be used instead because
+        # transaction.issued_at is set to the migration time, not creation time.
+        legacy_updatetime = self.attrs.get("creationtime")
+        if legacy_updatetime:
+            return legacy_updatetime
+        
+        continuum_time = self.versions[0].transaction.issued_at
+        if continuum_time is not None:
+            return format_date(continuum_time)
+       
+        return u"" 
+
+    @property
+    def updateuser(self):
+        # Migrated versions may contain a updateuser attribute that must be used instead because
+        # transaction.user is not set in the migration script. 
+        legacy_username = self.attrs.get("updateuser")
+        if legacy_username:
+            return legacy_username
+
+        continuum_user = self.transaction.user
+        if continuum_user is not None:
+            # XXX: not a really good idea but we keep that for backward compatibility
+            return continuum_user.getName()
+        # we don't know...
+        return u""
+            
+    @property
+    def creator(self):
+        # Migrated versions may contain a creator attribute that must be used instead because
+        # transaction.user is not set in the migration script. 
+        legacy_username = self.attrs.get("creator")
+        if legacy_username:
+            return legacy_username
+
+        continuum_user = self.versions[0].transaction.user
+        if continuum_user is not None:
+            # XXX: not a really good idea but we keep that for backward compatibility
+            return continuum_user.getName()
+        # we don't know...
+        return u""
+            
