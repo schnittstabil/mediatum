@@ -145,12 +145,18 @@ def finish():
     s.execute("DELETE FROM nodemapping WHERE nid IN (SELECT CAST(value AS INTEGER) FROM transaction_meta WHERE key = 'alias_id')")
     s.execute("DELETE FROM node WHERE id IN (SELECT CAST(value AS INTEGER) FROM transaction_meta WHERE key = 'alias_id')")
 
-    # insert remaining nodes as current version into version table
+    # insert remaining nodes and node files as current version into version table
     # create a single transaction for all nodes, would be too much to create a transaction for each node ;)
     res = s.execute("INSERT INTO transaction DEFAULT VALUES RETURNING id")
     tx_id = res.fetchone()[0]
-    stmt = ("INSERT INTO node_version (id, name, type, schema, attrs, orderpos, transaction_id, operation_type) " +
+    node_stmt = ("INSERT INTO node_version (id, name, type, schema, attrs, orderpos, transaction_id, operation_type) " +
            "SELECT id, name, type, schema, attrs, orderpos, {}, {} " +
            "FROM node WHERE id NOT IN (SELECT id FROM node_version)")
 
-    s.execute(stmt.format(tx_id, Operation.INSERT))
+    nodefile_stmt = ("INSERT INTO nodefile_version (nid, path, filetype, mimetype, transaction_id, operation_type) " +
+           "SELECT nid, path, filetype, mimetype, {tx_id}, {optype} " +
+           "FROM nodefile WHERE nid IN (SELECT id FROM node_version WHERE transaction_id={tx_id})")
+
+    s.execute(node_stmt.format(tx_id, Operation.INSERT))
+    s.execute(nodefile_stmt.format(tx_id=tx_id, optype=Operation.INSERT))
+        
