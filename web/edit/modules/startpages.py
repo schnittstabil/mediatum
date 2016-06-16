@@ -76,7 +76,7 @@ def getContent(req, ids):
                     filename = 'html/%s_%s.html' % (req.params.get('id'), maxid)
                 with codecs.open(config.get("paths.datadir") + filename, "w", encoding='utf8') as fil:
                     fil.write(req.params.get('data'))
-                node.files.append(File(filename, "content", "text/html"))
+                node.files.append(File(filename, u"content", u"text/html"))
                 db.session.commit()
                 req.write(json.dumps({'filename': '', 'state': 'ok'}))
                 logg.info("%s added startpage %s for node %s (%s, %s)", user.login_name, filename, node.id, node.name, node.type)
@@ -130,14 +130,16 @@ def getContent(req, ids):
                     logg.info("%s removed file %s from disk", user.login_name, fullpath)
                 else:
                     logg.warn("%s could not remove file %s from disk: not existing", user.login_name, fullpath)
-                filenode = File(page, "", "text/html")
-
-                del node.system_attrs["startpagedescr." + file_shortpath]
+                filenode = q(File).filter_by(path=page, mimetype=u"text/html").one()
+                try:
+                    del node.system_attrs["startpagedescr." + file_shortpath]
+                except KeyError:
+                    pass
                 node.system_attrs["startpage_selector"] = node.system_attrs["startpage_selector"].replace(file_shortpath, "")
                 node.files.remove(filenode)
                 db.session.commit()
                 logg.info("%s - startpages - deleted File and file for node %s (%s): %s, %s, %s, %s",
-                        user.login_name, node.id, node.name, page, filenode.name, filenode.type, filenode.mimetype)
+                        user.login_name, node.id, node.name, page, filenode.path, filenode.filetype, filenode.mimetype)
             except:
                 logg.exception("%s - startpages - error while delete File and file for %s, exception ignored", user.login_name, page)
             break
@@ -207,7 +209,7 @@ def getContent(req, ids):
                 sidebar.append(language)
 
         named_filelist.append((short_path,
-                               node.system_attrs['startpagedescr.' + short_path],
+                               node.system_attrs.get('startpagedescr.' + short_path),
                                f.type,
                                f,
                                file_exists,
