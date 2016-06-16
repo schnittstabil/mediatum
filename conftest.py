@@ -48,6 +48,11 @@ db.disable_session_for_test()
 warnings.simplefilter("always")
 _set_current_init_state("basic")
 
+# Disable setting the user and ip for each version. This leads to some failures in tests and we don't need it there anyways.
+# Versioning tests can enable this later.
+from core.database.postgres import athana_continuum_plugin
+athana_continuum_plugin.disabled = True
+
 # global fixtures, do not import them again!
 from core.test.fixtures import *
 

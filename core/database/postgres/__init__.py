@@ -27,6 +27,7 @@ from core import config
 from core.transition import request
 from core.database.postgres.continuumext import MtVersionBase
 from utils.compat import iteritems
+from core.transition.athana_continuum_plugin import AthanaContinuumPlugin
 
 
 logg = logging.getLogger(__name__)
@@ -53,10 +54,11 @@ DeclarativeBase = declarative_base(metadata=db_metadata)
 
 
 meta_plugin = TransactionMetaPlugin()
+athana_continuum_plugin = AthanaContinuumPlugin()
 
 def setup_versioning():
     make_versioned(
-        plugins=[meta_plugin],
+        plugins=[meta_plugin, athana_continuum_plugin],
         options={
             'native_versioning': True,
             'base_classes': (MtVersionBase, DeclarativeBase),
