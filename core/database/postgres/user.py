@@ -61,6 +61,11 @@ class UserGroup(DeclarativeBase, TimeStamp, UserGroupMixin):
 
     users = association_proxy("user_assocs", "user", creator=lambda u: UserToUserGroup(user=u))
 
+    @property
+    def user_names(self):
+        _user_names = [u.__repr__() for u in self.users]
+        return sorted(_user_names, key=unicode.lower)
+
     def __unicode__(self):
         return self.name
 
@@ -217,11 +222,12 @@ class User(DeclarativeBase, TimeStamp, UserMixin):
         return unicode(self.id)
 
     def __unicode__(self):
-        return u"{} ({}:{})".format(self.display_name or self.login_name, self.authenticator_info.auth_type,
-                                    self.authenticator_info.name)
+        return u"{} \"{}\" ({}:{})".format(self.login_name, self.display_name if self.display_name else "",
+                                     self.authenticator_info.auth_type,
+                                     self.authenticator_info.name)
 
     def __repr__(self):
-        return u"User<{} '{}'> ({})".format(self.id, self.login_name, object.__repr__(self)).encode("utf8")
+        return self.__unicode__()
 
     __table_args__ = (UniqueConstraint(login_name, authenticator_id),)
 
