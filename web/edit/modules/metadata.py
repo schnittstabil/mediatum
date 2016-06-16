@@ -23,7 +23,7 @@ from utils.date import format_date, parse_date, now
 from utils.utils import funcname, dec_entry_log
 from core.translation import lang, t, getDefaultLanguage
 from pprint import pformat as pf
-from core.transition import httpstatus
+from core.transition import httpstatus, current_user
 from core import Node, db
 from contenttypes import Container
 from core.users import user_from_session
@@ -99,7 +99,7 @@ class SystemMask:
 
 def _handle_edit_metadata(req, mask, nodes):
     # check and save items
-    user = user_from_session(req.session)
+    user = current_user
     userdir = user.home_dir
     flag_nodename_changed = -1
     form = req.form
@@ -116,16 +116,14 @@ def _handle_edit_metadata(req, mask, nodes):
 
             for node in nodes:
                 with node.new_tagged_version(comment=comment, user=user):
-                    node.set("updateuser", user.login_name)
-                    mask.update_node(node, req)
+                    mask.update_node(node, req, user)
         else:
             # XXX: why check here?
             # if nodes:
             old_nodename = nodes[0].name
 
             for node in nodes:
-                node.set("updateuser", user.login_name)
-                mask.update_node(node, req)
+                mask.update_node(node, req, user)
 
             db.session.commit()
 

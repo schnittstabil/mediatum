@@ -12,7 +12,7 @@ from schema import schema
 from core.test.test_version import teardown_module, session
 
 
-def test_handle_edit_metadata(session, req, editor_user, some_node, simple_mask_with_maskitems):
+def test_handle_edit_metadata_new_tagged_version(session, req, editor_user, some_node, simple_mask_with_maskitems):
     mask = simple_mask_with_maskitems
     nodes = [some_node]
     node = some_node
@@ -21,6 +21,8 @@ def test_handle_edit_metadata(session, req, editor_user, some_node, simple_mask_
     req.session["user_id"] = editor_user.id
     req.form["testattr"] = u"updated"
     session.commit()
+    assert node.versions.count() == 1
     _handle_edit_metadata(req, mask, nodes)
     assert node["testattr"] == u"updated"
-
+    session.commit()
+    assert node.versions.count() == 2
