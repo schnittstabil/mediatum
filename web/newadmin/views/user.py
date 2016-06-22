@@ -28,6 +28,15 @@ class UserView(BaseAdminView):
     column_filters = ("authenticator_info", "display_name", "login_name", "organisation")
     can_export = True
 
+    column_details_list = ("home_dir", "authenticator_info", "id", "login_name", "display_name", "lastname",
+                           "firstname", "telephone", "organisation", "comment", "email", "password_hash",
+                           "salt", "last_login", "active", "can_edit_shoppingbag", "can_change_password",
+                           "created_at", "group_names")
+    """
+    """
+
+    column_labels = dict(group_names = 'Groups')
+
     column_formatters = {
         "home_dir": lambda v, c, m, p: _link_format_node_id_column(m.home_dir.id) if m.home_dir else None
     }
@@ -41,7 +50,7 @@ class UserView(BaseAdminView):
     }
 
     form_extra_fields = {
-        "groups": QuerySelectMultipleField(query_factory=lambda: db.query(UserGroup),
+        "groups": QuerySelectMultipleField(query_factory=lambda: db.query(UserGroup).order_by(UserGroup.name),
                                            widget=form.Select2Widget(multiple=True)),
         "password": StringField()
     }
@@ -57,11 +66,16 @@ class UserView(BaseAdminView):
 class UserGroupView(BaseAdminView):
 
     form_excluded_columns = "user_assocs"
+    column_details_list = ["id", "name", "description", "hidden_edit_functions", "is_editor_group",
+                           "is_workflow_editor_group", "is_admin_group", "created_at", "user_names"]
+
+    column_labels = dict(user_names = 'Users')
 
     form_extra_fields = {
-        "users": QuerySelectMultipleField(query_factory=lambda: db.query(User),
-                                          widget=form.Select2Widget(multiple=True))
+        "users": QuerySelectMultipleField(query_factory=lambda: db.query(User).order_by(User.login_name),
+                                          widget=form.Select2Widget(multiple=True)),
     }
+
 
     def __init__(self, session=None, *args, **kwargs):
         super(UserGroupView, self).__init__(UserGroup, session, category="User", *args, **kwargs)
