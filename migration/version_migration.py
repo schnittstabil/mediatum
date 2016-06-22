@@ -106,7 +106,7 @@ def create_current_version(current_version_node):
 def insert_migrated_version_nodes(all_versioned_nodes):
     processed_nodes = set()
 
-    for node in all_versioned_nodes:
+    for node in all_versioned_nodes.order_by(Node.id):
         next_id = node.system_attrs.get(u"next_id")
         version_nodes = []
         while node and next_id:
