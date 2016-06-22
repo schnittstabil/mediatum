@@ -25,6 +25,7 @@ from mediatumtal import tal
 
 from utils.utils import esc
 from core.metatype import Metatype, Context
+from metadata.ilist import count_list_values_for_all_content_children
 from core import Node
 from core import db
 
@@ -42,10 +43,7 @@ class m_list(Metatype):
             if not isinstance(n, Node):
                 raise KeyError
             field_name = context.field.getName()
-            id_attr_val = n.all_children_by_query(q(Node.id, Node.a[field_name])
-                                                  .filter(Node.a[field_name] != None)
-                                                  .filter(Node.a[field_name] != '')
-                                                  .distinct(Node.a[field_name]))
+            id_attr_val = count_list_values_for_all_content_children(n.id, field_name)
             items = {pair[0]: pair[1] for pair in id_attr_val}
         except KeyError:
             None
