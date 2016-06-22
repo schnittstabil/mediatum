@@ -43,7 +43,7 @@ def getContent(req, ids):
     user = current_user
     node = q(Node).get(ids[0])
 
-    if "logo" in current_user.hidden_edit_functions or node.has_write_access():
+    if "logo" in current_user.hidden_edit_functions or not node.has_write_access():
         req.setStatus(httpstatus.HTTP_FORBIDDEN)
         return req.getTAL("web/edit/edit.html", {}, macro="access_error")
 
