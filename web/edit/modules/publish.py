@@ -23,7 +23,7 @@ from web.edit.edit import nodeIsChildOfNode
 from core.users import getHomeDir
 from core.transition import current_user
 import logging
-from contenttypes import Collections, Directory
+from contenttypes import Collections, Container
 from core import Node
 from core import db
 
@@ -50,6 +50,7 @@ def getContent(req, ids):
 
         for obj_id in objlist:
             faultylist = []
+            remove_from_src = False
             obj = q(Node).get(obj_id)
             metadatatype = obj.metadatatype
             mask_validated = False
@@ -86,7 +87,7 @@ def getContent(req, ids):
                 if not obj.has_write_access():
                     logg.error("Error in publishing of node %r: object has no write access.", obj.id)
                     error = True
-                if not isinstance(dest, Directory):
+                if not isinstance(dest, Container):
                     logg.error("Error in publishing of node %r: destination %r is not a directory.", obj.id, dest.id)
                     error = True
                 if dest == src:
@@ -96,8 +97,7 @@ def getContent(req, ids):
                 if not error:
                     if not nodeIsChildOfNode(dest,obj):
                         dest.children.append(obj)
-                        src.children.remove(obj)
-                        db.session.commit()
+                        remove_from_src = True
 
                         if dest.id not in changes:
                             changes.append(dest.id)
@@ -110,6 +110,10 @@ def getContent(req, ids):
                     else:
                         actionerror.append(obj.id)
                         logg.error("Error in publishing of node %s: Destination node %s is child of node.", obj_id, dest.id)
+
+            if remove_from_src:
+                src.children.remove(obj)
+                db.session.commit()
 
         v = {}
         v["id"] = publishdir.id
