@@ -155,6 +155,12 @@ class Audio(Content):
             obj['canseeoriginal'] = node.has_data_access()
             obj['audiolink'] = u'/file/{}/{}'.format(node.id, node.getName())
             obj['audiodownload'] = u'/download/{}/{}'.format(node.id, node.getName())
+            versions = self.tagged_versions.all()
+            obj['tag'] = versions[-1].tag if len(versions) > 0 else None
+            if not self.isActiveVersion():
+               obj['audiothumb'] += "?v=" + self.tag
+               obj['audiolink'] += "?v=" + self.tag
+               obj['audiodownload'] += "?v=" + self.tag
         else:
             obj['canseeoriginal'] = False
 
