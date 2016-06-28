@@ -201,8 +201,10 @@ def frameset(req):
             [ct_name.lower(), t(language, ct_name), get_editor_icon_path_from_nodeclass(ct)])
 
     # a html snippet may be inserted in the editor header
-    header_insert = q(Collections).one().get('system.editor.header.insert.' + language).strip()
-    help_link = q(Collections).one().get('system.editor.help.link.' + language).strip()
+    # XXX: this should be moved to the settings table!
+    header_insert, help_link = q(Collections.system_attrs[u"editor.header.insert" + language], 
+                                 Collections.system_attrs[u"editor.help_link" + language]).one()
+                                 
     homenodefilter = req.params.get('homenodefilter', '')
 
     v = {
@@ -219,8 +221,8 @@ def frameset(req):
         'language': lang(req),
         't': t,
         '_getIDPath': _getIDPath,
-        'system_editor_header_insert': header_insert,
-        'system_editor_help_link': help_link,
+        'system_editor_header_insert': (header_insert or "").strip(),
+        'system_editor_help_link': (help_link or "").strip(),
         'homenodefilter': homenodefilter,
     }
 
@@ -270,7 +272,7 @@ def handletabs(req, ids, tabs):
     spc.append(Menu("sub_header_logout", "../logout", target="_parent"))
 
     # a html snippet may be inserted in the editor header
-    help_link = q(Collections.attrs['system.editor.help.link.' + language]).scalar()
+    help_link = q(Collections.system_attrs['editor.help.link.' + language]).scalar()
     ctx = {
         "user": user,
         "ids": ids,
