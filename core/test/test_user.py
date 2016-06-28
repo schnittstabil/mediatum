@@ -66,14 +66,17 @@ def test_user_special_dirs(user_with_home_dir):
     assert user.trash_dir in home_subdirs
 
 
-def test_user_create_home_dir(some_user, home_root):
+def test_user_create_home_dir(session, some_user, home_root):
     user = some_user
-    db.session.add(home_root)
+    session.add(home_root)
     home = user.create_home_dir()
     assert isinstance(home, Directory)
     home_subdirs = user.home_dir.children.all()
     assert user.upload_dir in home_subdirs
     assert user.trash_dir in home_subdirs
+    assert home.has_read_access(user=user)
+    assert home.has_write_access(user=user)
+    assert home.has_data_access(user=user)
 
 
 def test_get_or_add_private_group(session, some_user):

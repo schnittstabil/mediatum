@@ -179,13 +179,26 @@ class User(DeclarativeBase, TimeStamp, UserMixin):
         self.password_hash, self.salt = create_password_hash(password)
 
     def create_home_dir(self):
-        from core import db
         from contenttypes.container import Directory, Home
+        from core.database.postgres.permission import AccessRulesetToRule
+        from core.permission import get_or_add_access_rule
+        s = object_session(self)
+        home_root = s.query(Home).one()
         homedir_name = self.login_name
         home = Directory(homedir_name)
+        home_root.container_children.append(home)
         home.children.extend(create_special_user_dirs())
-        # XXX: add access rules
-        db.session.query(Home).one().children.append(home)
+        # add access rules so only the user itself can access the home dir
+        private_group = self.get_or_add_private_group()
+        # we need the private group ID, it's set on flush by the DB
+        s.flush()
+        user_access_rule = get_or_add_access_rule(group_ids=[private_group.id])
+
+        for access_type in (u"read", u"write", u"data"):
+            ruleset = home.get_or_add_special_access_ruleset(access_type)
+            arr = AccessRulesetToRule(rule=user_access_rule)
+            ruleset.rule_assocs.append(arr)
+
         self.home_dir = home
         logg.info("created home dir for user '%s (id: %s)'", self.login_name, self.id)
         return home
