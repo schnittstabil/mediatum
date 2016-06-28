@@ -69,6 +69,11 @@ class UserGroupView(BaseAdminView):
     column_details_list = ["id", "name", "description", "hidden_edit_functions", "is_editor_group",
                            "is_workflow_editor_group", "is_admin_group", "created_at", "user_names"]
 
+    column_searchable_list = ("name", "description")
+
+    column_filters = ("name", "description", "is_editor_group", "is_workflow_editor_group", "is_admin_group")
+    can_export = True
+
     column_labels = dict(user_names = 'Users')
 
     form_extra_fields = {
