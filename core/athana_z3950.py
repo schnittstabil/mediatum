@@ -314,14 +314,14 @@ class QueryMatchNode(object):
     "equality match"
 
     def __init__(self, op, name, value):
-        self.op, self.name, self.value = op, name, protect(value)
+        self.op, self.name, self.value = op, name, protect(value).decode('utf8')
 
     def build_query_string(self, field_mapping):
         if self.name not in field_mapping:
             return None
         op, value = self.op, self.value
         return ' or '.join(['%s %s %s' % (field_type, op, value)
-                            for field_type in field_mapping[self.name] if self.name in field_mapping])
+                            for field_type in field_mapping[self.name]])
 
     def __repr__(self):
         return '%s = %s' % (self.name, self.value)
