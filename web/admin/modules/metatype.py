@@ -26,7 +26,7 @@ from web.admin.adminutils import Overview, getAdminStdVars, getSortCol, getFilte
 from web.common.acl_web import makeList
 from utils.utils import removeEmptyStrings, esc
 from core.translation import lang, t
-from schema.schema import loadTypesFromDB, getMetaFieldTypeNames, getMetaType, updateMetaType, existMetaType, deleteMetaType, fieldoption, moveMetaField, getMetaField, deleteMetaField, getFieldsForMeta, dateoption, requiredoption, existMetaField, updateMetaField, generateMask, cloneMask, exportMetaScheme, importMetaSchema
+from schema.schema import getMetaFieldTypeNames, getMetaType, updateMetaType, existMetaType, deleteMetaType, fieldoption, moveMetaField, getMetaField, deleteMetaField, getFieldsForMeta, dateoption, requiredoption, existMetaField, updateMetaField, generateMask, cloneMask, exportMetaScheme, importMetaSchema
 from schema.schema import VIEW_DEFAULT
 from schema.bibtex import getAllBibTeXTypes
 from schema import citeproc
@@ -321,7 +321,6 @@ def validate(req, op):
                 # if the name contains wrong characters
                 return MaskDetails(req, req.params.get("parent", ""), req.params.get("morig_name", ""), err=4)
 
-            from core.systemtypes import Metadatatypes
             mtype = q(Metadatatype).filter_by(name=q(Node).get(req.params.get("parent", "")).name).one()
             if req.params.get("form_op") == "save_editmask":
                 mask = mtype.get_mask(req.params.get("mname", ""))
@@ -368,7 +367,7 @@ def validate(req, op):
 
 
 def view(req):
-    mtypes = loadTypesFromDB()
+    mtypes = q(Metadatatypes).one().children.order_by("name").all()
     actfilter = getFilter(req)
 
     # filter

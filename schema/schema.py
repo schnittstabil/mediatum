@@ -160,7 +160,9 @@ def updateMetaType(name, description="", longname="", active=0, datatypes="", bi
 
 
 def deleteMetaType(name):
-    db.session.delete(getMetaType(name))
+    metadatatypes = q(Metadatatypes).one()
+    metadatatype = q(Metadatatype).filter_by(name=name).one()
+    metadatatypes.children.remove(metadatatype)
     db.session.commit()
 
 
