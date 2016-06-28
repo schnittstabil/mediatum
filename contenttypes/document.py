@@ -99,7 +99,7 @@ class Document(Content):
 
     @classmethod
     def get_sys_filetypes(cls):
-        return [u"doc", u"document", u"thumb", u"thumb2", u"presentation", u"fulltext", u"fileinfo"]
+        return [u"document", u"thumb", u"thumb2", u"presentation", u"fulltext", u"fileinfo"]
 
     @classmethod
     def get_default_edit_menu_tabs(cls):
@@ -116,11 +116,13 @@ class Document(Content):
                 template = styles[0].getTemplate()
         return req.getTAL(template, self._prepareData(req), macro)
 
+    @property
+    def document(self):
+        # XXX: this should be one() instead of first(), but we must enforce this unique constraint in the DB first
+        return self.files.filter_by(filetype=u"document").first()
+
     def has_object(self):
-        for f in self.files:
-            if f.type == "doc" or f.type == "document":
-                return True
-        return False
+        return self.document is not None
 
     """ postprocess method for object type 'document'. called after object creation """
     def event_files_changed(self):
@@ -140,8 +142,6 @@ class Document(Content):
                 fulltext = 1
             elif f.type == "fileinfo":
                 fileinfo = 1
-            elif f.type == "doc":
-                doc = f
             elif f.type == "document":
                 doc = f
         if not doc:
@@ -225,10 +225,10 @@ class Document(Content):
             req.write(t(req, "permission_denied"))
             return
 
-        for f in self.files:
-            if f.filetype == "doc" or f.filetype == "document":
-                req.sendFile(f.abspath, f.mimetype)
-                return
+        document = self.document
+
+        if document is not None:
+            req.sendFile(document.abspath, document.mimetype)
 
     def popup_thumbbig(self, req):
         self.popup_fullsize(req)

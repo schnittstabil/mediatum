@@ -119,7 +119,7 @@ def build_filelist(node):
     for n in node.all_children:
         if n.isActiveVersion():
             for fn in n.files:
-                if fn.filetype in ['doc', 'document', 'zip', 'attachment', 'other']:
+                if fn.filetype in ['document', 'zip', 'attachment', 'other']:
                     fullpath = fn.abspath
                     if os.path.isfile(fullpath) and os.path.exists(fullpath):
                         dirname, filename = os.path.split(fullpath)
@@ -156,7 +156,7 @@ def build_transferzip(dest_file, node):
     nid = node.id
     def _add_files_to_zip(zfile, node):
         for fo in node.files:
-            if fo.filetype in ['doc', 'document', 'zip', 'attachment', 'other']:
+            if fo.filetype in ['document', 'zip', 'attachment', 'other']:
                 fullpath = fo.abspath
                 if os.path.isfile(fullpath) and os.path.exists(fullpath):
                     filename = fo.base_name
