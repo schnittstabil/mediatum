@@ -4127,11 +4127,19 @@ class AthanaHandler:
         try:
             status = handler_func(req)
         except Exception as e:
+            # XXX: this shouldn't be in Athana, most of it is mediaTUM-specific...
+            # TODO: add some kind of exception handler system for Athana
             import core.config as config
             request = req.request
             if config.get('host.type') != 'testing':
                 from utils.log import make_xid_and_errormsg_hash, extra_log_info_from_req
                 from core.translation import translate
+                from core import db
+
+                # Roll back if the error was caused by a database problem. 
+                # DB requests in this error handler will fail until rollback is called, so let's do it here.
+                db.session.rollback()
+                
                 xid, hashed_errormsg, hashed_tb = make_xid_and_errormsg_hash()
 
                 mail_to_address = config.get('email.support')

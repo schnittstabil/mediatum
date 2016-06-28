@@ -16,3 +16,9 @@ def error(req):
 def error_variable_msg(req):
     random_string = ''.join(random.choice(string.ascii_uppercase) for _ in range(6))
     raise Exception("this is a test exception with random stuff:" + random_string)
+
+
+def db_error(req):
+    from core import db
+    random_sql = '|'.join(random.choice(string.ascii_uppercase) for _ in range(6))
+    db.session.execute(random_sql)
