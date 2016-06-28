@@ -305,7 +305,6 @@ let
   mock
   munch
   py
-  pytest
   redis
   ;
 
@@ -327,6 +326,18 @@ let
     };
     propagatedBuildInputs = with self; [fake-factory];
     buildInputs = with self; [mock];
+  };
+
+
+  pytest = self.buildPythonPackage {
+    name = "pytest-2.9.2";
+    buildInputs = with self; [];
+    doCheck = false;
+    propagatedBuildInputs = with self; [py];
+    src = fetchurl {
+      url = "https://pypi.python.org/packages/f0/ee/6e2522c968339dca7d9abfd5e71312abeeb5ee902e09b4daf44f07b2f907/pytest-2.9.2.tar.gz";
+      md5 = "b65c2944dfaa0efb62c0239afb424f5b";
+    };
   };
 
   pytest-catchlog = self.buildPythonPackage rec {
