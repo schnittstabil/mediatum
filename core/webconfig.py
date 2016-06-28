@@ -283,6 +283,7 @@ def initContexts():
     file = context.addFile("web/handlers/handlertest.py")
     file.addHandler("error").addPattern("/error")
     file.addHandler("error_variable_msg").addPattern("/error_variable_msg")
+    file.addHandler("db_error").addPattern("/db_error")
 
 def flush(req):
     athana.flush()
