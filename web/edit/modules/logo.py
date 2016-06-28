@@ -93,6 +93,8 @@ def getContent(req, ids):
             node.set("system.logo", req.params.get("logo").split("/")[-1])
             logg.info("%s set logo for node %s (%s, %s) to %s", user.login_name, node.id, node.name, node.type, node.get("system.logo"))
 
+        db.session.commit()
+
     logofiles = []
     for f in node.files:
         if f.filetype == "image":
