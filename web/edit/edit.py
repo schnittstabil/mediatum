@@ -500,7 +500,11 @@ def action(req):
 
     else:
         # all 'action's except 'getlabels' require a base dir (src)
+        # but expanding of a subdir in the edit-tree via fancytree has neither
+        # an action nor a srcid, so no action is necessary
         srcid = req.params.get("src")
+        if not action and not srcid:
+            return
         try:
             src = q(Node).get(srcid)
         except:
