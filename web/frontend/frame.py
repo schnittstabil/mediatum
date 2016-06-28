@@ -514,10 +514,12 @@ class NavigationFrame(object):
             if container is None:
                 container = rootnode
             language = lang(req)
+            liststyle = req.args.get("liststyle")
 
             ctx = {
                 "search": self.params["navigation"]["search"],
                 "container_id": container.id,
+                "liststyle": liststyle,
                 "search_placeholder": t(language, "search_in") + " " + container.getLabel(language)
             }
 
