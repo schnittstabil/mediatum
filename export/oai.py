@@ -211,13 +211,6 @@ def getOAIExportFormatsForSchema(schema_name):
         return []
 
 
-def getOAIExportFormatsForIdentifier(identifier):
-    node = q(Node).get(identifier2id(identifier))
-    if node is None:
-        return []
-    return getOAIExportFormatsForSchema(node.getSchema())
-
-
 def nodeHasOAIExportMask(node, metadataformat):
     if node.getSchema() in [x[0][1] for x in getExportMasks('oai_%s$' % metadataformat)]:
         return True
