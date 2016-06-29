@@ -243,10 +243,6 @@ def ListMetadataFormats(req):
             node = q(Node).get(nid)
         except (TypeError, KeyError):
             return writeError(req, "badArgument")
-        #except Exception as e:
-        #    print type(e)
-        #    print e
-        #    return writeError(req, "badArgument")
         if node is None:
             return writeError(req, "badArgument")
 
