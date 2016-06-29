@@ -323,19 +323,19 @@ def writeRecord(req, node, metadataformat):
         timetable_update(req, " in writeRecord: getSetSpecsForNode: node: '%s, %s', metadataformat='%s' set_specs:%s" %
                          (ustr(node.id), node.type, metadataformat, ustr(set_specs)))
 
-    req.write("""
+    record_str = """
            <record>
                <header><identifier>%s</identifier>
                        <datestamp>%sZ</datestamp>
                        %s
                </header>
-               <metadata>""" % (mkIdentifier(node.id), d, set_specs))
+               <metadata>""" % (mkIdentifier(node.id), d, set_specs)
 
     if DEBUG:
         timetable_update(req, " in writeRecord: writing header: node.id='%s', metadataformat='%s'" % (ustr(node.id), metadataformat))
 
     if metadataformat == "mediatum":
-        req.write(core.xmlnode.getSingleNodeXML(node))
+        record_str += core.xmlnode.getSingleNodeXML(node)
     # in [masknode.name for masknode in getMetaType(node.getSchema()).getMasks() if masknode.get('masktype')=='exportmask']:
     elif nodeHasOAIExportMask(node, metadataformat.lower()):
         mask = getMetaType(node.getSchema()).getMask(u"oai_" + metadataformat.lower())
@@ -347,7 +347,7 @@ def writeRecord(req, node, metadataformat):
                     node.id),
                     metadataformat))
         # XXX: fixXMLString is gone, do we need to sanitize XML here?
-        req.write(mask.getViewHTML([node], flags=8))
+        record_str += mask.getViewHTML([node], flags=8).replace('lang=""', 'lang="unknown"')  # for testing only, remove!
         if DEBUG:
             timetable_update(
                 req,
@@ -357,9 +357,11 @@ def writeRecord(req, node, metadataformat):
                     metadataformat))
 
     else:
-        req.write('<recordHasNoXMLRepresentation/>')
+        record_str += '<recordHasNoXMLRepresentation/>'
+        
+    record_str += '</metadata></record>'
 
-    req.write('</metadata></record>')
+    req.write(record_str)
 
     if DEBUG:
         timetable_update(req, "leaving writeRecord: node.id='%s', metadataformat='%s'" % (ustr(node.id), metadataformat))
