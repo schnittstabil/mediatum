@@ -397,6 +397,9 @@ def parentIsMedia(n):
 def retrieveNodes(req, setspec, date_from=None, date_to=None, metadataformat=None):
     schemata = []
 
+    nodequery = None
+    res = []
+
     if metadataformat == 'mediatum':
         metadatatypes = q(Metadatatypes).one().children
         schemata = [m.name for m in metadatatypes if m.type == 'metadatatype' and m.name not in ['directory', 'collection']]
@@ -412,9 +415,12 @@ def retrieveNodes(req, setspec, date_from=None, date_to=None, metadataformat=Non
         res = oaisets.getNodes(setspec, schemata)
         res = [q(Node).get(nid) for nid in res]
     else:
-        osp = OAISearchParser()
-        query = " or ".join(["schema=%s" % schema for schema in schemata])
-        res = osp.parse(query).execute()
+        #osp = OAISearchParser()
+        #query = " or ".join(["schema=%s" % schema for schema in schemata])
+        #res = osp.parse(query).execute()
+        collections_root = q(Collections).one()
+        nodequery = collections_root.all_children
+        nodequery = nodequery.filter(Node.schema.in_(schemata))
 
     if DEBUG:
         timetable_update(req, "in retrieveNodes: after building NodeList for %d nodes" % (len(res)))
@@ -428,25 +434,34 @@ def retrieveNodes(req, setspec, date_from=None, date_to=None, metadataformat=Non
         if DEBUG:
             timetable_update(req, "in retrieveNodes: after filtering date_to --> %d nodes" % (len(res)))
 
-    res = [n for n in res if n.has_read_access(user=get_guest_user())]
+    if nodequery:
+        guest_user = get_guest_user()
+        nodequery = nodequery.filter_read_access(user=guest_user)
+    else:
+        res = [n for n in res if n.has_read_access(user=get_guest_user())]
     if DEBUG:
         timetable_update(req, "in retrieveNodes: after read access filter --> %d nodes" % (len(res)))
 
-    collections = q(Collections).one()
-    res = [n for n in res if isDescendantOf(n, collections)]
+    if not nodequery:
+        collections = q(Collections).one()
+        res = [n for n in res if isDescendantOf(n, collections)]
     if DEBUG:
         timetable_update(req, "in retrieveNodes: after checking descendance from basenode --> %d nodes" % (len(res)))
 
-    if schemata:
-        res = [n for n in res if n.getSchema() in schemata]
-        if DEBUG:
-            timetable_update(req, "in retrieveNodes: after schemata (%s) filter --> %d nodes" % (ustr(schemata), len(res)))
+    # superflous ?!
+    #if schemata:
+    #    res = [n for n in res if n.getSchema() in schemata]
+    #    if DEBUG:
+    #        timetable_update(req, "in retrieveNodes: after schemata (%s) filter --> %d nodes" % (ustr(schemata), len(res)))
 
     if metadataformat and metadataformat.lower() in FORMAT_FILTERS.keys():
         format_string = metadataformat.lower()
         res = [n for n in res if filterFormat(n, format_string)]
         if DEBUG:
             timetable_update(req, "in retrieveNodes: after format (%s) filter --> %d nodes" % (format_string, len(res)))
+
+    if nodequery:
+        res = nodequery.all()
 
     return res
 
