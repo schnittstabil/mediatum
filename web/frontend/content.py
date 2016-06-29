@@ -606,8 +606,7 @@ def getPaths(node):
     res = []
 
     def r(node, path):
-        if isinstance(node, version_class(Node)):
-            node = q(Node).get(node.id)
+        node = node.getActiveVersion()
         if isinstance(node, Root):
             return
         for p in node.getParents():
@@ -771,8 +770,7 @@ class ContentArea(Content):
                     path.append(Link('', cd.getLabel(language), ''))
                 else:
                     path.append(Link('', cd.getLabel(), ''))
-                if isinstance(cd, version_class(Node)):
-                    cd = q(Node).get(cd.id)
+                cd = cd.getActiveVersion()
                 while True:
                     parents = cd.parents
                     if check_access:
