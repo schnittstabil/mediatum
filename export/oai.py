@@ -386,6 +386,7 @@ def identifier2id(identifier):
 
 def parentIsMedia(n):
     try:
+        return False  # quickfix ... remove
         p = n.getParents()[0]
         return hasattr(p, "isContainer") and p.isContainer() == 0
     except IndexError:
@@ -586,7 +587,10 @@ def ListRecords(req):
 
     req.write('<ListRecords>')
     for n in nodes:
-        writeRecord(req, n, metadataformat)
+        try:
+            writeRecord(req, n, metadataformat)
+        except Exception as e:
+            logg.exception("n.id=%s, n.type=%s, metadataformat=%s" % (n.id, n.type, metadataformat))
     if tokenstring:
         req.write(tokenstring)
     req.write('</ListRecords>')
