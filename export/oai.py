@@ -307,7 +307,7 @@ def getSetSpecsForNode(node):
     return indent + (indent.join(setspecs_elements))
 
 
-def writeRecord(req, node, metadataformat):
+def writeRecord(req, node, metadataformat, mask=None):
     if not SET_LIST:
         initSetList(req)
 
@@ -358,7 +358,7 @@ def writeRecord(req, node, metadataformat):
 
     else:
         record_str += '<recordHasNoXMLRepresentation/>'
-        
+
     record_str += '</metadata></record>'
 
     req.write(record_str)
@@ -596,6 +596,7 @@ def ListRecords(req):
         return writeError(req, 'badArgument')
 
     nodes, tokenstring, metadataformat = getNodes(req)
+    mask_cache_dict = {}
     # getNodes(req) filtered out nodes that are inactive or older versions of other nodes
     if nodes is None:
         return writeError(req, tokenstring)
@@ -605,7 +606,7 @@ def ListRecords(req):
     req.write('<ListRecords>')
     for n in nodes:
         try:
-            writeRecord(req, n, metadataformat)
+            writeRecord(req, n, metadataformat, mask=None)
         except Exception as e:
             logg.exception("n.id=%s, n.type=%s, metadataformat=%s" % (n.id, n.type, metadataformat))
     if tokenstring:
