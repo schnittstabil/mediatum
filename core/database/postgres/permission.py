@@ -41,7 +41,7 @@ class NodeToAccessRule(DeclarativeBase):
     rule = rel(AccessRule, backref="node_assocs")
 
 
-class AccessRuleset(DeclarativeBase, TimeStamp):
+class AccessRuleset(DeclarativeBase):
     __tablename__ = "access_ruleset"
     __versioned__ = {}
 
