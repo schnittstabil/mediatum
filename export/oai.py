@@ -153,7 +153,7 @@ def writeError(req, code, detail=""):
     else:
         desc = errordesc[code]
     req.write('<error code="%s">%s</error>' % (code, desc))
-    logg.error("%s:%d OAI (error code: %s) %s", req.ip, req.channel.addr[1], (code), (req.path + req.uri).replace('//', '/'))
+    logg.info("%s:%d OAI (error code: %s) %s", req.ip, req.channel.addr[1], (code), (req.path + req.uri).replace('//', '/'))
 
 
 def ISO8601(t=None):
@@ -211,13 +211,6 @@ def getOAIExportFormatsForSchema(schema_name):
         return []
 
 
-def getOAIExportFormatsForIdentifier(identifier):
-    node = q(Node).get(identifier2id(identifier))
-    if node is None:
-        return []
-    return getOAIExportFormatsForSchema(node.getSchema())
-
-
 def nodeHasOAIExportMask(node, metadataformat):
     if node.getSchema() in [x[0][1] for x in getExportMasks('oai_%s$' % metadataformat)]:
         return True
@@ -236,7 +229,10 @@ def ListMetadataFormats(req):
     if "identifier" in req.params:
         # list only formats available for the given identifier
         try:
-            node = q(Node).get(identifier2id(req.params.get("identifier")))
+            nid = identifier2id(req.params.get("identifier"))
+            if nid is None:
+                return writeError(req, "idDoesNotExist")
+            node = q(Node).get(nid)
         except (TypeError, KeyError):
             return writeError(req, "badArgument")
         if node is None:
@@ -373,10 +369,17 @@ def mkIdentifier(id):
     return IDPREFIX + ustr(id)
 
 
-def identifier2id(id):
-    if id.startswith(IDPREFIX):
-        return id[len(IDPREFIX):]
-    return id
+def identifier2id(identifier):
+    if identifier.startswith(IDPREFIX):
+        nid = identifier[len(IDPREFIX):]
+        # nid should be long int
+        try:
+            long(nid)
+        except:
+            nid = None
+        return nid
+    else:
+        return None
 
 # exclude children of media
 
@@ -593,7 +596,9 @@ def ListRecords(req):
 
 def GetRecord(req):
     if "identifier" in req.params:
-        id = identifier2id(req.params.get("identifier"))
+        nid = identifier2id(req.params.get("identifier"))
+        if nid is None:
+            return writeError(req, "idDoesNotExist")
     else:
         return writeError(req, "badArgument")
 
@@ -601,7 +606,7 @@ def GetRecord(req):
     if not checkMetaDataFormat(metadataformat):
         return writeError(req, "badArgument")
 
-    node = q(Node).get(id)
+    node = q(Node).get(nid)
     if node is None:
         return writeError(req, "idDoesNotExist")
 
