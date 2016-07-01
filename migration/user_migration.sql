@@ -25,10 +25,12 @@ CREATE OR REPLACE FUNCTION mediatum.migrate_internal_users() RETURNS void
     SET search_path TO :search_path
     AS $f$
 
-DECLARE rows integer;
+DECLARE 
+    rows integer;
+    internal_authenticator_id integer;
 BEGIN
-    INSERT INTO authenticator (id, auth_type, name)
-         VALUES (0, 'internal', 'default');
+    INSERT INTO authenticator (auth_type, name)
+         VALUES ('internal', 'default') RETURNING id INTO internal_authenticator_id;
 
     INSERT INTO mediatum.user (id, login_name, display_name, firstname, lastname, telephone, email,
         organisation, password_hash, comment, can_change_password, can_edit_shoppingbag, authenticator_id, created_at)
@@ -44,7 +46,7 @@ BEGIN
     trim(' ' from attrs->>'comment') AS comment,
     bool(position('c' in attrs->>'opts')) AS can_change_password,
     bool(position('s' in attrs->>'opts')) AS can_edit_shoppingbag,
-    0 AS authenticator_id,
+    internal_authenticator_id AS authenticator_id,
     now() AS created_at
     FROM node
     WHERE id IN (SELECT cid FROM nodemapping WHERE nid=(SELECT id FROM node WHERE name = 'users' AND type = 'users'))
@@ -66,7 +68,7 @@ BEGIN
                 ORDER BY id
                 LIMIT 1 -- mediaTUM selects the home dir with the lowest ID if there are multiple choices (which should not happen...)
                 )
-        WHERE authenticator_id = 0;
+        WHERE authenticator_id = internal_authenticator_id;
 
     RAISE NOTICE 'home dirs set, % users with home dir', (SELECT COUNT(*) FROM mediatum.user WHERE home_dir_id IS NOT NULL);
 
@@ -97,8 +99,9 @@ CREATE OR REPLACE FUNCTION mediatum.migrate_dynauth_users() RETURNS void
     AS $f$
 DECLARE
     rows integer;
+    ads_authenticator_id integer;
 BEGIN
-    INSERT INTO authenticator (id, name, auth_type) VALUES (1, 'ads', 'ldap');
+    INSERT INTO authenticator (name, auth_type) VALUES ('ads', 'ldap') RETURNING id INTO ads_authenticator_id;
 
     -- select info from home dirs for ads user (has name.adsuser system attribute) and create user from it
 
@@ -109,7 +112,7 @@ BEGIN
     'migration: created from home dir' AS comment,
     (system_attrs->>'last_authentication.adsuser')::timestamp AS last_login,
     node.id AS home_dir_id,
-    1 AS authenticator_id,
+    ads_authenticator_id AS authenticator_id,
     coalesce((system_attrs->>'last_authentication.adsuser')::timestamp, now()) AS created_at -- no really the creation date, but better than nothing
     FROM node
     WHERE id IN (SELECT cid FROM nodemapping WHERE nid=(SELECT id FROM node WHERE name = 'home'))
@@ -126,7 +129,7 @@ BEGIN
     SELECT
     q.login_name as login_name,
     'migration: created from dynuser list of group ' || array_to_string(group_name, ','),
-    1 AS authenticator_id,
+    ads_authenticator_id AS authenticator_id,
     now() AS created_at
     FROM
         (SELECT distinct unnest(array_remove(regexp_split_to_array(attrs->>'dynamic_users', '\r\n'), '')) as login_name,
@@ -134,7 +137,7 @@ BEGIN
         FROM mediatum.node WHERE type = 'usergroup' AND attrs ? 'dynamic_users'
         GROUP BY login_name
         ) q
-    WHERE q.login_name NOT IN (SELECT login_name FROM mediatum.user WHERE login_name IS NOT NULL AND authenticator_id = 1);
+    WHERE q.login_name NOT IN (SELECT login_name FROM mediatum.user WHERE login_name IS NOT NULL AND authenticator_id = ads_authenticator_id);
 
     GET DIAGNOSTICS rows = ROW_COUNT;
     RAISE NOTICE '% users created from dynamic user lists', rows;
@@ -144,7 +147,7 @@ BEGIN
     INSERT INTO user_to_usergroup (usergroup_id, user_id)
     SELECT usergroup_id, user_id FROM
         (SELECT id as usergroup_id,
-            (SELECT id FROM mediatum.user WHERE mediatum.user.login_name = q.login_name AND authenticator_id = 1 LIMIT 1) as user_id
+            (SELECT id FROM mediatum.user WHERE mediatum.user.login_name = q.login_name AND authenticator_id = ads_authenticator_id LIMIT 1) as user_id
         FROM
             (SELECT distinct id,
             unnest(array_remove(regexp_split_to_array(attrs->>'dynamic_users', '\r\n'), '')) as login_name
