@@ -307,6 +307,15 @@ def getSetSpecsForNode(node):
     return indent + (indent.join(setspecs_elements))
 
 
+def get_oai_export_mask_for_schema_name_and_metadataformat(schema_name, metadataformat):
+    schema = getMetaType(schema_name)
+    if schema:
+        mask = schema.getMask(u"oai_" + metadataformat.lower())
+    else:
+        mask = None
+    return mask
+
+
 def writeRecord(req, node, metadataformat, mask=None):
     if not SET_LIST:
         initSetList(req)
@@ -337,8 +346,10 @@ def writeRecord(req, node, metadataformat, mask=None):
     if metadataformat == "mediatum":
         record_str += core.xmlnode.getSingleNodeXML(node)
     # in [masknode.name for masknode in getMetaType(node.getSchema()).getMasks() if masknode.get('masktype')=='exportmask']:
-    elif nodeHasOAIExportMask(node, metadataformat.lower()):
-        mask = getMetaType(node.getSchema()).getMask(u"oai_" + metadataformat.lower())
+
+    #elif nodeHasOAIExportMask(node, metadataformat.lower()):
+    #    mask = getMetaType(node.getSchema()).getMask(u"oai_" + metadataformat.lower())
+    elif mask:
         if DEBUG:
             timetable_update(
                 req,
@@ -553,7 +564,7 @@ def getNodes(req):
         tokenstring = None
         with token_lock:
             del tokenpositions[token]
-    logg.info("%s : set=%s, objects, format=%s", req.params.get('verb'), req.params.get('set'), len(nodes), metadataformat)
+    logg.info("%s : set=%s, objects=%s, format=%s", req.params.get('verb'), req.params.get('set'), len(nodes), metadataformat)
     res = nodes[pos:pos + CHUNKSIZE]
     if DEBUG:
         timetable_update(req, "leaving getNodes: returning %d nodes, tokenstring='%s', metadataformat='%s'" %
@@ -605,8 +616,19 @@ def ListRecords(req):
 
     req.write('<ListRecords>')
     for n in nodes:
+
+        # retrieve mask from cache dict or insert
+        schema_name = n.getSchema()
+        look_up_key = u"%s_%s" % (schema_name, metadataformat)
+        if look_up_key in mask_cache_dict:
+            mask = mask_cache_dict.get(look_up_key)
+        else:
+            mask = get_oai_export_mask_for_schema_name_and_metadataformat(schema_name, metadataformat)
+            if mask:
+                mask_cache_dict[look_up_key] = mask
+
         try:
-            writeRecord(req, n, metadataformat, mask=None)
+            writeRecord(req, n, metadataformat, mask=mask)
         except Exception as e:
             logg.exception("n.id=%s, n.type=%s, metadataformat=%s" % (n.id, n.type, metadataformat))
     if tokenstring:
@@ -641,8 +663,11 @@ def GetRecord(req):
     if not node.has_read_access(user=get_guest_user()):
         return writeError(req, "noPermission")
 
+    schema_name = node.getSchema()
+    mask = get_oai_export_mask_for_schema_name_and_metadataformat(schema_name, metadataformat)
+
     req.write('<GetRecord>')
-    writeRecord(req, node, metadataformat)
+    writeRecord(req, node, metadataformat, mask=mask)
     req.write('</GetRecord>')
     if DEBUG:
         timetable_update(req, "leaving GetRecord")
