@@ -82,6 +82,8 @@ BEGIN
     GET DIAGNOSTICS rows = ROW_COUNT;
     RAISE NOTICE 'users mapped to groups, % mappings', rows;
 
+    PERFORM mediatum.reset_user_ids();
+
 END;
 $f$;
 
@@ -152,6 +154,35 @@ BEGIN
     GET DIAGNOSTICS rows = ROW_COUNT;
     RAISE NOTICE '% user-group mappings for dynamic users', rows;
 
+END;
+$f$;
+
+
+-- assign new IDs to users from the ID sequence
+CREATE OR REPLACE FUNCTION reset_user_ids() RETURNS void
+    LANGUAGE plpgsql
+    SET search_path TO :search_path
+    AS
+    $f$
+BEGIN
+    WITH mapping AS (SELECT id AS old, nextval('user_id_seq') AS new from mediatum.user order by id),
+        u1 AS (UPDATE mediatum.user_to_usergroup SET user_id=(SELECT new from mapping WHERE old=user_id))
+
+    UPDATE mediatum.user SET id=(SELECT new from mapping WHERE old=id);
+END;
+$f$;
+
+
+-- assign new IDs to user groups from the ID sequence
+CREATE OR REPLACE FUNCTION reset_usergroup_ids() RETURNS void
+    LANGUAGE plpgsql
+    SET search_path TO :search_path
+    AS
+    $f$
+BEGIN
+    WITH mapping AS (SELECT id AS old, nextval('usergroup_id_seq') AS new from usergroup order by id),
+            u1 AS (UPDATE mediatum.user_to_usergroup SET usergroup_id=(SELECT new from mapping WHERE old=usergroup_id))
+    UPDATE mediatum.usergroup SET id=(SELECT new from mapping WHERE old=id) ;
 END;
 $f$;
 

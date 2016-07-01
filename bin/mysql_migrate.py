@@ -108,6 +108,7 @@ def dynusers(s):
 
 
 def user_finish(s):
+    s.execute("SELECT mediatum.reset_usergroup_ids()")
     s.execute("SELECT mediatum.rename_user_system_nodes()")
     # orphaned home dirs are moved to node 1276513
     from migration import user_migration
