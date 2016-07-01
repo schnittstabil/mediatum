@@ -189,6 +189,7 @@ actions = OrderedDict([
 if __name__ == "__main__":
     parser = configargparse.ArgumentParser("mediaTUM mysql_migrate.py")
     parser.add_argument("--docker", default=False, action="store_true", help="use the prebuilt docker image for pgloader")
+    parser.add_argument("--test", default=False, action="store_true", help="don't commit after migration steps")
     parser.add_argument("--link", default=[], action="append", help="docker link to another container like: --link=postgres:postgres")
     parser.add_argument("action", nargs="*", choices=actions.keys())
 
@@ -200,7 +201,8 @@ if __name__ == "__main__":
     requested_actions = args.action
 
     s.execute("SET search_path to mediatum")
-    s.commit()
+    if not args.test:
+        s.commit()
 
     # pgloader can't be run in the action loop and must be run first
     if "pgloader" in requested_actions:
@@ -214,7 +216,8 @@ if __name__ == "__main__":
 
             for action in requested_actions:
                 actions[action](s)
-                s.commit()
+                if not args.test:
+                    s.commit()
         finally:
             s.rollback()
             enable_triggers()
