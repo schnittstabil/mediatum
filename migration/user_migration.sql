@@ -13,7 +13,8 @@ BEGIN
     bool(position('e' in attrs->>'opts')) AS is_editor_group,
     now() AS created_at
     FROM node
-    WHERE id IN (SELECT cid FROM nodemapping WHERE nid=(SELECT id FROM node WHERE name = 'usergroups' AND type = 'usergroups'));
+    WHERE id IN (SELECT cid FROM nodemapping WHERE nid=(SELECT id FROM node WHERE name = 'usergroups' AND type = 'usergroups'))
+    ORDER BY id;
 END;
 $f$;
 
@@ -46,7 +47,8 @@ BEGIN
     0 AS authenticator_id,
     now() AS created_at
     FROM node
-    WHERE id IN (SELECT cid FROM nodemapping WHERE nid=(SELECT id FROM node WHERE name = 'users' AND type = 'users'));
+    WHERE id IN (SELECT cid FROM nodemapping WHERE nid=(SELECT id FROM node WHERE name = 'users' AND type = 'users'))
+    ORDER BY id;
 
     GET DIAGNOSTICS rows = ROW_COUNT;
     RAISE NOTICE '% internal users inserted', rows;
@@ -165,7 +167,7 @@ CREATE OR REPLACE FUNCTION reset_user_ids() RETURNS void
     AS
     $f$
 BEGIN
-    WITH mapping AS (SELECT id AS old, nextval('user_id_seq') AS new from mediatum.user order by id),
+    WITH mapping AS (SELECT id AS old, nextval('user_id_seq') AS new from mediatum.user),
         u1 AS (UPDATE mediatum.user_to_usergroup SET user_id=(SELECT new from mapping WHERE old=user_id))
 
     UPDATE mediatum.user SET id=(SELECT new from mapping WHERE old=id);
@@ -180,7 +182,7 @@ CREATE OR REPLACE FUNCTION reset_usergroup_ids() RETURNS void
     AS
     $f$
 BEGIN
-    WITH mapping AS (SELECT id AS old, nextval('usergroup_id_seq') AS new from usergroup order by id),
+    WITH mapping AS (SELECT id AS old, nextval('usergroup_id_seq') AS new from usergroup),
             u1 AS (UPDATE mediatum.user_to_usergroup SET usergroup_id=(SELECT new from mapping WHERE old=usergroup_id))
     UPDATE mediatum.usergroup SET id=(SELECT new from mapping WHERE old=id) ;
 END;
