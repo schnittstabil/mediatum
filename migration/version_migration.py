@@ -31,9 +31,8 @@ def reset_version_data():
     """Delete irrelevant version data created in the migration process before creating node versions"""
     s = db.session
     # XXX: continuum does not define foreign keys, so we cannot use CASCADE...
-    s.execute("TRUNCATE transaction")
-    s.execute("ALTER SEQUENCE transaction_id_seq RESTART")
     s.execute("TRUNCATE nodemapping_version") # created by user_finish while fixing user special dirs
+    s.execute("TRUNCATE transaction")
 
 
 def all_version_nodes():
