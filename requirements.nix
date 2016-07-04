@@ -1,4 +1,4 @@
-{fetchurl, fetchgit, stdenv, self, pkgs}:
+{fetchurl, fetchgit, fetchhg, stdenv, self, pkgs}:
 
 let
   pythonPackages = pkgs.python27Packages;
@@ -359,6 +359,19 @@ let
     };
     propagatedBuildInputs = with self; [redis];
   };
+  
+  
+  yappi = self.buildPythonPackage {
+    name = "yappi-0.95";
+    src = fetchhg {
+      url = "https://bitbucket.org/sumerc/yappi/";
+      rev = "69d70e0663fc";
+      sha256 = "0phpkxwqill2g4vrh0fyn594jyck3l9r7fvik5906w6192z7k6yq";
+    };  
+    propagatedBuildInputs = with pkgs; []; 
+    buildInputs = with pkgs; []; 
+    doCheck = false;
+  }; 
 
 
 in {
@@ -428,6 +441,7 @@ in {
       pytest-catchlog
       redis-collections
       pkgs.redis
+      yappi
     ];
 
     system = with pkgs; [
