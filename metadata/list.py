@@ -49,7 +49,7 @@ class m_list(Metatype):
             None
 
         tempvalues = context.field.getValueList()
-        valuesfiles = context.field.files
+        valuesfiles = context.field.files.all()
 
         if len(valuesfiles):  # a text file with list values was uploaded
             if os.path.isfile(valuesfiles[0].abspath):
