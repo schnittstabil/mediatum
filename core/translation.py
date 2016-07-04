@@ -132,19 +132,26 @@ def addPoFilepath(filepath=[]):
 
 
 def lang(req):
+    # simple cache, lang won't change in the current request
+    if hasattr(req, "_lang"):
+        return req._lang
+    
     language_from_session = req.session.get("language")
     if language_from_session:
+        req._lang = language_from_session
         return language_from_session
 
     allowed_languages = config.languages
+    
     if "Accept-Language" in req.request_headers:
         languages = req.request_headers["Accept-Language"]
         for language in languages.split(";"):
             if language and language in allowed_languages:
-                req.session["language"] = language
+                req.session["language"] = req._lang = language
                 return language
+            
     if allowed_languages and allowed_languages[0]:
-        req.session["language"] = allowed_languages[0]
+        req.session["language"] = req._lang = allowed_languages[0]
         return allowed_languages[0]
     else:
         return "en"
