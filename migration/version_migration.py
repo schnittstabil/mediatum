@@ -26,6 +26,15 @@ def fix_versioning_attributes():
     s.execute("UPDATE node SET system_attrs=jsonb_object_delete_keys(system_attrs, 'next_id') WHERE system_attrs->>'next_id' IN (id::text, '0')")
 
 
+def reset_version_data():
+    """Delete irrelevant version data created in the migration process before creating node versions"""
+    s = db.session
+    # XXX: continuum does not define foreign keys, so we cannot use CASCADE...
+    s.execute("TRUNCATE transaction")
+    s.execute("ALTER SEQUENCE transaction_id_seq RESTART")
+    s.execute("TRUNCATE nodemapping_version") # created by user_finish while fixing user special dirs
+
+
 def all_version_nodes():
     return q(Node).filter(Node.system_attrs.has_key(u"next_id"))
 
