@@ -152,18 +152,28 @@
                         <th><tal:block i18n:translate="edit_meta_timestamp_comment"/></th>
                         <th><tal:block i18n:translate="edit_meta_updateduser"/></th>
                     </tr>
-                    <tal:block tal:repeat="v versions">
+                    <tr tal:condition="python: untagged_current_version" class="row active">
+						<td><a tal:attributes="href python:node_url(untagged_current_version.id)"
+						       i18n:translate="untagged_version"
+						       target="frontend">untagged</a>
+						</td>
+                        <td>
+                        <div tal:content="python:untagged_current_version.pretty_format_update_time"></div>
+                        </td>
+                        <td>
+                        <div tal:content="python:untagged_current_version.updateuser"></div>
+                        </td>
+                    </tr>
+                    <tal:block tal:repeat="v tagged_versions">
                     <tr tal:attributes="class python:(v.isActiveVersion() and 'row active' or 'row') ">
                       <td><a href="/" tal:attributes="href python:node_url(v.id, v.tag)" target="frontend"
-                             tal:content="python:u'V' + v.tag">Version</a></td>
+                             tal:content="python:v.tag">Version</a></td>
                         <td>
                         <div tal:content="python:v.pretty_format_update_time"></div>
                         <div tal:content="python:v.comment"></div>
                         </td>
                         <td>
-                        <div tal:content="python:v.get('updateuser') and v.get('updateuser') or v.get('creator')"></div>
-                        <tal:block tal:replace="raw python:'<script type=&quot;text/javascript&quot;>'"/>
-                        <tal:block tal:replace="raw python:'</script>'"/>
+                        <div tal:content="python:v.updateuser"></div>
                         </td>
                     </tr>
                     </tal:block>

@@ -35,6 +35,7 @@ msgid "show in new window"
 msgstr "In neuem Fenster anzeigen"
 
 msgid "main_title_tum"
+
 msgstr "mediaTUM - Der Medienserver der TU München"
 
 msgid "header_slogan_tum"
@@ -1196,3 +1197,6 @@ msgstr "zurück"
 
 msgid "no_metadata_to_display"
 msgstr "Es gibt für dieses Objekt keine Metadaten, die angezeigt werden können."
+
+msgid "untagged_version"
+msgstr "ohne Versionsnummer"
