@@ -113,15 +113,15 @@ def _handle_change(node, req):
             version_comment_full = u'({})\n{}'.format(t(req, translation_msg_id), version_comment)
 
             with node.new_tagged_version(comment=version_comment_full, user=user):
-                _finish_change(node, change_file, user, uploadfile, req)
                 node.set_legacy_update_attributes(user)
+                _finish_change(node, change_file, user, uploadfile, req)
 
             req.setStatus(httpstatus.HTTP_MOVED_TEMPORARILY)
             return req.getTAL("web/edit/modules/metadata.html", {'url': '?id={}&tab=files'.format(node.id), 'pid': None}, macro="redirect")
     else:
         # no new version
-        _finish_change(node, change_file, user, uploadfile, req)
         node.set_legacy_update_attributes(user)
+        _finish_change(node, change_file, user, uploadfile, req)
 
 
 def getContent(req, ids):
