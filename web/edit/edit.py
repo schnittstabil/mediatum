@@ -127,6 +127,13 @@ def frameset(req):
         req.params["id"] = currentdir.id
         id = req.params.get("id")
 
+    # use always the newest version
+    currentdir = currentdir.getActiveVersion()
+
+    if unicode(currentdir.id) != id:
+        req.params["id"] = unicode(currentdir.id)
+        id = req.params.get("id")
+
     nodepath = []
     n = currentdir
     while n:
