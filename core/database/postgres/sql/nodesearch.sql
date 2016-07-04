@@ -174,6 +174,7 @@ END;
 $$;
 
 
+-- XXX: does not work anymore, nodefile is file + node_to_file now
 CREATE OR REPLACE FUNCTION import_fulltexts_multicorn() RETURNS void
     LANGUAGE plpgsql
     SET search_path = :search_path

@@ -13,9 +13,6 @@ DECLARE
     deleted_nodes integer;
 BEGIN
     WITH reachable_node_ids AS (SELECT * FROM subtree_ids(1) UNION ALL SELECT 1),
-    del_file AS (DELETE FROM nodefile
-        WHERE nid NOT IN (SELECT * FROM reachable_node_ids)),
-
     del_rel AS (DELETE FROM noderelation
         WHERE nid NOT IN (SELECT * FROM reachable_node_ids)
         OR cid NOT IN (SELECT * FROM reachable_node_ids)),
