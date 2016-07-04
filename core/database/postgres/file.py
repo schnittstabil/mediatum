@@ -7,15 +7,23 @@ import logging
 import os
 from warnings import warn
 
-from core.database.postgres import DeclarativeBase, C, FK, rel, bref
+from core.database.postgres import DeclarativeBase, C, FK, rel, bref, integer_pk
 from core.database.postgres.node import Node
-from sqlalchemy import Integer, Unicode, String, event
+from sqlalchemy import Integer, Unicode, String, event, Table
 from core.database.postgres.alchemyext import AppenderQueryWithLen
 from core.file import FileMixin
 from core import config
 
 
 logg = logging.getLogger(__name__)
+
+
+class NodeToFile(DeclarativeBase):
+    __tablename__ = "node_to_file"
+    __versioned__ = {}
+    
+    nid = C(Integer, FK(Node.id, ondelete="CASCADE"), primary_key=True)
+    file_id = C(Integer, FK("file.id"), primary_key=True)
 
 
 class File(DeclarativeBase, FileMixin):
@@ -47,14 +55,26 @@ class File(DeclarativeBase, FileMixin):
         if node is not None:
             self.node = node
 
-    __tablename__ = "nodefile"
-    nid = C(Integer, FK(Node.id, ondelete="CASCADE"), primary_key=True, index=True)
-    path = C(Unicode(4096), primary_key=True)
-    filetype = C(Unicode(126), primary_key=True)
+    __tablename__ = "file"
+    id = integer_pk()
+    path = C(Unicode(4096))
+    filetype = C(Unicode(126))
     mimetype = C(String(255))
 
-    node = rel(Node, backref=bref("files", lazy="dynamic", cascade="all, delete-orphan", passive_deletes=True, query_class=AppenderQueryWithLen))
+    nodes = rel(Node, secondary=NodeToFile.__table__, backref=bref("files", lazy="dynamic"), lazy="dynamic")
 
+    def unlink(self):
+        if self.exists:
+            os.unlink(self.abspath)
+        else:
+            logg.warn("tried to unlink missing physical file %s at %s, ignored", self.id, self.path)
+
+    def __repr__(self):
+        return "File #{} ({}:{}|{}) at {}".format(
+            self.id, self.path, self.filetype, self.mimetype, hex(id(self)))
+
+    def __unicode__(self):
+        return u"# {} {} {} in {}".format(self.id, self.filetype, self.mimetype, self.path)
 
 @event.listens_for(File, 'after_delete')
 def unlink_physical_file_on_delete(mapper, connection, target):

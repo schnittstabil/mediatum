@@ -49,9 +49,9 @@ class FileView(BaseAdminView):
 
     column_filters = ("path", "filetype", "mimetype")
     column_editable_list = ("path", "filetype", "mimetype")
-    form_columns = ("node", "path", "filetype", "mimetype")
+    form_columns = ("nodes", "path", "filetype", "mimetype")
     form_ajax_refs = {
-        "node": {"fields": (Node.name, )}
+        "nodes": {"fields": (Node.name, )}
     }
 
     def __init__(self, session=db.session, *args, **kwargs):

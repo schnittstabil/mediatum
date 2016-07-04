@@ -40,9 +40,26 @@ BEGIN
 
     RAISE NOTICE 'migrated node';
 
-    INSERT INTO mediatum.nodefile
-    SELECT DISTINCT nid, filename AS path, type AS filetype, mimetype
+    -- nodefile is a one-to-many relationship from node to file
+    -- we migrate it to a many-to-many relationship
+
+    INSERT INTO mediatum.file (path, filetype, mimetype)
+    SELECT DISTINCT 
+        filename AS path, 
+        type AS filetype, 
+        mimetype
     FROM mediatum_import.nodefile;
+
+    CREATE INDEX file_mig ON mediatum.file (path, filetype, mimetype);
+
+    INSERT INTO mediatum.node_to_file (nid, file_id)
+    SELECT DISTINCT
+        nid, 
+        f.id AS file_id
+    FROM mediatum_import.nodefile nf 
+    JOIN file f ON (f.path=nf.filename and f.filetype=nf.type and f.mimetype=nf.mimetype);
+    
+    DROP INDEX file_mig;
 
     RAISE NOTICE 'migrated nodefile';
 

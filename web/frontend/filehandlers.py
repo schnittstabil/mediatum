@@ -38,28 +38,31 @@ def _send_thumbnail(thumb_type, req):
     except ValueError:
         return 400
 
-    if not Node.req_has_access_to_node_id(nid, u"read"):
-        return 404
 
     version_id = version_id_from_req(req)
 
-    if version_id:
-        version = get_node_or_version(nid, version_id, Data)
+    node_or_version = get_node_or_version(nid, version_id, Data)
 
+    if not node_or_version.has_read_access():
+        return 404
+
+    if version_id:
+        version = node_or_version
         for f in version.files.filter_by(filetype=thumb_type, transaction_id=version.transaction_id):
             if f.exists:
                 return req.sendFile(f.abspath, f.mimetype)
 
         ntype, schema = version.type, version.schema
     else:
-        # no version id given, use a bit more efficient variant for real nodes
+        # no version id given
         # XXX: better to use scalar(), but we must ensure that we have no dupes first
-        for f in q(File).filter_by(nid=nid, filetype=thumb_type):
-            if os.path.isfile(f.abspath):
+        node = node_or_version
+        for f in node.files.filter_by(filetype=thumb_type):
+            if f.exists:
                 return req.sendFile(f.abspath, f.mimetype)
 
         try:
-            ntype, schema = q(Data.type, Data.schema).filter_by(id=nid).one()
+            ntype, schema = node.type, node.schema
         except NoResultFound:
             return 404
 
