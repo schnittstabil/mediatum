@@ -44,10 +44,11 @@ def import_node_fulltext(node, overwrite=False):
 
 
 def import_fulltexts(overwrite=False):
-    if overwrite:
-        nodes = q(Data).join(File).filter_by(filetype=u"fulltext")
-    else:
-        nodes = q(Data).filter_by(fulltext=None).join(File).filter_by(filetype=u"fulltext")
+    nodes = q(Data).filter(Data.files.any(File.filetype == "fulltext"))
+
+    # don't overwrite = ignore nodes that have a fulltext
+    if not overwrite:
+        nodes = nodes.filter_by(fulltext=None)
 
     import_count = 0
     for node in nodes:
