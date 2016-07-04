@@ -63,6 +63,18 @@ class File(DeclarativeBase, FileMixin):
 
     nodes = rel(Node, secondary=NodeToFile.__table__, backref=bref("files", lazy="dynamic"), lazy="dynamic")
 
+    def unlink(self):
+        if self.exists:
+            os.unlink(self.abspath)
+        else:
+            logg.warn("tried to unlink missing physical file %s at %s, ignored", self.id, self.path)
+
+    def __repr__(self):
+        return "File #{} ({}:{}|{}) at {}".format(
+            self.id, self.path, self.filetype, self.mimetype, hex(id(self)))
+
+    def __unicode__(self):
+        return u"# {} {} {} in {}".format(self.id, self.filetype, self.mimetype, self.path)
 
 @event.listens_for(File, 'after_delete')
 def unlink_physical_file_on_delete(mapper, connection, target):

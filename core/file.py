@@ -67,7 +67,7 @@ class FileMixin(object):
         if self.exists:
             os.unlink(self.abspath)
         else:
-            logg.warn("tried to unlink missing physical file for node %s at %s, ignored", self.nid, self.path)
+            logg.warn("tried to unlink missing physical file %s at %s, ignored", self.id, self.path)
 
     def getType(self):
         warn("use File.type instead", DeprecationWarning)
@@ -89,9 +89,3 @@ class FileMixin(object):
         warn("use File.size instead", DeprecationWarning)
         return self.size
 
-    def __repr__(self):
-        return "File for Node #{} ({}:{}|{}) at {}".format(
-            self.nid, self.path, self.filetype, self.mimetype, hex(id(self)))
-
-    def __unicode__(self):
-        return u"{} {} for # {} in {}".format(self.filetype, self.mimetype, self.nid, self.path)
