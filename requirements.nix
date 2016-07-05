@@ -283,8 +283,8 @@ let
 
     src = fetchgit {
       url = https://github.com/mediatum/sqlalchemy-continuum.git;
-      rev = "a244d0c89f3635e4c15beabd2456e0ec2112fd44";
-      sha256 = "eaf86792dc6c5942b338310220a6ae206ce9b9a26123fa1eef2d8a4b8b01b348";
+      rev = "8730065da2a6754cd7701c10f171bce4798ee3ef";
+      sha256 = "216de4af4407b3ea956bd918c1f575147ea248295fb0fe41a9a540cd8ee22ca2";
     };
 
     propagatedBuildInputs = with self; [sqlalchemy sqlalchemy-utils];
