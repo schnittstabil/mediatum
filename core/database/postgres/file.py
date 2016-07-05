@@ -61,7 +61,8 @@ class File(DeclarativeBase, FileMixin):
     filetype = C(Unicode(126))
     mimetype = C(String(255))
 
-    nodes = rel(Node, secondary=NodeToFile.__table__, backref=bref("files", lazy="dynamic"), lazy="dynamic")
+    nodes = rel(Node, secondary=NodeToFile.__table__, 
+                backref=bref("files", lazy="dynamic", query_class=AppenderQueryWithLen), lazy="dynamic")
 
     def unlink(self):
         if self.exists:
