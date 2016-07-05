@@ -220,7 +220,7 @@ class PostgresSQLAConnector(object):
                             "HINT: You can delete and recreate the database schema with all tables with 'bin/manage.py schema recreate'")
 
     def get_model_classes(self):
-        from core.database.postgres.file import File
+        from core.database.postgres.file import File, NodeToFile
         from core.database.postgres.node import NodeType, Node, NodeAlias
         from core.database.postgres.user import User, UserGroup, UserToUserGroup, AuthenticatorInfo, OAuthUserCredentials
         from core.database.postgres.permission import AccessRule, AccessRuleset, NodeToAccessRule, NodeToAccessRuleset
@@ -228,6 +228,7 @@ class PostgresSQLAConnector(object):
         from core.database.postgres.search import Fts
         return (
             File,
+            NodeToFile,
             Node,
             User,
             UserGroup,
