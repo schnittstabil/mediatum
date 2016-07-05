@@ -269,18 +269,21 @@ def getContent(req, ids):
         if not hasattr(mask, "i_am_not_a_mask"):
             req.params["errorlist"] = mask.validate(nodes)
 
-    tagged_node_versions = nodes[0].tagged_versions
     update_date, creation_date = get_datelists(nodes)
-
     data = {}
-    data["tagged_versions"] = tagged_node_versions[::-1] # descending version tag
     
+    # version handling
     current_version = nodes[0].versions[-1]
+    tagged_node_versions = nodes[0].tagged_versions.all()
+    
+    data["untagged_current_version"] = current_version
 
-    if current_version != tagged_node_versions[-1]:
-        data["untagged_current_version"] = current_version
+    if tagged_node_versions:
+        data["tagged_versions"] = tagged_node_versions[::-1] # descending version tag
+        if current_version == tagged_node_versions[-1]:
+            data["untagged_current_version"] = None
     else:
-        data["untagged_current_version"] = None
+        data["tagged_versions"] = []
         
     data["creation_date"] = creation_date
     data["update_date"] = update_date
