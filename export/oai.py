@@ -484,7 +484,7 @@ def retrieveNodes(req, setspec, date_from=None, date_to=None, metadataformat=Non
             timetable_update(req, "in retrieveNodes: after format (%s) filter --> %d nodes" % (format_string, len(res)))
 
     if nodequery:
-        res = nodequery.all()
+        res = nodequery
 
     return res
 
@@ -504,11 +504,12 @@ def new_token(req):
 def getNodes(req):
     global tokenpositions, CHUNKSIZE
     nodes = None
+    nids = None
 
     if "resumptionToken" in req.params:
         token = req.params.get("resumptionToken")
         if token in tokenpositions:
-            pos, nodes, metadataformat = tokenpositions[token]
+            pos, nids, metadataformat = tokenpositions[token]
         else:
             return None, "badResumptionToken", None
 
@@ -522,7 +523,7 @@ def getNodes(req):
             return None, "badArgument", None
         pos = 0
 
-    if not nodes:
+    if not nids:
         string_from, string_to = None, None
         try:
             string_from = req.params["from"]
@@ -556,27 +557,42 @@ def getNodes(req):
             return None, "badArgument", None
 
         try:
-            nodes = retrieveNodes(req, setspec, date_from, date_to, metadataformat)
-            nodes = [n for n in nodes if not parentIsMedia(n)]
+            nodequery = retrieveNodes(req, setspec, date_from, date_to, metadataformat)
+            nodequery = nodequery.filter(Node.subnode == False)  #[n for n in nodes if not parentIsMedia(n)]
+
             # filter out nodes that are inactive or older versions of other nodes
-            nodes = [n for n in nodes if n.isActiveVersion()]
+            #nodes = [n for n in nodes if n.isActiveVersion()]  # not needed anymore
         except:
             logg.exception('error retrieving nodes for oai')
             # collection doesn't exist
             return None, "badArgument", None
-        if not nodes:
-            return None, "badArgument", None
+        #if not nodes:
+        #    return None, "badArgument", None
 
     with token_lock:
-        tokenpositions[token] = pos + CHUNKSIZE, nodes, metadataformat
+        if not nids:
+            import time
+            from sqlalchemy.orm import load_only
+            atime = time.time()
+            nodes = nodequery.options(load_only('id')).all()
+            etime = time.time()
+            logg.info('querying %d nodes for tokenposition took %.3f sec.' % (len(nodes), etime - atime))
+            atime = time.time()
+            nids = [n.id for n in nodes]
+            etime = time.time()
+            logg.info('retrieving %d nids for tokenposition took %.3f sec.' % (len(nids), etime - atime))
+
+        tokenpositions[token] = pos + CHUNKSIZE, nids, metadataformat
+
+
     tokenstring = '<resumptionToken expirationDate="' + ISO8601(date.now().add(3600 * 24)) + '" ' + \
-        'completeListSize="' + ustr(len(nodes)) + '" cursor="' + ustr(pos) + '">' + token + '</resumptionToken>'
-    if pos + CHUNKSIZE >= len(nodes):
+        'completeListSize="' + ustr(len(nids)) + '" cursor="' + ustr(pos) + '">' + token + '</resumptionToken>'
+    if pos + CHUNKSIZE >= len(nids):
         tokenstring = None
         with token_lock:
             del tokenpositions[token]
-    logg.info("%s : set=%s, objects=%s, format=%s", req.params.get('verb'), req.params.get('set'), len(nodes), metadataformat)
-    res = nodes[pos:pos + CHUNKSIZE]
+    logg.info("%s : set=%s, objects=%s, format=%s", req.params.get('verb'), req.params.get('set'), len(nids), metadataformat)
+    res = nids[pos:pos + CHUNKSIZE]
     if DEBUG:
         timetable_update(req, "leaving getNodes: returning %d nodes, tokenstring='%s', metadataformat='%s'" %
                          (len(res), tokenstring, metadataformat))
@@ -588,11 +604,13 @@ def ListIdentifiers(req):
     if not SET_LIST:
         initSetList(req)
 
-    nodes, tokenstring, metadataformat = getNodes(req)
-    if nodes is None:
+    nids, tokenstring, metadataformat = getNodes(req)
+
+    if nids is None:
         return writeError(req, tokenstring)
-    if not len(nodes):
+    if not len(nids):
         return writeError(req, 'noRecordsMatch')
+    nodes = q(Node).filter(Node.id.in_(nids)).all()
 
     req.write('<ListIdentifiers>')
     for n in nodes:
@@ -617,15 +635,22 @@ def ListRecords(req):
     if "resumptionToken" in req.params.keys() and "until" in req.params.keys():
         return writeError(req, 'badArgument')
 
-    nodes, tokenstring, metadataformat = getNodes(req)
-    mask_cache_dict = {}
-    # getNodes(req) filtered out nodes that are inactive or older versions of other nodes
+    nids, tokenstring, metadataformat = getNodes(req)
+
+    if nids is None:
+        return writeError(req, tokenstring)
+    if not len(nids):
+        return writeError(req, 'noRecordsMatch')
+    nodes = q(Node).filter(Node.id.in_(nids)).all()
+
     if nodes is None:
         return writeError(req, tokenstring)
     if not len(nodes):
         return writeError(req, 'noRecordsMatch')
 
     req.write('<ListRecords>')
+
+    mask_cache_dict = {}
     for n in nodes:
 
         # retrieve mask from cache dict or insert
