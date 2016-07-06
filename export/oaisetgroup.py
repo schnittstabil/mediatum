@@ -59,7 +59,9 @@ class OAISetGroup:
     def getNodesForSetSpec(self, setspec, schemata):
         if self.func_getNodesForSetSpec:
             return self.func_getNodesForSetSpec(self, setspec, schemata)
-        elif setspec in self.d_queries:
+        elif setspec in self.d_filters:
+            setspecFilter = self.d_filters.get(setspec)
+            return setspecFilter
             from .oaisearchparser import OAISearchParser
             osp = OAISearchParser()
             res = osp.parse(self.d_queries[setspec]).execute()

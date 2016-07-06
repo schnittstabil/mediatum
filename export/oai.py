@@ -425,8 +425,18 @@ def retrieveNodes(req, setspec, date_from=None, date_to=None, metadataformat=Non
                          (metadataformat.lower(), len(schemata), ustr([x for x in schemata])))
 
     if setspec:
-        res = oaisets.getNodes(setspec, schemata)
-        res = [q(Node).get(nid) for nid in res]
+        collections_root = q(Collections).one()
+        nodequery = collections_root.all_children
+        #nodequery = nodequery.filter(Node.schema.in_(schemata))
+
+        setspecFilter = oaisets.getNodes(setspec, schemata)  # todo:rename getNodes to getNodeFilter
+        if type(setspecFilter) == list:
+            for sFilter in setspecFilter:
+                nodequery = nodequery.filter(sFilter)
+        else:
+            nodequery = nodequery.filter(setspecFilter)
+        #res = oaisets.getNodes(setspec, schemata)
+        #res = [q(Node).get(nid) for nid in res]
     else:
         #osp = OAISearchParser()
         #query = " or ".join(["schema=%s" % schema for schema in schemata])
@@ -551,6 +561,7 @@ def getNodes(req):
             # filter out nodes that are inactive or older versions of other nodes
             nodes = [n for n in nodes if n.isActiveVersion()]
         except:
+            logg.exception('error retrieving nodes for oai')
             # collection doesn't exist
             return None, "badArgument", None
         if not nodes:
