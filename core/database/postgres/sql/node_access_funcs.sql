@@ -570,10 +570,7 @@ BEGIN
     FROM access_ruleset_to_rule arr
     JOIN node_to_access_ruleset nar ON arr.ruleset_name=nar.ruleset_name
     WHERE nar.ruletype=_ruletype
-    -- exclude existing rules
-    EXCEPT 
-    SELECT * FROM node_to_access_rule nar
-    WHERE nar.ruletype=_ruletype;
+    ON CONFLICT DO NOTHING;
 END;
 $f$;
 
@@ -604,10 +601,7 @@ BEGIN
            blocking OR NEW.blocking AS blocking
     FROM access_ruleset_to_rule 
     WHERE ruleset_name=NEW.ruleset_name
-    -- exclude existing rules
-    EXCEPT 
-    SELECT * FROM node_to_access_rule 
-    WHERE nid=NEW.nid AND ruletype=NEW.ruletype;
+    ON CONFLICT DO NOTHING;
     
 RETURN NEW;
 END;
