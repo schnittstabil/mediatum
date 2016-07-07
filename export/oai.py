@@ -514,12 +514,12 @@ def getNodes(req):
             return None, "badResumptionToken", None
 
         if not checkParams(req, ["verb", "resumptionToken"]):
-            logg.warn("OAI: getNodes: additional arguments (only verb and resumptionToken allowed)")
+            logg.info("OAI: getNodes: additional arguments (only verb and resumptionToken allowed)")
             return None, "badArgument", None
     else:
         token, metadataformat = new_token(req)
         if not checkMetaDataFormat(metadataformat):
-            logg.error('OAI: ListRecords: metadataPrefix missing')
+            logg.info('OAI: ListRecords: metadataPrefix missing')
             return None, "badArgument", None
         pos = 0
 
