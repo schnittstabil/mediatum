@@ -62,13 +62,13 @@ SET_LIST = []
 FORMAT_FILTERS = {}
 
 
-def registerFormatFilter(key, filterFunc):
-    FORMAT_FILTERS[key.lower()] = filterFunc
+def registerFormatFilter(key, filterFunc, filterQuery):
+    FORMAT_FILTERS[key.lower()] = {'filterFunc': filterFunc, 'filterQuery': filterQuery}
 
 
 def filterFormat(node, oai_format):
     if oai_format.lower() in FORMAT_FILTERS.keys():
-        return FORMAT_FILTERS[oai_format.lower()](node)
+        return FORMAT_FILTERS[oai_format.lower()]['filterFunc'](node)
     return True
 
 
@@ -479,7 +479,9 @@ def retrieveNodes(req, setspec, date_from=None, date_to=None, metadataformat=Non
 
     if metadataformat and metadataformat.lower() in FORMAT_FILTERS.keys():
         format_string = metadataformat.lower()
-        res = [n for n in res if filterFormat(n, format_string)]
+        format_filter = FORMAT_FILTERS[format_string]['filterQuery']
+        nodequery = nodequery.filter(format_filter)
+        #res = [n for n in res if filterFormat(n, format_string)]
         if DEBUG:
             timetable_update(req, "in retrieveNodes: after format (%s) filter --> %d nodes" % (format_string, len(res)))
 
