@@ -449,11 +449,13 @@ def retrieveNodes(req, setspec, date_from=None, date_to=None, metadataformat=Non
         timetable_update(req, "in retrieveNodes: after building NodeList for %d nodes" % (len(res)))
 
     if date_from:
-        res = [n for n in res if n.get(DATEFIELD) >= ustr(date_from)]
+        #res = [n for n in res if n.get(DATEFIELD) >= ustr(date_from)]
+        nodequery = nodequery.filter(Node.attrs[DATEFIELD].astext >= ustr(date_from))
         if DEBUG:
             timetable_update(req, "in retrieveNodes: after filtering date_from --> %d nodes" % (len(res)))
     if date_to:
-        res = [n for n in res if n.get(DATEFIELD) <= ustr(date_to)]
+        #res = [n for n in res if n.get(DATEFIELD) <= ustr(date_to)]
+        nodequery = nodequery.filter(Node.attrs[DATEFIELD].astext <= ustr(date_to))
         if DEBUG:
             timetable_update(req, "in retrieveNodes: after filtering date_to --> %d nodes" % (len(res)))
 
