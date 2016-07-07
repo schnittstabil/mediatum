@@ -399,7 +399,6 @@ def identifier2id(identifier):
 
 def parentIsMedia(n):
     try:
-        return False  # quickfix ... remove
         p = n.getParents()[0]
         return hasattr(p, "isContainer") and p.isContainer() == 0
     except IndexError:
