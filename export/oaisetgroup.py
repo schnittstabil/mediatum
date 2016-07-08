@@ -73,6 +73,14 @@ class OAISetGroup:
             logg.error("OAI: Error: no function 'getNodesForSetSpec' found for setSpec='%s', returning empty list", setspec)
             return []
 
+    def getNodesFilterForSetSpec(self, setspec, schemata):
+        if setspec in self.d_filters:
+            setspecFilter = self.d_filters.get(setspec)
+            return setspecFilter
+        else:
+            logg.error("OAI: Error: no function 'getNodesForSetSpec' found for setSpec='%s', returning empty list", setspec)
+            return []
+
     def getSetSpecsForNode(self, node, schemata=[]):
         if self.func_getSetSpecsForNode:
             return self.func_getSetSpecsForNode(self, node, schemata=[])
