@@ -424,16 +424,26 @@ def retrieveNodes(req, setspec, date_from=None, date_to=None, metadataformat=Non
                          (metadataformat.lower(), len(schemata), ustr([x for x in schemata])))
 
     if setspec:
-        collections_root = q(Collections).one()
-        nodequery = collections_root.all_children
+        is_int = False
+        try:
+            _x = long(setspec)
+            is_int = True
+            # todo: check access !!!
+            collections_root = q(Node).get(_x)
+            nodequery = collections_root.all_children
+            nodequery = nodequery.filter(Node.schema.in_(schemata))
+        except:
+            collections_root = q(Collections).one()
+            nodequery = collections_root.all_children
         #nodequery = nodequery.filter(Node.schema.in_(schemata))
 
-        setspecFilter = oaisets.getNodesFilterForSetSpec(setspec, schemata)
-        if type(setspecFilter) == list:
-            for sFilter in setspecFilter:
-                nodequery = nodequery.filter(sFilter)
-        else:
-            nodequery = nodequery.filter(setspecFilter)
+        if not is_int:
+            setspecFilter = oaisets.getNodesFilterForSetSpec(setspec, schemata)
+            if type(setspecFilter) == list:
+                for sFilter in setspecFilter:
+                    nodequery = nodequery.filter(sFilter)
+            else:
+                nodequery = nodequery.filter(setspecFilter)
         #res = oaisets.getNodes(setspec, schemata)
         #res = [q(Node).get(nid) for nid in res]
     else:

@@ -74,8 +74,11 @@ def build_container_group():
     node_list = [node for node in node_list if node.get('oai.formats').strip()]
 
     d_names = OrderedDict()
+    d_filters = OrderedDict()
+
     for col_node in node_list:
         d_names[ustr(col_node.id)] = esc(col_node.get('oai.setname'))
+        d_filters[ustr(col_node.id)] = None  # todo: fix this
 
     g = OAISetGroup(d_names, descr='group of %d container sets' % len(d_names))
 
