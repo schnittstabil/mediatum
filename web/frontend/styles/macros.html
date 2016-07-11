@@ -22,11 +22,30 @@
     <div tal:define="versions python:node.tagged_versions.all()[::-1]" tal:condition="python:len(versions)>1">
         <span onclick="$('#versions').toggle()" style="cursor:pointer" i18n:attributes="title document_versions_existing_title"><tal:block i18n:translate="document_versions">TEXT</tal:block> <img src="/img/greyarrow.gif"/></span>
             <div style="display:none;border:1px solid silver;padding:5px;" id="versions">
-                <div><tal:block i18n:translate="document_view_current_version_from">Current version:<br/><span i18n:name="version" tal:replace="python:'Version {}'.format(tag)">Version</span> from</tal:block> <tal:block tal:condition="python:node.updatetime or node.get('creationtime')" tal:replace="python:node.pretty_format_update_time"></tal:block> <tal:block i18n:translate="document_view_by" /> <tal:block tal:replace="python:node.get('updateuser') and node.get('updateuser') or node.get('creator')" /></div>
+              <div>
+                <!-- shown version: node is active and is tagged -->
+                <tal:block tal:condition="python:(node == node.getActiveVersion() or node == node.versions[-1]) and node.versions[-1].tag" i18n:translate="document_view_is_current_version_with_tag_from">Current version:<br/><span i18n:name="version" tal:replace="python:'Version {}'.format(tag)">Version</span> from</tal:block>
+
+                <!-- shown version: node is active and is not tagged -->
+                <tal:block tal:condition="python:(node == node.getActiveVersion() or node == node.versions[-1]) and not node.versions[-1].tag" i18n:translate="document_view_is_current_version_without_tag_from">Current version:<br/><span i18n:name="version" tal:replace="python:'Version {}'.format(tag)">Version</span> from</tal:block>
+
+                <!-- shown version: node is not active -->
+                <tal:block tal:condition="python:node != node.getActiveVersion() and node != node.versions[-1]" i18n:translate="document_view_current_version_from">Current version:<br/><span i18n:name="version" tal:replace="python:'Version {}'.format(tag)">Version</span> from</tal:block>
+
+                  <tal:block tal:condition="python:node.updatetime or node.creation" tal:replace="python:node.pretty_format_update_time"></tal:block> <tal:block i18n:translate="document_view_by" /> <tal:block tal:replace="python:node.updateuser or node.creator" /></div>
                 <div i18n:translate="document_view_other_versions_of_the_document">Other versions of the document:</div>
+                <!-- other versions: active node is not tagged -->
+                <tal:block tal:condition="python:not node.versions[-1].tag">
+                <div>
+                    <a href="/" tal:attributes="href python:node_url(node.id)"><span i18n:translate="current_version">Version</span>
+                    <span tal:condition="python:node.getActiveVersion().updatetime or node.getActiveVersion().creationtime">(<tal:block i18n:translate="document_view_from">from</tal:block> <tal:block tal:replace="python:node.getActiveVersion().pretty_format_update_time"></tal:block> <tal:block i18n:translate="document_view_by" /> <tal:block tal:replace="python:node.getActiveVersion().updateuser or node.getActiveVersion().creator" />)</span></a>
+                </div>
+                </tal:block>
                 <div tal:repeat="v versions">
-                    <a href="/" tal:attributes="href python:node_url(v.id, v.tag)"><span tal:content="python:'Version {}'.format(v.tag)">Version</span>
-                    <span tal:condition="python:v.updatetime or v.get('creationtime')">(<tal:block i18n:translate="document_view_from">from</tal:block> <tal:block tal:replace="python:v.pretty_format_update_time"></tal:block> <tal:block i18n:translate="document_view_by" /> <tal:block tal:replace="python:v.get('updateuser') or v.get_special('updateuser') or v.get('creator')" />)</span></a>
+                    <a href="/" tal:attributes="href python:node_url(v.id, None if v == v.versions[-1] else v.tag)"><span tal:content="python:'Version {}'.format(v.tag)">Version</span>
+                      <span tal:condition="python:v == v.versions[-1]">(<tal:block i18n:translate="current_version"></tal:block>)
+                      </span>
+                    <span tal:condition="python:v.updatetime or v.creationtime">(<tal:block i18n:translate="document_view_from">from</tal:block> <tal:block tal:replace="python:v.pretty_format_update_time"></tal:block> <tal:block i18n:translate="document_view_by" /> <tal:block tal:replace="python:v.updateuser or v.creator" />)</span></a>
                 </div>
             </div>
     </div>
