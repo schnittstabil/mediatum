@@ -109,6 +109,14 @@ def getNodesFilterForSetSpec(setspec, schemata):
     return []
 
 
+def getNodesQueryForSetSpec(setspec, schemata):
+    for g in GROUPS:
+        if setspec in g.d_names.keys():
+            if g.func_get_nodes_query_for_setspec:
+                return g.func_get_nodes_query_for_setspec(g, setspec, schemata)
+    return None
+
+
 def getSets():
     res = []
     for g in GROUPS:

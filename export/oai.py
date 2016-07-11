@@ -217,6 +217,12 @@ def nodeHasOAIExportMask(node, metadataformat):
     return False
 
 
+def get_schemata_for_metadataformat(metadataformat):
+    mdt_masks_list = getExportMasks("oai_" + metadataformat.lower() + "$")  # check exact name
+    schemata = [x[0][1] for x in mdt_masks_list if x[1]]
+    return schemata
+
+
 def ListMetadataFormats(req):
     if "set" in req.params:
         return writeError(req, "badArgument")
@@ -416,36 +422,39 @@ def retrieveNodes(req, setspec, date_from=None, date_to=None, metadataformat=Non
         metadatatypes = q(Metadatatypes).one().children
         schemata = [m.name for m in metadatatypes if m.type == 'metadatatype' and m.name not in ['directory', 'collection']]
     elif metadataformat:
-        mdt_masks_list = getExportMasks("oai_" + metadataformat.lower() + "$")  # check exact name
-        schemata = [x[0][1] for x in mdt_masks_list if x[1]]
+        schemata = get_schemata_for_metadataformat(metadataformat)
 
     if DEBUG:
         timetable_update(req, "in retrieveNodes: find schemata with export mask for metadata type %s (%d found: '%s')" %
                          (metadataformat.lower(), len(schemata), ustr([x for x in schemata])))
 
     if setspec:
-        is_int = False
-        try:
-            _x = long(setspec)
-            is_int = True
-            # todo: check access !!!
-            collections_root = q(Node).get(_x)
-            nodequery = collections_root.all_children
-            nodequery = nodequery.filter(Node.schema.in_(schemata))
-        except:
-            collections_root = q(Collections).one()
-            nodequery = collections_root.all_children
-        #nodequery = nodequery.filter(Node.schema.in_(schemata))
+        nodequery = oaisets.getNodesQueryForSetSpec(setspec, schemata)
+        if not nodequery:
+            is_int = False
+            try:
+                _x = long(setspec)
+                is_int = True
+                # todo: check access !!!
+                collections_root = q(Node).get(_x)
+                nodequery = collections_root.all_children
+                nodequery = nodequery.filter(Node.schema.in_(schemata))
+            except:
+                collections_root = q(Collections).one()
+                nodequery = collections_root.all_children
+            #nodequery = nodequery.filter(Node.schema.in_(schemata))
 
-        if not is_int:
-            setspecFilter = oaisets.getNodesFilterForSetSpec(setspec, schemata)
-            if type(setspecFilter) == list:
-                for sFilter in setspecFilter:
-                    nodequery = nodequery.filter(sFilter)
-            else:
-                nodequery = nodequery.filter(setspecFilter)
-        #res = oaisets.getNodes(setspec, schemata)
-        #res = [q(Node).get(nid) for nid in res]
+            if not is_int:
+                setspecFilter = oaisets.getNodesFilterForSetSpec(setspec, schemata)
+                if schemata:
+                    nodequery = nodequery.filter(Node.schema.in_(schemata))
+                if type(setspecFilter) == list:
+                    for sFilter in setspecFilter:
+                        nodequery = nodequery.filter(sFilter)
+                else:
+                    nodequery = nodequery.filter(setspecFilter)
+            #res = oaisets.getNodes(setspec, schemata)
+            #res = [q(Node).get(nid) for nid in res]
     else:
         #osp = OAISearchParser()
         #query = " or ".join(["schema=%s" % schema for schema in schemata])

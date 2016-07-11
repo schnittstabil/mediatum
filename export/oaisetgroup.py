@@ -31,6 +31,7 @@ class OAISetGroup:
                  func_getNodesForSetSpec=None,
                  func_getSetSpecsForNode=None,
                  func_isSetEmpty=None,
+                 func_get_nodes_query_for_setspec= None,
                  descr='-undescribed OAI set group-',
                  sortorder='',
                  group_identifier=''):
@@ -40,6 +41,7 @@ class OAISetGroup:
         self.func_getNodesForSetSpec = func_getNodesForSetSpec
         self.func_getSetSpecsForNode = func_getSetSpecsForNode
         self.func_isSetEmpty = func_isSetEmpty
+        self.func_get_nodes_query_for_setspec = func_get_nodes_query_for_setspec
         self.descr = descr
         self.sortorder = sortorder
         self.group_identifier = group_identifier
