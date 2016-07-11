@@ -66,6 +66,15 @@ def func_getSetSpecsForNode(self, node, schemata):
     return res
 
 
+def get_nodes_query_for_container_setspec(self, setspec, schemata):
+
+    container_node = q(Node).get(setspec)
+    nodequery = container_node.all_children
+    nodequery = nodequery.filter(Node.schema.in_(schemata))
+
+    return nodequery
+
+
 def build_container_group():
     node_list = q(Node).filter(Node.attrs['oai.setname'].isnot(None))
     node_list = node_list.order_by(Node.attrs['oai.setname'])
@@ -84,6 +93,7 @@ def build_container_group():
 
     g.func_getNodesForSetSpec = func_getNodesForSetSpec
     g.func_getSetSpecsForNode = func_getSetSpecsForNode
+    g.func_get_nodes_query_for_setspec = get_nodes_query_for_container_setspec
     g.sortorder = '040'
     g.group_identifier = 'oaigroup_containers'
     return g
