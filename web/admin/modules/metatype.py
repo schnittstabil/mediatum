@@ -324,6 +324,11 @@ def validate(req, op):
             mtype = q(Metadatatype).filter_by(name=q(Node).get(req.params.get("parent", "")).name).one()
             if req.params.get("form_op") == "save_editmask":
                 mask = mtype.get_mask(req.params.get("mname", ""))
+                # in case of renaming a mask the mask cannot be detected via the new mname
+                # then detect mask via maskid
+                if not mask:
+                    mtype = getMetaType(req.params.get("parent"))
+                    mask = mtype.children.filter_by(id =req.params.get("maskid", "")).scalar()
 
             elif req.params.get("form_op") == "save_newmask":
                 mask = Mask(req.params.get("mname", ""))
