@@ -556,6 +556,9 @@ def getNodes(req):
         setspec = None
         if "set" in req.params:
             setspec = req.params.get("set")
+            if not oaisets.existsSetSpec(setspec):
+                return None, "noRecordsMatch", None
+
 
         if string_from and string_to and (string_from > string_to or len(string_from) != len(string_to)):
             return None, "badArgument", None

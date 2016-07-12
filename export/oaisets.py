@@ -145,6 +145,19 @@ def getGroup(group_identifier):
     return DICT_GROUPS[group_identifier]
 
 
+def existsSetSpec(setspec):
+    '''
+    :param setspec: string
+    :return: True is sespec is defined, False otherwise
+
+    this function has been introduced to allow responding with oai error early
+    '''
+    for g in GROUPS:
+        if setspec in g.d_names.keys():
+            return True
+    return False
+
+
 def init():
     if config.getboolean("oai.activate", True):
         registerGroupGetterFunc('mediatum', get_set_groups)
