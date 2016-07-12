@@ -1149,6 +1149,12 @@ msgstr "von"
 msgid "document_view_current_version_from"
 msgstr "<b>Angezeigte Version: </b><br/>${version} vom"
 
+msgid "document_view_is_current_version_with_tag_from"
+msgstr "<b>Angezeigte Version: </b><br/>${version} (Aktuelle Version) vom"
+
+msgid "document_view_is_current_version_without_tag_from"
+msgstr "<b>Angezeigte Version: </b><br/>Aktuelle Version vom"
+
 msgid "document_view_other_versions_of_the_document"
 msgstr "<b>Andere Versionen des Dokuments:</b><br/>"
 
@@ -1200,3 +1206,6 @@ msgstr "Es gibt für dieses Objekt keine Metadaten, die angezeigt werden können
 
 msgid "untagged_version"
 msgstr "ohne Versionsnummer"
+
+msgid "current_version"
+msgstr "Aktuelle Version"
