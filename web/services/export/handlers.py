@@ -59,6 +59,7 @@ q = db.query
 
 
 configured_host = config.get("host.name", "")
+allow_cross_origin = config.get("webservice.allow_cross_origin", "").lower() == "true"
 
 from web.services.cache import Cache
 from web.services.cache import date2string as cache_date2string
@@ -947,7 +948,7 @@ def write_formatted_response(
 
     # remark: on 2011-12-01 switched response from req.write to req.sendAsBuffer for performance reasons
     # (before: ) req.write(s)
-    req.sendAsBuffer(s, content_type, force=1)
+    req.sendAsBuffer(s, content_type, force=1, allow_cross_origin=allow_cross_origin)
     d['timetable'].append(["executed req.sendAsBuffer, %d bytes, content type='%s'" % (len(s), content_type), time.time() - atime])
     atime = time.time()
     return d['html_response_code'], len(s), d

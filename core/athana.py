@@ -1146,7 +1146,7 @@ class http_request(object):
             self.push(file_producer(file))
         return
 
-    def sendAsBuffer(self, text, content_type, force=0):
+    def sendAsBuffer(self, text, content_type, force=0, allow_cross_origin=False):
         from StringIO import StringIO
         stringio = StringIO(text)
 
@@ -1190,6 +1190,8 @@ class http_request(object):
         self.reply_headers['Last-Modified'] = build_http_date(mtime)
         self.reply_headers['Content-Length'] = file_length
         self.reply_headers['Content-Type'] = content_type
+        if allow_cross_origin:
+            self.reply_headers['Access-Control-Allow-Origin'] = '*'
         if self.command == 'GET':
             self.push(file_producer(file))
         return
