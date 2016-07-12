@@ -202,3 +202,65 @@ BEGIN
     WHERE type IN ('user', 'users', 'usergroup', 'usergroups', 'externalusers');
 END;
 $f$;
+
+
+CREATE OR REPLACE FUNCTION clean_trash_dirs() RETURNS integer
+    LANGUAGE plpgsql
+    SET search_path = :search_path
+    AS $f$
+DECLARE
+    num_deleted_nodes integer;
+BEGIN
+    DELETE FROM nodemapping WHERE nid IN
+        (SELECT id
+        FROM node JOIN noderelation ON id=cid
+        WHERE distance = 2
+        AND nid=(SELECT id from node WHERE type = 'home')
+        AND name = 'Papierkorb');
+
+    GET DIAGNOSTICS num_deleted_nodes = ROW_COUNT;
+    RETURN num_deleted_nodes;
+END;
+$f$;
+
+
+CREATE OR REPLACE FUNCTION purge_empty_home_dirs() RETURNS integer
+    LANGUAGE plpgsql
+    SET search_path = :search_path
+    AS $f$
+DECLARE
+    deleted_nodes integer;
+    home_dir_ids integer[];
+    special_dir_ids integer[];
+BEGIN
+    -- delete empty special dirs first
+    SELECT array_agg(id)
+    INTO special_dir_ids
+    FROM node n JOIN noderelation nr ON id=cid
+    WHERE distance = 2
+    AND nid=(SELECT id from node WHERE type = 'home')
+    AND n.name in ('Papierkorb',
+                   'Inkonsistente Daten',
+                   'Uploads',
+                   'Importe')
+    AND id NOT IN (SELECT nid FROM nodemapping);
+
+    PERFORM delete_nodes(special_dir_ids);
+
+    -- delete all now empty home dirs
+    SELECT array_agg(id)
+    INTO home_dir_ids
+    FROM node JOIN nodemapping ON id=cid
+    AND nid=(SELECT id from node WHERE type = 'home')
+    AND name LIKE 'Arbeitsverzeichnis (%'
+    AND id NOT IN (SELECT nid FROM nodemapping);
+
+    UPDATE mediatum.user
+    SET home_dir_id=NULL
+    WHERE home_dir_id IN (SELECT unnest(home_dir_ids));
+
+    deleted_nodes = delete_nodes(home_dir_ids);
+    RETURN deleted_nodes;
+END;
+$f$;
+
