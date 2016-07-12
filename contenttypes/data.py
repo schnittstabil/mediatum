@@ -25,7 +25,7 @@ from warnings import warn
 import humanize
 from mediatumtal import tal
 
-from core import Node
+from core import Node, db
 from core.database.postgres.node import children_rel
 import core.config as config
 from core.translation import lang, t
@@ -211,6 +211,8 @@ class Data(Node):
 
                     if hasattr(metadatatype, "language_snipper"):
                         metafield = fd['element']
+                        # XXX: don't save nodes in global data structures! We must change this in the mask caching code.
+                        metafield = db.refresh(metafield)
                         if (metafield.get("type") == "text" and metafield.get("valuelist") == "multilingual") \
                             or \
                            (metafield.get("type") in ['memo', 'htmlmemo'] and metafield.get("multilang") == '1'):
