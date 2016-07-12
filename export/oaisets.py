@@ -148,9 +148,9 @@ def getGroup(group_identifier):
 def existsSetSpec(setspec):
     '''
     :param setspec: string
-    :return: True is sespec is defined, False otherwise
+    :return: True if setspec is defined, False otherwise
 
-    this function has been introduced to allow responding with oai error early
+    this function has been introduced to allow to respond early with an oai error
     '''
     for g in GROUPS:
         if setspec in g.d_names.keys():
