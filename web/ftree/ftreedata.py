@@ -107,7 +107,7 @@ def getPathTo(req):
     # parameters: pathTo=selected Node
     collectionsid = q(Collections).one().id
     nid = req.args.get("pathTo", collectionsid, type=int)
-    if not id:
+    if not nid:
         raise ValueError("node id must be numeric, got '{}'".format(req.args.get("pathTo")))
     node = q(Node).get(nid)
 
