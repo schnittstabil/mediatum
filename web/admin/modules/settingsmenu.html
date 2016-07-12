@@ -48,6 +48,7 @@
 
 
 <metal:block metal:define-macro="view_adminmodules">
+    <div id="adminmodules_reset" i18n:translate="adminmodules_reset_question" style="display:none">TEXT</div>
     <form method="post">
     <table class="overview">
         <thead>
@@ -56,7 +57,7 @@
                     <h2 i18n:translate="admin_settings_adminmodules_title">TEXT</h2>
                 </td>
                 <td>
-                    <button type="submit" name="adminmodules_default" i18n:translate="admin_settings_adminmodules_reset">TEXT</button>
+                    <button type="submit" name="adminmodules_default" onclick="return confirm($('#adminmodules_reset').html())" i18n:translate="admin_settings_adminmodules_reset">TEXT</button>
                 </td>
             </tr>
             <tr>
