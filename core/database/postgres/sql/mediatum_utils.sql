@@ -65,20 +65,17 @@ CREATE OR REPLACE FUNCTION clean_trash_dirs() RETURNS integer
     SET search_path = :search_path
     AS $f$
 DECLARE
-    trash_item_ids integer[];
-    deleted_nodes integer;
+    num_deleted_nodes integer;
 BEGIN
-    SELECT array_agg(cid)
-    INTO trash_item_ids
-    FROM nodemapping WHERE nid IN
+    DELETE FROM nodemapping WHERE nid IN
         (SELECT id
         FROM node JOIN noderelation ON id=cid
         WHERE distance = 2
         AND nid=(SELECT id from node WHERE type = 'home')
         AND name = 'Papierkorb');
 
-    deleted_nodes = delete_nodes(trash_item_ids, true);
-    RETURN deleted_nodes;
+    GET DIAGNOSTICS num_deleted_nodes = ROW_COUNT;
+    RETURN num_deleted_nodes;
 END;
 $f$;
 
