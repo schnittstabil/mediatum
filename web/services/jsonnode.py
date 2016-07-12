@@ -148,9 +148,9 @@ def buildNodeDescriptor(params, node, indent=None, written=None, children=True, 
         nodedict['name'] = node.name
 
     if 'nodetype' in params:
-        if node.type is None:
-            nodedict['type'] = 'node'
-        else:
-            nodedict['type'] = node.type
+        nodedict['type'] = node.type
+
+    if 'nodeschema' in params:
+        nodedict['schema'] = node.schema
     return nd
 
