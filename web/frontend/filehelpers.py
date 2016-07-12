@@ -116,7 +116,8 @@ def build_filelist(node):
     files_written = 0
     result_list = []
 
-    for n in node.all_children:
+    # in mediatum-mysql node.getAllChildren() included node, here node.all_children.all() will not include node
+    for n in [node] + node.all_children.all():
         if n.isActiveVersion():
             for fn in n.files:
                 if fn.filetype in ['document', 'zip', 'attachment', 'other']:
@@ -143,10 +144,10 @@ def get_transfer_url(n):
     "get transfer url for oai format xmetadissplus"
     filecount = len(build_filelist(n))
     if filecount < 2:
-        transfer_filename = n.id + ".pdf"
+        transfer_filename = ustr(n.id) + ".pdf"
         transferurl = u"http://{}/doc/{}/".format(config.get("host.name"), n.id, transfer_filename)
     else:
-        transfer_filename = n.id + "_transfer.zip"
+        transfer_filename = ustr(n.id) + "_transfer.zip"
         transferurl = u"http://{}/file/{}/".format(config.get("host.name"), n.id, transfer_filename)
 
     return transferurl
