@@ -346,7 +346,7 @@ class Collectionlet(Portlet):
         nid = req.args.get("id", type=int)
         if nid:
             node = q(Node).get(nid)
-            if node is not None:
+            if node is not None and node.has_read_access():
                 if isinstance(node, Container):
                     self.container = node
 
