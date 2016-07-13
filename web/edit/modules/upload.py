@@ -308,8 +308,8 @@ def getContent(req, ids):
         # upload file to current node as attachment
         if req.params.get('action') == "upload":
             if 'file' in req.params:  # plupload
-                realname = mybasename(req.params['file'].filename)
-                tempname = req.params['file'].tempname
+                realname = mybasename(req.params['file'].filename.decode("utf8"))
+                tempname = req.params['file'].tempname.decode("utf8")
                 proceed_to_uploadcomplete = True
 
             realname = realname.replace(' ', '_')
@@ -451,10 +451,7 @@ def mybasename(filename):
     else:
         basename = filename
 
-    if isinstance(basename, unicode):
-        return basename.encode('utf8')
-    else:
-        return basename
+    return basename
 
 @dec_entry_log
 def upload_filehandler(req):
