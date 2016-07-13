@@ -756,7 +756,6 @@ def initSetList(req=None):
 
 
 def oaiRequest(req):
-    import time
 
     start_time = time.clock()
     req._tt = {'atime': now(), 'tlist': []}
