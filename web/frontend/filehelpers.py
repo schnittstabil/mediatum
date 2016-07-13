@@ -150,7 +150,6 @@ def get_transfer_url(n):
 
 def build_transferzip(dest_file, node):
     nid = node.id
-    count_files_written = 0
 
     def _add_files_to_zip(zfile, node):
         files_written = 0
@@ -170,6 +169,7 @@ def build_transferzip(dest_file, node):
                         files_written += 1
         return files_written
 
+    count_files_written = 0
     count_children_visited = 0
     logg.info("builing transfer zip for node %s", nid)
 
@@ -177,8 +177,8 @@ def build_transferzip(dest_file, node):
         if isinstance(node, Content) and node.has_data_access():
             count_files_written = _add_files_to_zip(zfile, node)
 
-        for children in node.all_children_by_query(q(Content)).filter_data_access().limit(100):
-            _add_files_to_zip(zfile, children)
+        for child in node.all_children_by_query(q(Content)).filter_data_access().limit(100):
+            count_files_written +=_add_files_to_zip(zfile, child)
             count_children_visited += 1
 
 
