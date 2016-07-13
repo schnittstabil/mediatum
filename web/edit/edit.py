@@ -510,10 +510,10 @@ def action(req):
 
     else:
         # all 'action's except 'getlabels' require a base dir (src)
-        # but expanding of a subdir in the edit-tree via fancytree has neither
-        # an action nor a srcid, so no action is necessary
+        # but expanding of a subdir in the edit-tree via fancytree has
+        # not a srcid, so no action is necessary
         srcid = req.params.get("src")
-        if not action and not srcid:
+        if not srcid:
             return
         try:
             src = q(Node).get(srcid)
@@ -801,14 +801,23 @@ def content(req):
         if nid is None:
             raise ValueError("invalid request, neither 'src' not 'id' parameter is set!")
 
+        folders_only = False
+        if nid.find(',') > 0:
+            # more than one node selected
+            # use the first one for activateEditorTreeNode
+            # and display only folders
+            nid = nid.split(',')[0]
+            folders_only = True
         n = q(Data).get(nid)
         if current == 'metadata' and 'save' in req.params:
             pass
         s = []
         while n:
-            s = ['<a onClick="activateEditorTreeNode(%r); return false;" href="/edit/edit_content?id=%s">%s</a>' %
-                 (n.id, n.id, get_edit_label(n, language))] + s
+            if not folders_only:
+                s = ['<a onClick="activateEditorTreeNode(%r); return false;" href="/edit/edit_content?id=%s">%s</a>' %
+                     (n.id, n.id, get_edit_label(n, language))] + s
 
+            folders_only = False;
             p = n.parents
             # XXX: we only check the first parent. This is wrong, how could be solve this? #
             first_parent = p[0]
