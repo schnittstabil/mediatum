@@ -131,31 +131,29 @@ def build_filelist(node):
                             dirname, filename = os.path.split(f)
                             result_list.append([filename, get_filesize(f)])
                             files_written += 1
-                        if os.path.isdir(fullpath):
-                            for f in get_all_file_paths(fullpath):
-                                dirname, filename = os.path.split(f)
-                                result_list.append([filename, get_filesize(f)])
-                                files_written += 1
 
     return result_list
 
 
 def get_transfer_url(n):
-    "get transfer url for oai format xmetadissplus"
+    "get transfer url for transfer.zip archive of appended files (for example for oai format xmetadissplus)"
     filecount = len(build_filelist(n))
     if filecount < 2:
         transfer_filename = ustr(n.id) + ".pdf"
-        transferurl = u"http://{}/doc/{}/".format(config.get("host.name"), n.id, transfer_filename)
+        transferurl = u"http://{}/doc/{}/{}".format(config.get("host.name"), n.id, transfer_filename)
     else:
         transfer_filename = ustr(n.id) + "_transfer.zip"
-        transferurl = u"http://{}/file/{}/".format(config.get("host.name"), n.id, transfer_filename)
+        transferurl = u"http://{}/file/{}".format(config.get("host.name"), transfer_filename)
 
     return transferurl
 
 
 def build_transferzip(dest_file, node):
     nid = node.id
+    count_files_written = 0
+
     def _add_files_to_zip(zfile, node):
+        files_written = 0
         for fo in node.files:
             if fo.filetype in ['document', 'zip', 'attachment', 'other']:
                 fullpath = fo.abspath
@@ -163,21 +161,21 @@ def build_transferzip(dest_file, node):
                     filename = fo.base_name
                     logg.debug("adding to zip: %s as %s", fullpath, filename)
                     zfile.write(fullpath, filename)
-                    count_files_written += 1
+                    files_written += 1
                 if os.path.isdir(fullpath):
                     for filepath in get_all_file_paths(fullpath):
                         relpath = filepath.replace(fullpath, "")
-                        logg.debug("adding from directory % to zip as %s", fullpath, relpath)
+                        logg.debug("adding from directory %s to zip as %s", fullpath, relpath)
                         zfile.write(filepath, relpath)
-                    count_files_written += 1
+                        files_written += 1
+        return files_written
 
-    count_files_written = 0
     count_children_visited = 0
     logg.info("builing transfer zip for node %s", nid)
 
     with zipfile.ZipFile(dest_file, "w", zipfile.ZIP_DEFLATED) as zfile:
         if isinstance(node, Content) and node.has_data_access():
-            _add_files_to_zip(zfile, node)
+            count_files_written = _add_files_to_zip(zfile, node)
 
         for children in node.all_children_by_query(q(Content)).filter_data_access().limit(100):
             _add_files_to_zip(zfile, children)
