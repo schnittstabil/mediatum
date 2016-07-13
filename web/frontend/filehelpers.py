@@ -113,11 +113,13 @@ def get_all_file_paths(basedir):
 
 def build_filelist(node):
     "build file list for generation of xmetadissplus xml"
+    if not (isinstance(node, Content) and node.has_data_access()):
+        return []
     files_written = 0
     result_list = []
 
-    # in mediatum-mysql node.getAllChildren() included node, here node.all_children.all() will not include node
-    for n in [node] + node.all_children.all():
+    # limit transfer.zip to one node
+    for n in [node]:
         if n.isActiveVersion():
             for fn in n.files:
                 if fn.filetype in ['document', 'zip', 'attachment', 'other']:
@@ -170,21 +172,11 @@ def build_transferzip(dest_file, node):
         return files_written
 
     count_files_written = 0
-    count_children_visited = 0
     logg.info("builing transfer zip for node %s", nid)
 
     with zipfile.ZipFile(dest_file, "w", zipfile.ZIP_DEFLATED) as zfile:
         if isinstance(node, Content) and node.has_data_access():
             count_files_written = _add_files_to_zip(zfile, node)
-
-        for child in node.all_children_by_query(q(Content)).filter_data_access().limit(100):
-            count_files_written +=_add_files_to_zip(zfile, child)
-            count_children_visited += 1
-
-
-    logg.info("transfer zip for node %s finished, %s children visited, %s files written", nid, count_children_visited, count_files_written)
-    if count_children_visited == 100:
-        logg.warn("transfer zip requested for node %s with too many children, limited to 100 children", nid)
 
     return count_files_written
 
