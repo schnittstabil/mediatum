@@ -106,7 +106,8 @@ def getPathTo(req):
     # returns path(s) to selected node, 'x' separated, with selected nodes in ()
     # parameters: pathTo=selected Node
     collectionsid = q(Collections).one().id
-    nid = req.args.get("pathTo", collectionsid, type=int)
+    # if more than one node selected use the first to get the path to
+    nid = req.args.get("pathTo", collectionsid).split(',')[0]
     if not nid:
         raise ValueError("node id must be numeric, got '{}'".format(req.args.get("pathTo")))
     node = q(Node).get(nid)
