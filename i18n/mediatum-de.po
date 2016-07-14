@@ -267,8 +267,11 @@ msgstr "Zuklappen"
 msgid "unfold"
 msgstr "Aufklappen"
 
-msgid "search_list_title"
+msgid "back_to_list_view_start"
 msgstr "Zurück zum Anfang der Trefferliste"
+
+msgid "back"
+msgstr "Zürück"
 
 msgid "search_hit"
 msgstr "Treffer"

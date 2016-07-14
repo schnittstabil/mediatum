@@ -259,8 +259,11 @@ msgstr "fold"
 msgid "unfold"
 msgstr "unfold"
 
-msgid "search_list_title"
+msgid "back_to_list_view_start"
 msgstr "back to start of result list"
+
+msgid "back"
+msgstr "back"
 
 msgid "search_hit"
 msgstr "hints"
