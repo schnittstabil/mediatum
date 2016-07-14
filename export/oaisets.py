@@ -66,6 +66,15 @@ def func_getSetSpecsForNode(self, node, schemata):
     return res
 
 
+def get_nodes_query_for_container_setspec(self, setspec, schemata):
+
+    container_node = q(Node).get(setspec)
+    nodequery = container_node.all_children
+    nodequery = nodequery.filter(Node.schema.in_(schemata))
+
+    return nodequery
+
+
 def build_container_group():
     node_list = q(Node).filter(Node.attrs['oai.setname'].isnot(None))
     node_list = node_list.order_by(Node.attrs['oai.setname'])
@@ -74,13 +83,17 @@ def build_container_group():
     node_list = [node for node in node_list if node.get('oai.formats').strip()]
 
     d_names = OrderedDict()
+    d_filters = OrderedDict()
+
     for col_node in node_list:
         d_names[ustr(col_node.id)] = esc(col_node.get('oai.setname'))
+        d_filters[ustr(col_node.id)] = None  # todo: fix this
 
     g = OAISetGroup(d_names, descr='group of %d container sets' % len(d_names))
 
     g.func_getNodesForSetSpec = func_getNodesForSetSpec
     g.func_getSetSpecsForNode = func_getSetSpecsForNode
+    g.func_get_nodes_query_for_setspec = get_nodes_query_for_container_setspec
     g.sortorder = '040'
     g.group_identifier = 'oaigroup_containers'
     return g
@@ -99,6 +112,21 @@ def getNodes(setspec, schemata):
     return []
 
 
+def getNodesFilterForSetSpec(setspec, schemata):
+    for g in GROUPS:
+        if setspec in g.d_names.keys():
+            return g.getNodesFilterForSetSpec(setspec, schemata)
+    return []
+
+
+def getNodesQueryForSetSpec(setspec, schemata):
+    for g in GROUPS:
+        if setspec in g.d_names.keys():
+            if g.func_get_nodes_query_for_setspec:
+                return g.func_get_nodes_query_for_setspec(g, setspec, schemata)
+    return None
+
+
 def getSets():
     res = []
     for g in GROUPS:
@@ -115,6 +143,19 @@ def getSetSpecsForNode(node):
 
 def getGroup(group_identifier):
     return DICT_GROUPS[group_identifier]
+
+
+def existsSetSpec(setspec):
+    '''
+    :param setspec: string
+    :return: True if setspec is defined, False otherwise
+
+    this function has been introduced to allow to respond early with an oai error
+    '''
+    for g in GROUPS:
+        if setspec in g.d_names.keys():
+            return True
+    return False
 
 
 def init():

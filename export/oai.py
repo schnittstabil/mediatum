@@ -62,13 +62,13 @@ SET_LIST = []
 FORMAT_FILTERS = {}
 
 
-def registerFormatFilter(key, filterFunc):
-    FORMAT_FILTERS[key.lower()] = filterFunc
+def registerFormatFilter(key, filterFunc, filterQuery):
+    FORMAT_FILTERS[key.lower()] = {'filterFunc': filterFunc, 'filterQuery': filterQuery}
 
 
 def filterFormat(node, oai_format):
     if oai_format.lower() in FORMAT_FILTERS.keys():
-        return FORMAT_FILTERS[oai_format.lower()](node)
+        return FORMAT_FILTERS[oai_format.lower()]['filterFunc'](node)
     return True
 
 
@@ -217,6 +217,12 @@ def nodeHasOAIExportMask(node, metadataformat):
     return False
 
 
+def get_schemata_for_metadataformat(metadataformat):
+    mdt_masks_list = getExportMasks("oai_" + metadataformat.lower() + "$")  # check exact name
+    schemata = [x[0][1] for x in mdt_masks_list if x[1]]
+    return schemata
+
+
 def ListMetadataFormats(req):
     if "set" in req.params:
         return writeError(req, "badArgument")
@@ -307,7 +313,16 @@ def getSetSpecsForNode(node):
     return indent + (indent.join(setspecs_elements))
 
 
-def writeRecord(req, node, metadataformat):
+def get_oai_export_mask_for_schema_name_and_metadataformat(schema_name, metadataformat):
+    schema = getMetaType(schema_name)
+    if schema:
+        mask = schema.getMask(u"oai_" + metadataformat.lower())
+    else:
+        mask = None
+    return mask
+
+
+def writeRecord(req, node, metadataformat, mask=None):
     if not SET_LIST:
         initSetList(req)
 
@@ -323,22 +338,24 @@ def writeRecord(req, node, metadataformat):
         timetable_update(req, " in writeRecord: getSetSpecsForNode: node: '%s, %s', metadataformat='%s' set_specs:%s" %
                          (ustr(node.id), node.type, metadataformat, ustr(set_specs)))
 
-    req.write("""
+    record_str = """
            <record>
                <header><identifier>%s</identifier>
                        <datestamp>%sZ</datestamp>
                        %s
                </header>
-               <metadata>""" % (mkIdentifier(node.id), d, set_specs))
+               <metadata>""" % (mkIdentifier(node.id), d, set_specs)
 
     if DEBUG:
         timetable_update(req, " in writeRecord: writing header: node.id='%s', metadataformat='%s'" % (ustr(node.id), metadataformat))
 
     if metadataformat == "mediatum":
-        req.write(core.xmlnode.getSingleNodeXML(node))
+        record_str += core.xmlnode.getSingleNodeXML(node)
     # in [masknode.name for masknode in getMetaType(node.getSchema()).getMasks() if masknode.get('masktype')=='exportmask']:
-    elif nodeHasOAIExportMask(node, metadataformat.lower()):
-        mask = getMetaType(node.getSchema()).getMask(u"oai_" + metadataformat.lower())
+
+    #elif nodeHasOAIExportMask(node, metadataformat.lower()):
+    #    mask = getMetaType(node.getSchema()).getMask(u"oai_" + metadataformat.lower())
+    elif mask:
         if DEBUG:
             timetable_update(
                 req,
@@ -347,7 +364,7 @@ def writeRecord(req, node, metadataformat):
                     node.id),
                     metadataformat))
         # XXX: fixXMLString is gone, do we need to sanitize XML here?
-        req.write(mask.getViewHTML([node], flags=8))
+        record_str += mask.getViewHTML([node], flags=8).replace('lang=""', 'lang="unknown"')  # for testing only, remove!
         if DEBUG:
             timetable_update(
                 req,
@@ -357,9 +374,11 @@ def writeRecord(req, node, metadataformat):
                     metadataformat))
 
     else:
-        req.write('<recordHasNoXMLRepresentation/>')
+        record_str += '<recordHasNoXMLRepresentation/>'
 
-    req.write('</metadata></record>')
+    record_str += '</metadata></record>'
+
+    req.write(record_str)
 
     if DEBUG:
         timetable_update(req, "leaving writeRecord: node.id='%s', metadataformat='%s'" % (ustr(node.id), metadataformat))
@@ -396,56 +415,95 @@ def parentIsMedia(n):
 def retrieveNodes(req, setspec, date_from=None, date_to=None, metadataformat=None):
     schemata = []
 
+    nodequery = None
+    res = []
+
     if metadataformat == 'mediatum':
         metadatatypes = q(Metadatatypes).one().children
         schemata = [m.name for m in metadatatypes if m.type == 'metadatatype' and m.name not in ['directory', 'collection']]
     elif metadataformat:
-        mdt_masks_list = getExportMasks("oai_" + metadataformat.lower() + "$")  # check exact name
-        schemata = [x[0][1] for x in mdt_masks_list if x[1]]
+        schemata = get_schemata_for_metadataformat(metadataformat)
 
     if DEBUG:
         timetable_update(req, "in retrieveNodes: find schemata with export mask for metadata type %s (%d found: '%s')" %
                          (metadataformat.lower(), len(schemata), ustr([x for x in schemata])))
 
     if setspec:
-        res = oaisets.getNodes(setspec, schemata)
-        res = [q(Node).get(nid) for nid in res]
+        nodequery = oaisets.getNodesQueryForSetSpec(setspec, schemata)
+        # if for this oai group set no function is defined that retrieve the nodes query, use the filters
+        if not nodequery:
+            collections_root = q(Collections).one()
+            nodequery = collections_root.all_children
+            setspecFilter = oaisets.getNodesFilterForSetSpec(setspec, schemata)
+            if schemata:
+                nodequery = nodequery.filter(Node.schema.in_(schemata))
+        is_int = False
+        try:
+            _x = long(setspec)
+            is_int = True
+            # todo: check access !!!
+            collections_root = q(Node).get(_x)
+            nodequery = collections_root.all_children
+            nodequery = nodequery.filter(Node.schema.in_(schemata))
+        except:
+            collections_root = q(Collections).one()
+            nodequery = collections_root.all_children
+        #nodequery = nodequery.filter(Node.schema.in_(schemata))
+
+        if not is_int:
+            setspecFilter = oaisets.getNodesFilterForSetSpec(setspec, schemata)
+            if type(setspecFilter) == list:
+                for sFilter in setspecFilter:
+                    nodequery = nodequery.filter(sFilter)
+            else:
+                nodequery = nodequery.filter(setspecFilter)
     else:
-        osp = OAISearchParser()
-        query = " or ".join(["schema=%s" % schema for schema in schemata])
-        res = osp.parse(query).execute()
+        collections_root = q(Collections).one()
+        nodequery = collections_root.all_children
+        nodequery = nodequery.filter(Node.schema.in_(schemata))
 
     if DEBUG:
         timetable_update(req, "in retrieveNodes: after building NodeList for %d nodes" % (len(res)))
 
     if date_from:
-        res = [n for n in res if n.get(DATEFIELD) >= ustr(date_from)]
+        nodequery = nodequery.filter(Node.attrs[DATEFIELD].astext >= str(date_from))
         if DEBUG:
             timetable_update(req, "in retrieveNodes: after filtering date_from --> %d nodes" % (len(res)))
     if date_to:
-        res = [n for n in res if n.get(DATEFIELD) <= ustr(date_to)]
+        nodequery = nodequery.filter(Node.attrs[DATEFIELD].astext <= str(date_to))
         if DEBUG:
             timetable_update(req, "in retrieveNodes: after filtering date_to --> %d nodes" % (len(res)))
 
-    res = [n for n in res if n.has_read_access(user=get_guest_user())]
+    if nodequery:
+        guest_user = get_guest_user()
+        nodequery = nodequery.filter_read_access(user=guest_user)
+    else:
+        res = [n for n in res if n.has_read_access(user=get_guest_user())]
     if DEBUG:
         timetable_update(req, "in retrieveNodes: after read access filter --> %d nodes" % (len(res)))
 
-    collections = q(Collections).one()
-    res = [n for n in res if isDescendantOf(n, collections)]
+    if not nodequery:
+        collections = q(Collections).one()
+        res = [n for n in res if isDescendantOf(n, collections)]
     if DEBUG:
         timetable_update(req, "in retrieveNodes: after checking descendance from basenode --> %d nodes" % (len(res)))
 
-    if schemata:
-        res = [n for n in res if n.getSchema() in schemata]
-        if DEBUG:
-            timetable_update(req, "in retrieveNodes: after schemata (%s) filter --> %d nodes" % (ustr(schemata), len(res)))
+    # superflous ?!
+    #if schemata:
+    #    res = [n for n in res if n.getSchema() in schemata]
+    #    if DEBUG:
+    #        timetable_update(req, "in retrieveNodes: after schemata (%s) filter --> %d nodes" % (ustr(schemata), len(res)))
 
     if metadataformat and metadataformat.lower() in FORMAT_FILTERS.keys():
         format_string = metadataformat.lower()
-        res = [n for n in res if filterFormat(n, format_string)]
+        format_filter = FORMAT_FILTERS[format_string]['filterQuery']
+        nodequery = nodequery.filter(format_filter)
+        #res = [n for n in res if filterFormat(n, format_string)]
         if DEBUG:
             timetable_update(req, "in retrieveNodes: after format (%s) filter --> %d nodes" % (format_string, len(res)))
+
+    if nodequery:
+        res = nodequery
 
     return res
 
@@ -465,25 +523,26 @@ def new_token(req):
 def getNodes(req):
     global tokenpositions, CHUNKSIZE
     nodes = None
+    nids = None
 
     if "resumptionToken" in req.params:
         token = req.params.get("resumptionToken")
         if token in tokenpositions:
-            pos, nodes, metadataformat = tokenpositions[token]
+            pos, nids, metadataformat = tokenpositions[token]
         else:
             return None, "badResumptionToken", None
 
         if not checkParams(req, ["verb", "resumptionToken"]):
-            logg.warn("OAI: getNodes: additional arguments (only verb and resumptionToken allowed)")
+            logg.info("OAI: getNodes: additional arguments (only verb and resumptionToken allowed)")
             return None, "badArgument", None
     else:
         token, metadataformat = new_token(req)
         if not checkMetaDataFormat(metadataformat):
-            logg.error('OAI: ListRecords: metadataPrefix missing')
+            logg.info('OAI: ListRecords: metadataPrefix missing')
             return None, "badArgument", None
         pos = 0
 
-    if not nodes:
+    if not nids:
         string_from, string_to = None, None
         try:
             string_from = req.params["from"]
@@ -512,31 +571,50 @@ def getNodes(req):
         setspec = None
         if "set" in req.params:
             setspec = req.params.get("set")
+            if not oaisets.existsSetSpec(setspec):
+                return None, "noRecordsMatch", None
+
 
         if string_from and string_to and (string_from > string_to or len(string_from) != len(string_to)):
             return None, "badArgument", None
 
         try:
-            nodes = retrieveNodes(req, setspec, date_from, date_to, metadataformat)
-            nodes = [n for n in nodes if not parentIsMedia(n)]
+            nodequery = retrieveNodes(req, setspec, date_from, date_to, metadataformat)
+            nodequery = nodequery.filter(Node.subnode == False)  #[n for n in nodes if not parentIsMedia(n)]
+
             # filter out nodes that are inactive or older versions of other nodes
-            nodes = [n for n in nodes if n.isActiveVersion()]
+            #nodes = [n for n in nodes if n.isActiveVersion()]  # not needed anymore
         except:
+            logg.exception('error retrieving nodes for oai')
             # collection doesn't exist
             return None, "badArgument", None
-        if not nodes:
-            return None, "badArgument", None
+        #if not nodes:
+        #    return None, "badArgument", None
 
     with token_lock:
-        tokenpositions[token] = pos + CHUNKSIZE, nodes, metadataformat
+        if not nids:
+            import time
+            from sqlalchemy.orm import load_only
+            atime = time.time()
+            nodes = nodequery.options(load_only('id')).all()
+            etime = time.time()
+            logg.info('querying %d nodes for tokenposition took %.3f sec.' % (len(nodes), etime - atime))
+            atime = time.time()
+            nids = [n.id for n in nodes]
+            etime = time.time()
+            logg.info('retrieving %d nids for tokenposition took %.3f sec.' % (len(nids), etime - atime))
+
+        tokenpositions[token] = pos + CHUNKSIZE, nids, metadataformat
+
+
     tokenstring = '<resumptionToken expirationDate="' + ISO8601(date.now().add(3600 * 24)) + '" ' + \
-        'completeListSize="' + ustr(len(nodes)) + '" cursor="' + ustr(pos) + '">' + token + '</resumptionToken>'
-    if pos + CHUNKSIZE >= len(nodes):
+        'completeListSize="' + ustr(len(nids)) + '" cursor="' + ustr(pos) + '">' + token + '</resumptionToken>'
+    if pos + CHUNKSIZE >= len(nids):
         tokenstring = None
         with token_lock:
             del tokenpositions[token]
-    logg.info("%s : set=%s, objects, format=%s", req.params.get('verb'), req.params.get('set'), len(nodes), metadataformat)
-    res = nodes[pos:pos + CHUNKSIZE]
+    logg.info("%s : set=%s, objects=%s, format=%s", req.params.get('verb'), req.params.get('set'), len(nids), metadataformat)
+    res = nids[pos:pos + CHUNKSIZE]
     if DEBUG:
         timetable_update(req, "leaving getNodes: returning %d nodes, tokenstring='%s', metadataformat='%s'" %
                          (len(res), tokenstring, metadataformat))
@@ -548,11 +626,13 @@ def ListIdentifiers(req):
     if not SET_LIST:
         initSetList(req)
 
-    nodes, tokenstring, metadataformat = getNodes(req)
-    if nodes is None:
+    nids, tokenstring, metadataformat = getNodes(req)
+
+    if nids is None:
         return writeError(req, tokenstring)
-    if not len(nodes):
+    if not len(nids):
         return writeError(req, 'noRecordsMatch')
+    nodes = q(Node).filter(Node.id.in_(nids)).all()
 
     req.write('<ListIdentifiers>')
     for n in nodes:
@@ -577,16 +657,38 @@ def ListRecords(req):
     if "resumptionToken" in req.params.keys() and "until" in req.params.keys():
         return writeError(req, 'badArgument')
 
-    nodes, tokenstring, metadataformat = getNodes(req)
-    # getNodes(req) filtered out nodes that are inactive or older versions of other nodes
+    nids, tokenstring, metadataformat = getNodes(req)
+
+    if nids is None:
+        return writeError(req, tokenstring)
+    if not len(nids):
+        return writeError(req, 'noRecordsMatch')
+    nodes = q(Node).filter(Node.id.in_(nids)).all()
+
     if nodes is None:
         return writeError(req, tokenstring)
     if not len(nodes):
         return writeError(req, 'noRecordsMatch')
 
     req.write('<ListRecords>')
+
+    mask_cache_dict = {}
     for n in nodes:
-        writeRecord(req, n, metadataformat)
+
+        # retrieve mask from cache dict or insert
+        schema_name = n.getSchema()
+        look_up_key = u"%s_%s" % (schema_name, metadataformat)
+        if look_up_key in mask_cache_dict:
+            mask = mask_cache_dict.get(look_up_key)
+        else:
+            mask = get_oai_export_mask_for_schema_name_and_metadataformat(schema_name, metadataformat)
+            if mask:
+                mask_cache_dict[look_up_key] = mask
+
+        try:
+            writeRecord(req, n, metadataformat, mask=mask)
+        except Exception as e:
+            logg.exception("n.id=%s, n.type=%s, metadataformat=%s" % (n.id, n.type, metadataformat))
     if tokenstring:
         req.write(tokenstring)
     req.write('</ListRecords>')
@@ -619,8 +721,11 @@ def GetRecord(req):
     if not node.has_read_access(user=get_guest_user()):
         return writeError(req, "noPermission")
 
+    schema_name = node.getSchema()
+    mask = get_oai_export_mask_for_schema_name_and_metadataformat(schema_name, metadataformat)
+
     req.write('<GetRecord>')
-    writeRecord(req, node, metadataformat)
+    writeRecord(req, node, metadataformat, mask=mask)
     req.write('</GetRecord>')
     if DEBUG:
         timetable_update(req, "leaving GetRecord")
@@ -651,7 +756,6 @@ def initSetList(req=None):
 
 
 def oaiRequest(req):
-    import time
 
     start_time = time.clock()
     req._tt = {'atime': now(), 'tlist': []}
