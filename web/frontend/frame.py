@@ -393,11 +393,10 @@ class Collectionlet(Portlet):
 
 class UserLinks(object):
 
-    def __init__(self, user, area="", host=""):
+    def __init__(self, user, host=""):
         self.user = user
         self.id = None
         self.language = ""
-        self.area = area
         self.host = host
 
     def feedback(self, req):
@@ -411,6 +410,8 @@ class UserLinks(object):
         self.language = lang(req)
         self.path = req.path
         self.args = req.args
+        # XXX: hack to show the frontend link when workflows are displayed
+        self.is_workflow_area = req.path.startswith("/publish")
 
     def getLinks(self):
         guest_user = get_guest_user()
@@ -425,9 +426,10 @@ class UserLinks(object):
                 l = [Link("/login", t(self.language, "sub_header_login_title"),
                           t(self.language, "sub_header_login"), icon="/img/login.gif")]
 
-        if self.area != "":
+        
+        if self.is_workflow_area:
             l += [Link("/", t(self.language, "sub_header_frontend_title"),
-                       t(self.language, "sub_header_frontend"), icon="/img/frontend.gif")]
+                   t(self.language, "sub_header_frontend"), icon="/img/frontend.gif")]
 
         if self.user.is_editor:
             idstr = ""
@@ -464,7 +466,7 @@ class NavigationFrame(object):
         user = current_user
 
         host = req.get_header("HOST")
-        userlinks = UserLinks(user, area=req.session.get("area"), host=host)
+        userlinks = UserLinks(user, host=host)
         userlinks.feedback(req)
 
         # tabs
