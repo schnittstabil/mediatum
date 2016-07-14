@@ -577,15 +577,17 @@ msgstr "Manage messages"
 msgid "tab_identifier"
 msgstr "Create identifier"
 
+msgid "liststyle_text"
+msgstr "list view, only text"
 
-msgid "Text-Ansicht"
-msgstr "text view"
+msgid "liststyle_list"
+msgstr "list view with thumbnails"
 
-msgid "Thumbnail-Ansicht"
+msgid "liststyle_thumbnailbig"
+msgstr "thumbnail view (big)"
+
+msgid "liststyle_thumbnail"
 msgstr "thumbnail view"
-
-msgid "Listen-Ansicht"
-msgstr "list view"
 
 msgid "full_standard_doc_title"
 msgstr "Default view for documents"
