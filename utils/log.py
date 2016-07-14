@@ -315,8 +315,8 @@ def make_xid_and_errormsg_hash():
     """
     # : and - interferes with elasticsearch query syntax, better use underscores in the datetime string
     date_now = datetime.datetime.now().strftime("%Y_%m_%dT%H_%M_%S")
-    error_msg = str(sys.exc_value)
-    formatted_traceback = "\n".join(traceback.format_tb(sys.exc_traceback))
+    error_msg = str(sys.exc_info()[1])
+    formatted_traceback = "\n".join(traceback.format_tb(sys.exc_info()[2]))
     hashed_errormsg = hashlib.md5(error_msg).hexdigest()[:6]
     hashed_tb = hashlib.md5(formatted_traceback).hexdigest()[:6]
     # http://stackoverflow.com/questions/2257441/random-string-generation-with-upper-case-letters-and-digits
