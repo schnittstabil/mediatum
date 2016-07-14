@@ -232,7 +232,6 @@ def check_node_is_accessible(node):
 
 SORT_FIELDS = 2
 DEFAULT_FULL_STYLE_NAME = "full_standard"
-DEFAULT_NODES_PER_PAGE = 9
 
 class ContentList(Content):
 
@@ -284,8 +283,8 @@ class ContentList(Content):
         params = self.nav_params.copy()
         if self.liststyle_name:
             params["liststyle"] = self.liststyle_name
-        if self.nodes_per_page:
-            params["nodes_per_page"] = self.nodes_per_page
+        if self.nodes_per_page_from_req:
+            params["nodes_per_page"] = self.nodes_per_page_from_req
 
         if not ("before" in param_overrides or "after" in param_overrides):
             if self.before:
@@ -332,7 +331,6 @@ class ContentList(Content):
 
         self.before = req.args.get("before", type=int)
         self.after = req.args.get("after", type=int)
-        self.nodes_per_page = req.args.get("nodes_per_page", type=int)
 
         for i in range(SORT_FIELDS):
             key = "sortfield" + str(i)
@@ -346,8 +344,35 @@ class ContentList(Content):
             default_sortfield = self.collection.get(u"sortfield")
             self.sortfields[0] = default_sortfield if default_sortfield else u"-node.id"
 
-        self.liststyle_name = req.args.get("liststyle")
+        liststyle_name = req.args.get("liststyle")
 
+        if liststyle_name:
+            ls = liststyle_name
+            # use default collection style
+        else:
+            ls = self.collection.get("style")
+            if ls is None:
+                # nothing found, use default style
+                ls = "list"
+            else:
+                ls = ls.split(";")[0]
+
+        liststyle = getContentStyles("smallview", ls, contenttype=u"")
+        
+        if not liststyle:
+            raise Exception("invalid liststyle " + ls)
+        
+        liststyle = liststyle[0]
+        
+        self.liststyle = liststyle
+
+        self.nodes_per_page_from_req = req.args.get("nodes_per_page", type=int)
+        
+        if self.nodes_per_page_from_req:
+            self.nodes_per_page = self.nodes_per_page_from_req
+        else:
+            self.nodes_per_page = liststyle.nodes_per_page
+        
         self.nav_params = {k: v for k, v in req.args.items()
                            if k not in ("before", "after", "style", "sortfield", "page", "nodes_per_page")}
 
@@ -468,7 +493,7 @@ class ContentList(Content):
 
     def _page_nav_prev_next(self):
         q_nodes = self.nodes
-        nodes_per_page = self.nodes_per_page or DEFAULT_NODES_PER_PAGE
+        nodes_per_page = self.nodes_per_page
         # self.after set <=> moving to next page
         # self.before set <=> moving to previous page
         # nothing set <=> first page
@@ -554,22 +579,6 @@ class ContentList(Content):
 
         # render result list
 
-        if self.liststyle_name:
-            ls = self.liststyle_name
-            # use default collection style
-        else:
-            ls = self.collection.get("style")
-            if ls is None:
-                # nothing found, use default style
-                ls = "list"
-            else:
-                ls = ls.split(";")[0]
-
-        liststyle = getContentStyles("smallview", ls, contenttype=u"")
-        if not liststyle:
-            raise Exception("invalid liststyle " + ls)
-        liststyle = liststyle[0]
-
         ctx = {
             "page_nav": self.page_nav,
             "nav": self,
@@ -583,7 +592,7 @@ class ContentList(Content):
         # use template of style and build html content
         ctx = {"files": self.files, "op": "", "language": self.lang}
 
-        contentList = liststyle.renderTemplate(req, ctx)
+        contentList = self.liststyle.renderTemplate(req, ctx)
 
         if self.show_sidebar:
             sidebar = u""  # check for sidebar

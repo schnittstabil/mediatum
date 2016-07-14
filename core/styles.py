@@ -24,6 +24,7 @@ from mediatumtal import tal
 import os
 import core.config as config
 from utils.utils import splitpath
+from utils.compat import text_type, string_types
 
 
 contentstyles = {}
@@ -62,7 +63,7 @@ theme = Theme("default", "web/themes/mediatum/", "default")
 class ContentStyle:
 
     def __init__(self, type="type", contenttype="all", name="name", label="label",
-                 icon="icon", template="template", default="", description=""):
+                 icon="icon", template="template", default="", description="", nodes_per_page=10):
         self.type = type
         self.contenttype = contenttype
         self.name = name
@@ -71,6 +72,7 @@ class ContentStyle:
         self.template = template
         self.default = default
         self.description = description
+        self.nodes_per_page = nodes_per_page
 
     def getID(self):
         if self.contenttype != "all" and self.contenttype != "":
@@ -117,18 +119,27 @@ class ContentStyle:
 
 def readStyleConfig(filename):
     path, file = splitpath(filename)
-    attrs = {"type": "", "contenttype": "", "name": "", "label": "", "icon": "",
+    attrs = {"type": "", "contenttype": "", "name": "", "label": "", "icon": "", "nodes_per_page": 10,
              "template": path.replace(config.basedir, "") + "/", "description": "", "default": ""}
 
     with codecs.open(filename, "rb", encoding='utf8') as fi:
         for line in fi:
             if line.find("#") < 0:
                 line = line.split("=")
-                if line[0].strip() in attrs.keys():
-                    attrs[line[0].strip()] += line[1].replace("\r", "").replace("\n", "").strip()
+                key = line[0].strip()  
+                if key in attrs:
+                    value = line[1].strip()
+                    if isinstance(attrs[key], string_types):
+                        attrs[key] += value.replace("\r", "").replace("\n", "")
+                    else:
+                        try:
+                            attrs[key] = int(value)
+                        except ValueError:
+                            logg.exception("error in style config {}, key {} must be of type integer".format(filename, key))
+                            
 
     return ContentStyle(attrs["type"], attrs["contenttype"], attrs["name"], attrs["label"],
-                        attrs["icon"], attrs["template"], attrs["default"], attrs["description"])
+                        attrs["icon"], attrs["template"], attrs["default"], attrs["description"], attrs["nodes_per_page"])
 
 
 def getContentStyles(type, name=None, contenttype=None):
