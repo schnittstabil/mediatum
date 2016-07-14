@@ -360,7 +360,58 @@ let
     propagatedBuildInputs = with self; [redis];
   };
   
-  
+  selenium = self.buildPythonPackage rec {
+    name = "selenium-2.53.6";
+    src = pkgs.fetchurl {
+      url = "https://pypi.python.org/packages/c9/d4/4c032f93dd8d198d51d06ce41005d02ae2e806d4e5b550255ddbeee4143b/selenium-2.53.6.tar.gz";
+      md5 = "66f2f89e46377247fb9df010568c5d1d";
+    };
+
+    buildInputs = with self; [pkgs.xorg.libX11];
+
+    # Recompiling x_ignore_nofocus.so as the original one dlopen's libX11.so.6 by some
+    # absolute paths. Replaced by relative path so it is found when used in nix.
+    x_ignore_nofocus =
+      pkgs.fetchFromGitHub {
+        owner = "SeleniumHQ";
+        repo = "selenium";
+        rev = "selenium-2.52.0";
+        sha256 = "1n58akim9np2jy22jfgichq1ckvm8gglqi2hn3syphh0jjqq6cfx";
+      };
+
+    patchPhase = ''
+      cp "${x_ignore_nofocus}/cpp/linux-specific/"* .
+      substituteInPlace x_ignore_nofocus.c --replace "/usr/lib/libX11.so.6" "${pkgs.xorg.libX11}/lib/libX11.so.6"
+      gcc -c -fPIC x_ignore_nofocus.c -o x_ignore_nofocus.o
+      gcc -shared \
+        -Wl,${if stdenv.isDarwin then "-install_name" else "-soname"},x_ignore_nofocus.so \
+        -o x_ignore_nofocus.so \
+        x_ignore_nofocus.o
+      cp -v x_ignore_nofocus.so py/selenium/webdriver/firefox/${if pkgs.stdenv.is64bit then "amd64" else "x86"}/
+    '';
+  };
+
+  splinter = self.buildPythonPackage {
+    name = "splinter-0.7.3";
+    buildInputs = with self; [];
+    doCheck = false;
+    propagatedBuildInputs = with self; [selenium];
+    src = fetchurl {
+      url = "https://pypi.python.org/packages/40/b9/7cac56d0f1f419b11ccf0ce9dcd924abe4b7dd17e2be1eb49862568550b4/splinter-0.7.3.tar.gz";
+      md5 = "1d6ba25a4d5383a506da033290675da7";
+    };
+  };
+  pytest-splinter = self.buildPythonPackage {
+    name = "pytest-splinter-1.7.3";
+    buildInputs = with self; [tox];
+    doCheck = true;
+    propagatedBuildInputs = with self; [setuptools splinter selenium pytest];
+    src = fetchurl {
+      url = "https://pypi.python.org/packages/79/ad/c4c133028e4acd2dde93bb82ceca3a7498a19138116fa5067c8c79efd8e5/pytest-splinter-1.7.3.tar.gz";
+      md5 = "8dd9e42397aa2584409cab2c03d1edc2";
+    };
+  };
+
   yappi = self.buildPythonPackage {
     name = "yappi-0.95";
     src = fetchhg {
@@ -441,6 +492,7 @@ in {
       pytest-catchlog
       redis-collections
       pkgs.redis
+      pytest-splinter
       yappi
     ];
 
