@@ -606,7 +606,7 @@ def showEditor(req):
                 pass
 
         elif req.params.get("op", "") == "new":
-            if req.params.get("fieldtype", "") == "common":
+            if req.params.get("fieldtype", "") == "common" and req.params.get("field"):
                 # existing field used
                 fieldid = long(req.params.get("field"))
             elif "mappingfield" in req.params.keys():
