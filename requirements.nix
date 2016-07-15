@@ -412,6 +412,17 @@ let
     };
   };
 
+  pytest-base-url = self.buildPythonPackage {
+    name = "pytest-base-url-1.1.0";
+    buildInputs = with self; [];
+    doCheck = false;
+    propagatedBuildInputs = with self; [pytest requests];
+    src = fetchurl {
+      url = "http://localhost:3141/root/pypi/+f/edf/b6c8797cfa5a5/pytest-base-url-1.1.0.tar.gz";
+      md5 = "edfb6c8797cfa5a58fd1fc5b677f46b3";
+    };
+  };
+
   yappi = self.buildPythonPackage {
     name = "yappi-0.95";
     src = fetchhg {
@@ -490,6 +501,7 @@ in {
       munch
       pytest
       pytest-catchlog
+      pytest-base-url
       redis-collections
       pkgs.redis
       pytest-splinter
