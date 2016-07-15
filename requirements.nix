@@ -418,7 +418,7 @@ let
     doCheck = false;
     propagatedBuildInputs = with self; [pytest requests];
     src = fetchurl {
-      url = "http://localhost:3141/root/pypi/+f/edf/b6c8797cfa5a5/pytest-base-url-1.1.0.tar.gz";
+      url = "https://pypi.python.org/packages/26/72/13d09fca6e5ad4ee263aaff01a662105646036135d8f8989b965f6a10274/pytest-base-url-1.1.0.tar.gz";
       md5 = "edfb6c8797cfa5a58fd1fc5b677f46b3";
     };
   };
