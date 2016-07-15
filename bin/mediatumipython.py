@@ -153,7 +153,6 @@ from itertools import islice, chain
 import logging
 import os.path
 import sys
-import tempfile
 import warnings
 from sqlalchemy import sql
 from sqlalchemy.orm.exc import NoResultFound
@@ -208,7 +207,7 @@ logging.getLogger("core.init").setLevel(logging.ERROR)
 initmodule.check_undefined_nodeclasses(stub_undefined_nodetypes=True)
 logging.getLogger("core.init").setLevel(_core_init_loglevel)
 
-from core import db, Node, File
+from core import db, Node, File, NodeToFile
 from core import User, UserGroup, AuthenticatorInfo
 from core import AccessRule, AccessRuleset, NodeToAccessRule, NodeToAccessRuleset
 from core import Fts, Setting
@@ -262,6 +261,8 @@ def reachable_node_ids():
 
 
 def delete_unreachable_nodes(synchronize_session='fetch'):
+    # XXX: replace this with the SQL function
+    raise Exception("doesn't work anymore, use the SQL function purge_nodes!")
     reachable_nodes_sq = reachable_node_ids().subquery()
     s.execute(t_noderelation.delete(~t_noderelation.c.nid.in_(reachable_nodes_sq)))
     s.execute(t_noderelation.delete(~t_noderelation.c.cid.in_(reachable_nodes_sq)))
