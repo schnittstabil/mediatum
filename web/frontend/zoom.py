@@ -20,7 +20,7 @@
 import logging
 import re
 import zipfile
-from core import db, File, Node
+from core import db, Node, File, NodeToFile
 from utils.lrucache import lru_cache
 from contenttypes import Image
 
@@ -66,7 +66,7 @@ class ImageZoomData(object):
         if not self.height:
             logg.warn("original width for image %s is zero or missing!", self.node_id)
 
-        zoom_file = q(File).filter_by(nid=self.node_id, filetype=u"zoom").scalar()
+        zoom_file = q(File).filter_by(filetype=u"zoom").join(NodeToFile).join(Image).filter_by(id=self.node_id).scalar()
 
         if zoom_file is None:
             logg.warn("no zoom file entry exists for image node %s, cannot provide tiles!", self.node_id)
