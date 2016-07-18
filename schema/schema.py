@@ -1076,8 +1076,6 @@ class Mask(Node):
                 if hasattr(t, "event_metafield_changed"):
                     t.event_metafield_changed(node, field)
 
-        node.set_legacy_update_attributes(user)
-
         if user is not None:
             updated_attrs["updateuser"] = user.getName()
 
