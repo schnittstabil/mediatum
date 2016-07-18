@@ -215,6 +215,11 @@ def updateMetaField(parent, name, label, orderpos, fieldtype, option="", descrip
 
     if field is not None:
         field.name = name
+    elif name in [c.name for c in metatype.children]:
+        for c in metatype.children:
+            if c.name == name:
+                field = c
+                break
     else:
         field = Metafield(name)
         metatype.children.append(field)
