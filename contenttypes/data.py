@@ -32,11 +32,14 @@ from core.translation import lang, t
 from core.styles import getContentStyles
 from core.transition.postgres import check_type_arg_with_schema
 from export.exportutils import runTALSnippet, default_context
-from schema.schema import getMetadataType, VIEW_DATA_ONLY, VIEW_HIDE_EMPTY, SchemaMixin
+from schema.schema import getMetadataType, VIEW_DATA_ONLY, VIEW_HIDE_EMPTY, SchemaMixin, Metafield, Metadatatype, Mask
 from web.services.cache import date2string as cache_date2string
 from utils.utils import highlight
 
 logg = logging.getLogger(__name__)
+
+q = db.query
+
 
 # for TAL templates from mask cache
 context = default_context.copy()
@@ -174,32 +177,37 @@ class Data(Node):
 
     def show_node_text_deep(self, words=None, language=None, separator="", labels=0):
 
-        def render_mask_template(node, mfs, words=None, separator="", skip_empty_fields=True):
-            """
-               mfs: [mask] + list_of_maskfields
-            """
+        def render_mask_template(node, mask, field_descriptors, words=None, separator="", skip_empty_fields=True):
+            
             res = []
-            exception_count = {}
-            mask = mfs[0]
-            for node_attribute, fd in mfs[1:]:
+             
+            for node_attribute, fd in field_descriptors:
                 metafield_type = fd['metafield_type']
-                field_type = fd['field_type']
+                maskitem_type = fd['maskitem_type']
+                metafield_id = fd["metafield_id"]
+                metafield = q(Metafield).get(metafield_id)
+                
+                if metafield is None:
+                    raise ValueError("metafield with ID {} not found!".format(metafield_id))
+                
+                metatype = fd["metatype"]
+                
                 if metafield_type in ['date', 'url', 'hlist']:
-                    exception_count[metafield_type] = exception_count.setdefault(metafield_type, 0) + 1
                     value = node.get_special(node_attribute)
                     try:
-                        value = fd['metadatatype'].getFormatedValue(fd['element'], node, language=language, mask=mask)[1]
+                        value = metatype.getFormatedValue(metafield, node, language=language, mask=mask)[1]
                     except:
-                        value = fd['metadatatype'].getFormatedValue(fd['element'], node, language=language)[1]
+                        value = metatype.getFormatedValue(metafield, node, language=language)[1]
+
                 elif metafield_type in ['field']:
-                    if field_type in ['hgroup', 'vgroup']:
+                    if maskitem_type in ['hgroup', 'vgroup']:
                         _sep = ''
-                        if field_type == 'hgroup':
+                        if maskitem_type == 'hgroup':
                             fd['unit'] = ''  # unit will be taken from definition of the hgroup
                             use_label = False
                         else:
                             use_label = True
-                        value = getMetadataType(field_type).getViewHTML(
+                        value = getMetadataType(maskitem_type).getViewHTML(
                                                                          fd['field'],  # field
                                                                          [node],  # nodes
                                                                          0,  # flags
@@ -207,16 +215,12 @@ class Data(Node):
                                                                          mask=mask, use_label=use_label)
                 else:
                     value = node.get_special(node_attribute)
-                    metadatatype = fd['metadatatype']
 
-                    if hasattr(metadatatype, "language_snipper"):
-                        metafield = fd['element']
-                        # XXX: don't save nodes in global data structures! We must change this in the mask caching code.
-                        metafield = db.refresh(metafield)
+                    if hasattr(metatype, "language_snipper"):
                         if (metafield.get("type") == "text" and metafield.get("valuelist") == "multilingual") \
                             or \
                            (metafield.get("type") in ['memo', 'htmlmemo'] and metafield.get("multilang") == '1'):
-                            value = metadatatype.language_snipper(value, language)
+                            value = metatype.language_snipper(value, language)
 
                     if value.find('&lt;') >= 0:
                         # replace variables
@@ -268,8 +272,7 @@ class Data(Node):
                 if words:
                     value = highlight(value, words, '<font class="hilite">', "</font>")
                 res.append(fd["template"] % value)
-            if exception_count and len(exception_count.keys()) > 1:
-                pass
+                
             return separator.join(res)
 
         if not separator:
@@ -281,8 +284,13 @@ class Data(Node):
         # else: build the mask_template
 
         if lookup_key in maskcache:
-            mfs = maskcache[lookup_key]
-            res = render_mask_template(self, mfs, words=words, separator=separator)
+            mask_id, field_descriptors = maskcache[lookup_key]
+            mask = q(Mask).get(mask_id)
+            
+            if mask is None:
+                raise ValueError("mask for cached ID {} not found".format(mask_id))
+            
+            res = render_mask_template(self, mask_id, field_descriptors, words=words, separator=separator)
             maskcache_accesscount[lookup_key] += 1
         else:
             mask = self.metadatatype.get_mask(u"nodesmall")
@@ -290,40 +298,40 @@ class Data(Node):
                 mask = m
 
             if mask:
-                mfs = [mask]  # mask fields
                 fields = mask.getMaskFields(first_level_only=True)
                 ordered_fields = sorted([(f.orderpos, f) for f in fields])
-                for _, field in ordered_fields:
+                field_descriptors = []
+                
+                for _, maskitem in ordered_fields:
                     fd = {}  # field descriptor
-                    fd['field'] = field
-                    element = field.getField()
-                    element_type = element.get('type')
-                    field_type = field.get('type')
+                    fd['maskitem_id'] = maskitem.id
+                    fd['maskitem_type'] = maskitem.get('type')
+                    fd['format'] = maskitem.getFormat()
+                    fd['unit'] = maskitem.getUnit()
+                    fd['label'] = maskitem.getLabel()
 
-                    t = getMetadataType(element.get("type"))
-
-                    fd['format'] = field.getFormat()
-                    fd['unit'] = field.getUnit()
-                    label = field.getLabel()
-                    fd['label'] = label
-                    default = field.getDefault()
+                    metafield = maskitem.getField()
+                    default = maskitem.getDefault()
                     fd['default'] = default
                     fd['default_has_tal'] = (default.find('tal:') >= 0)
 
-                    fd['metadatatype'] = t
-                    fd['metafield_type'] = element_type
-                    fd['element'] = element
-                    fd['field_type'] = field_type
+                    metafield_type = metafield.get('type')
+                    
+                    fd['metafield_type'] = metafield_type
+                    fd['metafield_id'] = metafield.id
 
-                    def getNodeAttributeName(field):
-                        metafields = [x for x in field.getChildren() if x.type == 'metafield']
+                    t = getMetadataType(metafield_type)
+                    fd['metatype'] = t
+
+                    def getNodeAttributeName(maskitem):
+                        metafields = maskitem.children.filter_by(type=u"metafield").all()
                         if len(metafields) != 1:
                             # this can only happen in case of vgroup or hgroup
-                            logg.error("maskfield %s zero or multiple metafield child(s)", field.id)
-                            return field.name
+                            logg.error("maskitem %s has zero or multiple metafield child(s)", maskitem.id)
+                            return maskitem.name
                         return metafields[0].name
 
-                    node_attribute = getNodeAttributeName(field)
+                    node_attribute = getNodeAttributeName(maskitem)
                     fd['node_attribute'] = node_attribute
 
                     def build_field_template(field_descriptor):
@@ -341,12 +349,12 @@ class Data(Node):
                     template = build_field_template(fd)
 
                     fd['template'] = template
-                    long_field_descriptor = [node_attribute, fd]
-                    mfs = mfs + [long_field_descriptor]
+                    long_field_descriptor = (node_attribute, fd)
+                    field_descriptors.append(long_field_descriptor)
 
-                maskcache[lookup_key] = mfs
+                maskcache[lookup_key] = (mask.id, field_descriptors)
                 maskcache_accesscount[lookup_key] = 0
-                res = render_mask_template(self, mfs, words=words, separator=separator)
+                res = render_mask_template(self, mask, field_descriptors, words=words, separator=separator)
 
             else:
                 res = '&lt;smallview mask not defined&gt;'
