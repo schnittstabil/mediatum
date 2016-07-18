@@ -22,6 +22,7 @@ from core.translation import t, lang, addLabels
 from schema.schema import getMetaType
 from schema.schema import Metafield
 from core import db
+from core.transition import current_user
 
 q = db.query
 
@@ -48,7 +49,7 @@ class WorkflowStep_EditMetadata(WorkflowStep):
             mask = getMetaType(node.schema).getMask(maskname)
 
         if "metaDataEditor" in req.params:
-            mask.update_node(node, req)
+            mask.update_node(node, req, current_user)
             missing = mask.validate([node])
             if not missing or "gofalse" in req.params:
                 op = "gotrue" in req.params
