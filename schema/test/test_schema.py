@@ -27,14 +27,14 @@ def test_filter_masks_language_type(content_node_with_mdt):
     assert masks[0]["masktype"] == "testmasktype"
     
     
-def test_update_node(session, req, editor_user, some_node, simple_mask_with_maskitems):
+def test_update_node(session, req, editor_user, some_node, simple_mask_with_maskitems, guest_user):
     mask = simple_mask_with_maskitems
     node = some_node
     schema.schema.init()
     req.form["testattr"] = u"updated"
     req.form["newattr"] = u"new"
     req.form["nodename"] = u"new_name"
-    mask.update_node(node, req)
+    mask.update_node(node, req, guest_user)
     assert node["testattr"] == u"updated"
     assert node["newattr"] == u"new"
     assert node.name == u"new_name"
