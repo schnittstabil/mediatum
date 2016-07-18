@@ -748,7 +748,7 @@ function reloadPage(id, path, tree_selector){
       active_accordion = 0;
     }
     action = "";
-    idselection = "";
+    idselection = id;
     consoledb.log(path);
     $('.ui-layout-center').attr('src', '/edit/edit_content?id='+id);
     $('#accordiontree').accordion("option", "active", active_accordion);
