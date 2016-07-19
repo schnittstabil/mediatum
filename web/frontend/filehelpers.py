@@ -13,6 +13,7 @@ from core import config, db, Node
 from contenttypes import Content
 from utils.utils import getMimeType, get_filesize
 from utils import userinput
+from utils.compat import text_type
 
 
 FILEHANDLER_RE = re.compile("/?(attachment|doc|images|thumbs|thumb2|file|download|archive)/([^/]*)(/(.*))?$")
@@ -24,6 +25,9 @@ q = db.query
 
 
 def split_image_path(path):
+    if not isinstance(path, text_type):
+        path = path.decode("utf8")
+    
     m  = IMAGE_HANDLER_RE.match(path)
     if not m:
         raise ValueError("invalid image path")
@@ -33,6 +37,9 @@ def split_image_path(path):
 
 
 def splitpath(path):
+    if not isinstance(path, text_type):
+        path = path.decode("utf8")
+    
     m = FILEHANDLER_RE.match(path)
     if m is None:
         return path
