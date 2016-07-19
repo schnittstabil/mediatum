@@ -238,7 +238,7 @@ def send_file(req):
         # try only extension
         file_ext = os.path.splitext(filename)[1]
         for f in node.files:
-            if os.path.splitext(f.base_name)[1] == file_ext and f.filetype in ['document', 'original', 'mp3']:
+            if os.path.splitext(f.base_name)[1] == file_ext and f.filetype in [u'document', u'original', u'mp3']:
                 logg.warn("serving file %s for node %s only by matched extension", f.path, node.id)
                 return _send_attachment(f.abspath, f.mimetype)
 
