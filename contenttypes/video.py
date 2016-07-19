@@ -150,7 +150,12 @@ class Video(Content):
             finally:
                 os.unlink(temp_thumbnail_path)
 
-            self.files.filter(File.filetype.in_([u'thumb', u'presentation'])).delete(synchronize_session=False)
+            old_thumb_files = self.files.filter(File.filetype.in_([u'thumb', u'presentation']))
+            
+            for old_thumb_file in old_thumb_files:
+                self.files.remove(old_thumb_file)
+                old_thumb_file.unlink()
+            
             self.files.append(File(thumbname, u'thumb', u'image/jpeg'))
             self.files.append(File(thumbname2, u'presentation', u'image/jpeg'))
 
