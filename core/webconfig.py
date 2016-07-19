@@ -75,9 +75,9 @@ def loadServices():
         if servicename + '.basecontext' in config.getsubset("services").keys():
             basecontext = config.getsubset("services")[servicename + '.basecontext']
         else:
-            basecontext = config.get("services.contextprefix", "services") + '/' + servicename
+            basecontext = config.get("services.contextprefix", u"services") + '/' + servicename
         basecontext = ('/' + basecontext).replace('//', '/').replace('//', '/')
-        context = athana.addContext(basecontext, ".")
+        context = athana.addContext(str(basecontext), ".")
         file = context.addFile(servicedir + "services/" + servicename)
 
         if hasattr(file.m, "request_handler"):
