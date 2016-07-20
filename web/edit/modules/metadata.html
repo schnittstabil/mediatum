@@ -11,6 +11,19 @@
     </div>
 </tal:block>
 
+<tal:block metal:define-macro="multiple_documents_not_supported">
+    <div style="clear:left"> </div>
+    <div id="operation" style="position:relative;margin-right:200px;min-height:30px">
+        <div style="position:absolute;bottom:1px;right:-195px"><a href="#" onclick="showhide()"><img src="/img/uparrowdisabled.png"/></a></div>
+    </div>
+    <div id="scrollcontainer">
+        <div id="scrollcontent">
+            <p>&nbsp;</p>
+            <p align="center" i18n:translate="edit_meta_info3">TEXT</p>
+        </div>
+    </div>
+</tal:block>
+
 <tal:block metal:define-macro="edit_metadata">
     <style>
         input, button, textarea, select{background-color:white}
