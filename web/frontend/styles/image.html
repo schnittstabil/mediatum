@@ -29,32 +29,6 @@
             <img tal:condition="python:int(node.get('width'))<int(node.get('height'))" tal:attributes="src presentation_url; onClick python:'fullSizePopup('+ustr(node.id)+', 700, 700)'" style="cursor:pointer;border:1px double silver;" border="1px" />
         </a>
 
-        <div tal:condition="python:highres_url" id="object_highresolution">
-
-            <div tal:condition="python:not archive_url" style="padding-top:20px">
-                <p><a tal:attributes="href highres_url" i18n:translate="image_high_res_title">TEXT</a></p>
-            </div>
-
-            <div tal:condition="python:archive_url" style="padding-top:10px">
-                <script>
-                    function getArchivedFile(path){
-                        $('#archive_div').html('<img src="/img/wait_small.gif"/>');
-                        $.ajax({
-                            url: path,
-                            type: "GET",
-                            success: function(msg){$('#archive_div').html($('#high_resolution').html());},
-                            statusCode: {404: function(msg) { alert(msg.responseText); $('#archive_div').hide();}}});
-                    }
-                </script>
-
-                <div id="high_resolution" style="display:none"><a tal:attributes="href highres_url" i18n:translate="image_high_res_title">TEXT</a></div>
-                <div id="archive_div">
-                    <a tal:attributes="href python:'javascript:getArchivedFile(\'{}\')'.format(archive_url)" i18n:translate="image_high_res_archive">TEXT</a>
-                </div>
-            </div>
-
-        </div>
-
         <div>
         <h3 i18n:translate="image_available_formats"></h3>
         <ul tal:repeat="type python:image_formats">
@@ -66,6 +40,38 @@
         </ul>
         </div>
 
+        <tal:block tal:condition="python:highres_url">
+			<div tal:condition="python:not archive_fetch_url" style="padding-top:20px">
+				<p><a tal:attributes="href highres_url" i18n:translate="image_high_res_title">TEXT</a></p>
+			</div>
+
+			<div tal:condition="python:archive_fetch_url" style="padding-top:10px">
+				<script>
+					function getArchivedFile(path){
+						// replace archive fetch link with spinner image 
+						$('#archive_div').html('<img src="/img/wait_small.gif"/>');
+						$.ajax({
+							url: path,
+							type: "GET",
+							success: function(msg) {
+								$('#high_resolution_link').css("display", "inherit");
+								$('#archive_div').hide()
+							},
+							error: function(msg) { 
+								alert(msg.responseText); 
+								$('#archive_div').hide();
+							}});
+					}
+				</script>
+
+				<a style="display:none;" id="high_resolution_link" tal:attributes="href highres_url" i18n:translate="image_high_res_title">TEXT</a>
+
+				<div id="archive_div">
+					<a id="get_archive_link" tal:attributes="href python:'javascript:getArchivedFile(\'{}\')'.format(archive_fetch_url)" i18n:translate="image_high_res_archive">TEXT</a>
+				</div>
+			</div>
+        </tal:block>
+        
         <div tal:condition="python:len(attachment)>0" id="object_attachment" style="padding:5px 0px">
             <p><a tal:attributes="onclick python:'javascript:openPopup(\'/attachmentbrowser?id='+ustr(node.id)+'&path='+path+'\', \'Attachment\', 400, 400)'" i18n:translate="doc_att_browser" href="#" >TEXT</a></p>
         </div>

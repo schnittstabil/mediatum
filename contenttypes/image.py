@@ -311,11 +311,12 @@ class Image(Content):
         archive = get_archive_for_node(self)
         if archive:
             if can_see_original:
-                archive_state = archive.get_state(self)
+                obj['highres_url'] = u"/file/{nid}/{nid}.tif".format(nid=self.id)
+                archive_state = archive.get_file_state(self)
                 if archive_state == Archive.NOT_PRESENT:
                     obj['archive_fetch_url'] = u"/archive/{}".format(self.id)
                 elif archive_state == Archive.PRESENT:
-                    obj['highres_url'] = u"/file/{nid}/{nid}.tif".format(nid=self.id)
+                    obj['archive_fetch_url'] = None
 
         files, sum_size = filebrowser(self, req)
 
