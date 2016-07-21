@@ -224,16 +224,14 @@ END;
 $f$;
 
 
-CREATE OR REPLACE FUNCTION purge_empty_home_dirs() RETURNS integer
+CREATE OR REPLACE FUNCTION delete_empty_special_dirs() RETURNS integer
     LANGUAGE plpgsql
     SET search_path = :search_path
     AS $f$
 DECLARE
-    deleted_nodes integer;
-    home_dir_ids integer[];
     special_dir_ids integer[];
+    deleted_special_dirs integer;
 BEGIN
-    -- delete empty special dirs first
     SELECT array_agg(id)
     INTO special_dir_ids
     FROM node n JOIN noderelation nr ON id=cid
@@ -245,9 +243,20 @@ BEGIN
                    'Importe')
     AND id NOT IN (SELECT nid FROM nodemapping);
 
-    PERFORM delete_nodes(special_dir_ids);
+    deleted_special_dirs = delete_nodes(special_dir_ids);
+    RETURN deleted_special_dirs;
+END;
+$f$;
 
-    -- delete all now empty home dirs
+
+CREATE OR REPLACE FUNCTION purge_empty_home_dirs() RETURNS integer
+    LANGUAGE plpgsql
+    SET search_path = :search_path
+    AS $f$
+DECLARE
+    home_dir_ids integer[];
+    deleted_home_dirs integer;
+BEGIN
     SELECT array_agg(id)
     INTO home_dir_ids
     FROM node JOIN nodemapping ON id=cid
@@ -259,8 +268,8 @@ BEGIN
     SET home_dir_id=NULL
     WHERE home_dir_id IN (SELECT unnest(home_dir_ids));
 
-    deleted_nodes = delete_nodes(home_dir_ids);
-    RETURN deleted_nodes;
+    deleted_home_dirs = delete_nodes(home_dir_ids);
+    RETURN deleted_home_dirs;
 END;
 $f$;
 

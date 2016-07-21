@@ -29,6 +29,7 @@ Database changes are commited after all actions have been run.
 from __future__ import print_function
 
 import configargparse
+from functools import partial
 import logging
 import os.path
 import subprocess
@@ -47,7 +48,7 @@ plugins.init_plugins()
 
 import core.database.postgres
 from core.database.postgres import db_metadata
-from core.database.postgres.alchemyext import disable_triggers, enable_triggers
+from core.database.postgres.alchemyext import disable_triggers, enable_triggers, exec_sqlfunc
 from core.database.postgres.connector import read_and_prepare_sql
 
 core.database.postgres.SLOW_QUERY_SECONDS = 1000
@@ -95,10 +96,13 @@ def migrate_core(s):
 
 
 def users(s):
-    s.execute("SELECT mediatum.clean_trash_dirs()")
-    s.execute("SELECT mediatum.purge_empty_home_dirs()")
-    s.execute("SELECT mediatum.migrate_usergroups()")
-    s.execute("SELECT mediatum.migrate_internal_users()")
+    ex = partial(exec_sqlfunc, s)
+    removed_trash_nodes = ex("SELECT mediatum.clean_trash_dirs()")
+    logg.info("removed %s trash items", removed_trash_nodes)
+    deleted_home_dirs = ex("SELECT mediatum.purge_empty_home_dirs()")
+    logg.info("deleted %s empty home dirs", deleted_home_dirs)
+    ex("SELECT mediatum.migrate_usergroups()")
+    ex("SELECT mediatum.migrate_internal_users()")
     logg.info("finished user migration")
 
 
