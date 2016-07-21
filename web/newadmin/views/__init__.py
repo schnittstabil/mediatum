@@ -25,4 +25,5 @@ class BaseAdminView(ModelView):
         super(BaseAdminView, self).__init__(model, session or db.Session, *args, **kwargs)
 
     def is_accessible(self):
-        return login.current_user.is_authenticated
+        # view access only allowed for admins!
+        return login.current_user.is_authenticated and login.current_user.is_admin
