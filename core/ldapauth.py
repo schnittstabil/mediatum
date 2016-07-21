@@ -217,8 +217,12 @@ class LDAPAuthenticator(Authenticator):
 
             if user is not None:
                 # we already have an user object, update data
-                self.update_ldap_user(login_result_data[0][1], user)
-                db.session.commit()
+                if config.getboolean("config.readonly"):
+                    logg.warn("cannot update existing user data for login name %s in read-only mode", login, trace=False)
+                else:
+                    self.update_ldap_user(login_result_data[0][1], user)
+                    db.session.commit()
+
                 logg.info("LDAP auth succeeded for known login name %s", login)
                 return user
             else:
@@ -226,6 +230,11 @@ class LDAPAuthenticator(Authenticator):
                 authenticator_info = q(AuthenticatorInfo).filter_by(name=self.name, auth_type=LDAPAuthenticator.auth_type).scalar()
                 user = self.add_ldap_user(data, login, authenticator_info)
 
+                if config.getboolean("config.readonly"):
+                    logg.warn("LDAP auth succeeded for login name %s, but cannot create user in read-only mode. Refusing login.", 
+                              login, trace=False)
+                    return 
+                    
                 # refuse login if no user was created (if no matching group was found)
                 if user is not None:
                     db.session.commit()
