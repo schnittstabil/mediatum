@@ -310,8 +310,15 @@ def fetch_archived(req):
 
     archive = get_archive_for_node(node)
     if archive:
-        archive.fetch_file_from_archive(node)
-        req.write('done')
+        try:
+            archive.fetch_file_from_archive(node)
+        except:
+            logg.exception("exception in fetch_file_from_archive for archive %s", archive.archive_type)
+            msg = "fetch archive for node failed"
+            req.setStatus(500)
+            req.write(msg)
+        else:
+            req.write('done')
     else:
         msg = "archive for node not found"
         req.setStatus(404)
