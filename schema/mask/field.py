@@ -63,9 +63,9 @@ class m_field(Metatype):
         ret += label + description
         elementtype = element.get("type")
 
-        val = nodes[0].get(element.getName())
+        val = nodes[0].get_special(element.getName())
         for node in nodes:
-            elementname = node.get(element.getName())
+            elementname = node.get_special(element.getName())
             if elementname == "":
                 val = ""
         valuelist = {}
@@ -75,7 +75,7 @@ class m_field(Metatype):
         containsemptystring = val == ""
 
         for node in nodes:
-            newvalue = node.get(element.getName())
+            newvalue = node.get_special(element.getName())
             containsemptystring = containsemptystring or newvalue == ""
             if newvalue not in valuelist:
                 differentvalues += 1
