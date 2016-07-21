@@ -211,7 +211,7 @@ CREATE OR REPLACE FUNCTION clean_trash_dirs() RETURNS integer
 DECLARE
     num_deleted_nodes integer;
 BEGIN
-    DELETE FROM nodemapping WHERE nid IN
+    DELETE FROM noderelation WHERE nid IN
         (SELECT id
         FROM node JOIN noderelation ON id=cid
         WHERE distance = 2
