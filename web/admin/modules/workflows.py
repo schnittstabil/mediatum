@@ -308,9 +308,6 @@ def WorkflowDetail(req, id, err=0):
         workflow.id = req.params.get("id")
         db.session.commit()
 
-    # XXX: just shut it down...
-    # rule = {"read": ustr(workflow.getAccess("read") or "").split(","), "write": ustr(workflow.getAccess("write") or "").split(",")}
-
     try:
         rule = {"read": [r.ruleset_name for r in workflow.access_ruleset_assocs.filter_by(ruletype='read')],
                 "write": [r.ruleset_name for r in workflow.access_ruleset_assocs.filter_by(ruletype='write')]}
