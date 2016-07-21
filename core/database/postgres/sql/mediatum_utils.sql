@@ -45,7 +45,7 @@ BEGIN
     END IF;
 
     WITH del_rel AS
-       (DELETE FROM noderelation
+       (DELETE FROM nodemapping
         WHERE cid IN (SELECT unnest(ids_to_delete))
         RETURNING cid AS id),
 
