@@ -42,7 +42,7 @@
 
         <tal:block tal:condition="python:highres_url">
 			<div tal:condition="python:not archive_fetch_url" style="padding-top:20px">
-				<p><a tal:attributes="href highres_url" i18n:translate="image_high_res_title">TEXT</a></p>
+				<a tal:attributes="href highres_url" i18n:translate="image_high_res_title">TEXT</a>
 			</div>
 
 			<div tal:condition="python:archive_fetch_url" style="padding-top:10px">
