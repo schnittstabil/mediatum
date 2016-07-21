@@ -41,6 +41,7 @@ class LDAPConfigError(Exception):
 
 
 class LDAPAuthenticator(Authenticator):
+    
     """Provide LDAP authentication. Multiple LDAPAuthenticators can be configured in mediatum.cfg like:
 
         [ldap_name]
@@ -55,6 +56,8 @@ class LDAPAuthenticator(Authenticator):
         authenticator_order=internal|default,ldap|name,ldap|name2
 
         This prefers internal authentication. If that fails, the ldap authenticator with 'name' is tried and so on.
+
+    TODO: Logging should include the name of the authenticator!
     """
 
     auth_type = u"ldap"
@@ -171,6 +174,7 @@ class LDAPAuthenticator(Authenticator):
 
         # empty passwords not allowed, don't even try to authenticate with that...
         if not password:
+            logg.info("empty password for login name %s", login)
             return
 
         if "@" not in login and self.user_url:
@@ -185,9 +189,11 @@ class LDAPAuthenticator(Authenticator):
                 result_type = ldap.RES_SEARCH_ENTRY
                 auth_result_data = auth_result_data[0]
             else:
+                logg.info("LDAP auth failed for login name %s", login)
                 return
 
         if result_type != ldap.RES_SEARCH_ENTRY:
+            logg.info("LDAP auth failed for login name %s", login)
             return
 
         user_dn = auth_result_data[0][0]
@@ -200,6 +206,7 @@ class LDAPAuthenticator(Authenticator):
             result_type = ldap.RES_SEARCH_ENTRY
             login_result_data = login_result_data[0]
         if (result_type != ldap.RES_SEARCH_ENTRY):
+            logg.info("LDAP auth failed for login name %s", login)
             return
 
         if login_result_data[0][0] == user_dn:
@@ -212,6 +219,7 @@ class LDAPAuthenticator(Authenticator):
                 # we already have an user object, update data
                 self.update_ldap_user(login_result_data[0][1], user)
                 db.session.commit()
+                logg.info("LDAP auth succeeded for known login name %s", login)
                 return user
             else:
                 data = login_result_data[0][1]
@@ -221,7 +229,10 @@ class LDAPAuthenticator(Authenticator):
                 # refuse login if no user was created (if no matching group was found)
                 if user is not None:
                     db.session.commit()
+                    logg.info("LDAP auth succeeded for login name %s, created new user", login)
                     return user
+                else:
+                    logg.info("LDAP auth succeeded for login name %s, but user does not have any groups. Refusing login.", login)
 
     def _configure(self, config_dict):
         if config_dict is not None:

@@ -83,6 +83,9 @@ class Authenticator(object):
 
 
 class InternalAuthenticator(Authenticator):
+    
+    """TODO: Logging should include the name of the authenticator!
+    """
 
     auth_type = INTERNAL_AUTHENTICATOR_KEY[0]
 
@@ -111,10 +114,12 @@ class InternalAuthenticator(Authenticator):
             if user.salt:
                 # new password hash
                 if check_user_password(user, password):
+                    logg.info("internal auth succeeded for login name %s", login_name)
                     return user
                 # check legacy md5 hash that was hashed again
                 if check_user_password(user, create_md5_hash(password)):
                     rehash_legacy_password(password)
+                    logg.info("internal auth succeeded with rehashed md5 hash for login name %s", login_name)
                     return user
             else:
                 # check legacy md5 hash directly
@@ -123,7 +128,10 @@ class InternalAuthenticator(Authenticator):
                     # not rehashing md5 is NOT ok, let's warn...
                     if not rehashed:
                         logg.warn("password rehashing failed or disabled in config, you really should rehash insecure md5 hashes!")
+                    logg.info("internal auth succeeded with md5 hash for login name %s", login_name)
                     return user
+                
+        logg.info("internal auth failed for login name %s", login_name)
 
     def change_user_password(self, user, old_password, new_password, request):
         if not check_user_password(user, old_password):
@@ -166,6 +174,9 @@ def authenticate_user_credentials(login, password, request):
         user = authenticator.authenticate_user_credentials(login, password, request)
         if user is not None:
             return user
+        
+        
+    logg.info("failed authentication for login name %s", login)
 
 
 def logout_user(user, request):
