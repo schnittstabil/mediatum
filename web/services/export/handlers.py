@@ -60,6 +60,7 @@ q = db.query
 
 configured_host = config.get("host.name", "")
 allow_cross_origin = config.get("webservice.allow_cross_origin", "").lower() == "true"
+DEFAULT_CACHE_VALID = config.get("services.default_cache_valid", 0)
 
 from web.services.cache import Cache
 from web.services.cache import date2string as cache_date2string
@@ -803,7 +804,7 @@ def write_formatted_response(
     cache_key = '|'.join(map(str, [path, _p, allchildren, singlenode, parents, send_children]))
     cache_key = cache_key.replace(' ', '_')
 
-    acceptcached = float(params.get('acceptcached', '0'))
+    acceptcached = float(params.get('acceptcached', DEFAULT_CACHE_VALID))
 
     result_from_cache = None
     if acceptcached > 0.0:
