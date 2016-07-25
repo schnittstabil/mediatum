@@ -9,7 +9,7 @@ import datetime
 
 import core.config as config
 from core.transition import httpstatus
-from utils.log import make_xid_and_errormsg_hash
+from utils.log import make_xid_and_errormsg_hash, extra_log_info_from_req
 from functools import wraps
 
 logg = logging.getLogger(__name__)
@@ -54,24 +54,21 @@ def dec_handle_exception(func):
             return http_status_code
         except Exception, e:
             iso_datetime_now = datetime.datetime.now().isoformat()
-            errormsg = str(e)
-            xid, hashed_errormsg = make_xid_and_errormsg_hash(errormsg)
-
-            log_extra = {"xid": xid,
-                         "req_args": dict(req.args),
-                         "req_path": req.path,
-                         "errorhash": hashed_errormsg}
+            xid, hashed_errormsg, hashed_tb = make_xid_and_errormsg_hash()
             
-            if req.method == "POST":
-                log_extra["req_form"] = dict(req.form)
-                log_extra["req_files"] = dict(req.files)
+            log_extra = {"xid": xid,
+                         "error_hash": hashed_errormsg,
+                         "trace_hash": hashed_tb}
+            
+            log_extra["req"] = extra_log_info_from_req(req)
+
             
             logg.exception(u"exception (xid=%s) while handling request %s %s, %s", 
                            xid, req.method, req.path, dict(req.args), extra=log_extra)
 
             response_format = req.params.get('format', '').lower()
             response_template, response_mimetype = supported_formats.get(response_format, supported_formats.get('xml'))
-            response = response_template % dict(iso_datetime_now=iso_datetime_now, errormsg=u"%s: %s" % (xid, errormsg))
+            response = response_template % dict(iso_datetime_now=iso_datetime_now, errormsg=xid)
             response = response.strip()  # remove whitespaces at least from xml response
 
             req.reply_headers['Content-Type'] = response_mimetype
