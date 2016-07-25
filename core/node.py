@@ -12,6 +12,23 @@ from utils.url import add_query_params_to_url
 logg = logging.getLogger(__name__)
 
 
+def get_node_from_request_cache(nodeclass, node_id): 
+    """XXX: Lame request-scoped cache that speeds up code with heavy node use.
+    Don't use this if you don't know what you are doing...
+    """
+    from core.transition import request
+    from core import db
+    node_cache = request.app_cache.setdefault(nodeclass, {})
+    node_from_cache = node_cache.get(node_id)
+    
+    if node_from_cache is not None:
+        return node_from_cache
+
+    node = db.query(nodeclass).get(node_id)
+    node_cache[node_id] = node
+    return node
+        
+
 class NodeMixin(object):
 
     """Provides methods for simple node handling on top of the SQLAlchemy methods provided by Node.
