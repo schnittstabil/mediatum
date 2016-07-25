@@ -161,7 +161,7 @@ class WorkflowStep_AddPic2Pdf(WorkflowStep):
                             if os.path.splitext(f.base_name)[0] == os.path.splitext(o_document_name)[0]:
                                 new_f = File(f.path, 'o_' + f.filetype, f.mimetype)
                                 node.files.remove(f)
-                                node.files.apped(new_f)
+                                node.files.append(new_f)
 
                     new_document_file = File(p_document_file.path, 'document', p_document_file.mimetype)
                     node.files.remove(p_document_file)
@@ -379,10 +379,10 @@ class WorkflowStep_AddPic2Pdf(WorkflowStep):
                     logo_url = url_mapping[key]
                     break
 
-            logo_info[logo_filename] = {'size': _size, 'dpi': _dpi, 'url': logo_url}
+            logo_info[logo_filename.encode('utf-8')] = {'size': _size, 'dpi': _dpi, 'url': logo_url.encode('utf-8')}
             if _dpi == 'no-info':
                 _dpi = 72.0
-            logo_info_list.append({'size': _size, 'dpi': _dpi, 'url': logo_url})
+            logo_info_list.append({'size': _size, 'dpi': _dpi, 'url': logo_url.encode('utf-8')})
 
         if len(logo_info) == 0:
             logg.error("workflow step addpic2pdf(%s): Error: no logo images found", current_workflow_step.id)
