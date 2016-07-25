@@ -101,13 +101,11 @@ def buildNodeDescriptor(params, node, indent=None, written=None, children=True, 
             # fill cache
             node.show_node_text(labels=False, language=language)
 
-        field_descriptors = get_maskcache_entry(lookup_key)
+        mask_id, field_descriptors = get_maskcache_entry(lookup_key)
 
         try:
-            mask = field_descriptors[0]
-            for field_descriptor in field_descriptors[1:]:
+            for field_descriptor in field_descriptors:
                 field_attribute = field_descriptor[0]
-                #fd = field_descriptor[1]
                 if field_attribute not in attrlist:
                     # attrlist may be an empty list or filled from the request parameters
                     attrlist.append(field_attribute)
