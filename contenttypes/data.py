@@ -19,6 +19,7 @@
 """
 import re
 import sys
+from functools import partial
 import logging
 import time
 from warnings import warn
@@ -35,10 +36,10 @@ from export.exportutils import runTALSnippet, default_context
 from schema.schema import getMetadataType, VIEW_DATA_ONLY, VIEW_HIDE_EMPTY, SchemaMixin, Metafield, Metadatatype, Mask
 from web.services.cache import date2string as cache_date2string
 from utils.utils import highlight
+from core.transition.globals import request
+from core.node import get_node_from_request_cache
 
 logg = logging.getLogger(__name__)
-
-q = db.query
 
 
 # for TAL templates from mask cache
@@ -99,6 +100,10 @@ def get_maskcache_entry(lookup_key):
     except:
         res = None
     return res
+
+
+get_mask = partial(get_node_from_request_cache, Mask)
+get_metafield = partial(get_node_from_request_cache, Metafield)
 
 
 class Data(Node):
@@ -185,7 +190,7 @@ class Data(Node):
                 metafield_type = fd['metafield_type']
                 maskitem_type = fd['maskitem_type']
                 metafield_id = fd["metafield_id"]
-                metafield = q(Metafield).get(metafield_id)
+                metafield = get_metafield(metafield_id)
                 
                 if metafield is None:
                     raise ValueError("metafield with ID {} not found!".format(metafield_id))
@@ -285,7 +290,7 @@ class Data(Node):
 
         if lookup_key in maskcache:
             mask_id, field_descriptors = maskcache[lookup_key]
-            mask = q(Mask).get(mask_id)
+            mask = get_mask(mask_id)
             
             if mask is None:
                 raise ValueError("mask for cached ID {} not found".format(mask_id))
