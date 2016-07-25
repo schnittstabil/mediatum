@@ -93,13 +93,13 @@ def add_node_to_xmldoc(
         # XXX: is this ok?
         xmlattr.text = etree.CDATA(xml_remove_illegal_chars(unicode(value)))
 
-    file_query = node.files.filter(File.filetype != u"metadata")
+#     file_query = node.files.filter(File.filetype != u"metadata")
+# 
+#     if exclude_filetypes:
+#         file_query = file_query.filter(~File.filetype.in_(exclude_filetypes))
 
-    if exclude_filetypes:
-        file_query = file_query.filter(~File.filetype.in_(exclude_filetypes))
-
-    for fileobj in file_query:
-        add_file_to_xmlnode(fileobj, xmlnode)
+#     for fileobj in file_query:
+#         add_file_to_xmlnode(fileobj, xmlnode)
 
     if children:
         child_query = node.children
