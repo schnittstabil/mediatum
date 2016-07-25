@@ -693,7 +693,7 @@ def get_node_data_struct(
             if desc:
                 order_expr = sql.desc(order_expr)
 
-            nodequery = nodequery.order_by(order_expr)
+            nodequery = nodequery.order_by(order_expr.nullslast())
     else:
         sfields = []
 
