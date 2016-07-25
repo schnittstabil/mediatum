@@ -26,7 +26,7 @@ import os
 import re
 import time
 
-from sqlalchemy.orm import undefer
+from sqlalchemy.orm import undefer, joinedload
 
 from core.users import get_guest_user
 from core import config, search
@@ -582,7 +582,8 @@ def _client_error_response(status_code, error_msg, **additional_data):
 
 
 def get_node_data_struct(
-        req, path, params, data, id, debug=True, allchildren=False, singlenode=False, parents=False, send_children=False):
+        req, path, params, data, id, debug=True, 
+        allchildren=False, singlenode=False, parents=False, send_children=False, fetch_files=False):
 
     res = _prepare_response()
     timetable = res["timetable"]
@@ -707,6 +708,9 @@ def get_node_data_struct(
     ### actually get the nodes
 
     nodequery = nodequery.distinct().options(undefer(Node.attrs))
+    
+    if fetch_files:
+        nodequery = nodequery.options(joinedload(Node.file_objects))
 
     if singlenode:
         # we already checked that node can be accessed by the user, just return the node
@@ -830,14 +834,21 @@ def write_formatted_response(
 
     if not result_from_cache:
 
+        res_format = (params.get('format', 'xml')).lower()
+
+        # XXX: hack because we want all files for the XML format only
+        if res_format == "xml":
+            fetch_files = True
+        else:
+            fetch_files = False
+                    
         d = get_node_data_struct(req, path, params, data, id, debug=debug, allchildren=allchildren,
-                                     singlenode=singlenode, send_children=send_children, parents=parents)
+                                     singlenode=singlenode, send_children=send_children, parents=parents, fetch_files=fetch_files)
 
         if r_timetable:
             d['timetable'] = r_timetable + d.setdefault('timetable', [])
             r_timetable = []
 
-        res_format = (params.get('format', 'xml')).lower()
         formatIsSupported = False
 
         for supported_format in supported_formats:
@@ -877,7 +888,7 @@ def write_formatted_response(
             d['errormessage'] = 'unsupported format'
             d['build_response_end'] = time.time()
 
-            s = struct2xml(req, path, params, data, d, singlenode=True, send_children=False)
+            s = struct2xml(req, path, params, data, d, singlenode=True, send_children=False, fetch_files=True)
             content_type = "text/xml; charset=utf-8"
 
         if acceptcached > 0:  # only write to cache for these requests
