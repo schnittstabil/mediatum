@@ -26,6 +26,7 @@ from core import File, db
 from core.systemtypes import Mappings, Root
 from utils.compat import iteritems
 from utils.xml import xml_remove_illegal_chars
+from utils.list import filter_scalar
 
 
 EXCLUDE_WORKFLOW_NEWNODES = True
@@ -93,13 +94,13 @@ def add_node_to_xmldoc(
         # XXX: is this ok?
         xmlattr.text = etree.CDATA(xml_remove_illegal_chars(unicode(value)))
 
-#     file_query = node.files.filter(File.filetype != u"metadata")
-# 
-#     if exclude_filetypes:
-#         file_query = file_query.filter(~File.filetype.in_(exclude_filetypes))
+    files = [f for f in node.file_objects if f.filetype != u"metadata"]
+ 
+    if exclude_filetypes:
+        files = [f for f in files if f.filetype not in (exclude_filetypes)]
 
-#     for fileobj in file_query:
-#         add_file_to_xmlnode(fileobj, xmlnode)
+    for fileobj in files:
+        add_file_to_xmlnode(fileobj, xmlnode)
 
     if children:
         child_query = node.children
