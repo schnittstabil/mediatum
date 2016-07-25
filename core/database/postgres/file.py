@@ -63,6 +63,8 @@ class File(DeclarativeBase, FileMixin):
 
     nodes = rel(Node, secondary=NodeToFile.__table__, 
                 backref=bref("files", lazy="dynamic", query_class=AppenderQueryWithLen), lazy="dynamic")
+    
+    _node_objects = rel(Node, secondary=NodeToFile.__table__, backref=bref("file_objects"))
 
     def unlink(self):
         if self.exists:
