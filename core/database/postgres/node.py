@@ -318,7 +318,13 @@ class Node(DeclarativeBase, NodeMixin):
 
         user = user_from_session(req.session)
 
-        ip = IPv4Address(req.remote_addr)
+        # XXX: like in mysql version, what's the real solution?
+        if "," in req.remote_addr:
+            logg.warn("multiple IP adresses %s, refusing IP-based access", req.remote_addr)
+            ip = None
+        else:
+            ip = IPv4Address(req.remote_addr)
+
         return Node.has_access_to_node_id(node_id, accesstype, user, ip, date)
 
     @staticmethod

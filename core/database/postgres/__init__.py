@@ -210,7 +210,13 @@ class MtQuery(Query):
 
             from core.users import user_from_session
             user = user_from_session(req.session)
-            ip = IPv4Address(req.remote_addr)
+
+            # XXX: like in mysql version, what's the real solution?
+            if "," in req.remote_addr:
+                logg.warn("multiple IP adresses %s, refusing IP-based access", req.remote_addr)
+                ip = None
+            else:
+                ip = IPv4Address(req.remote_addr)
 
         if user is None:
             user = get_guest_user()
