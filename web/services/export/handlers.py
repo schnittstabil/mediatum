@@ -74,12 +74,18 @@ DEFAULT_NODEQUERY_LIMIT = 100
 def add_mask_xml(xmlroot, node, mask_name, language):
     # mask handling
     if mask_name not in ["", "none"]:  # deliver every mask
-        mask_obj = node.metadatatype.get_mask(mask_name)
-        if mask_obj is not None:
-            formated = mask_obj.getViewHTML([node], flags=8)
-        else:
-            mask_name = 'default'
+        
+        
+        if mask_name == 'default':
             formated = node.show_node_text(labels=1, language=language)
+        else:
+            mask_obj = node.metadatatype.get_mask(mask_name)
+
+            if mask_obj is not None:
+                formated = mask_obj.getViewHTML([node], flags=8)
+            else:
+                mask_name = 'default'
+                formated = node.show_node_text(labels=1, language=language)
 
         maskxml = etree.SubElement(xmlroot, "mask")
         maskxml.set("name", mask_name)
