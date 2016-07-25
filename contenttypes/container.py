@@ -86,6 +86,8 @@ class Container(Data, ContainerMixin, SchemaMixin):
     """(Abstract) Base class for Nodes that contain other Container/Content nodes and are displayed in the navigation area.
     """
 
+    show_childcount = False
+
     # By default, a Container shows its children as a list.
     # Subclasses can set this to False if they want to display something else via show_node_big().
     show_list_view = True
@@ -276,6 +278,8 @@ class Container(Data, ContainerMixin, SchemaMixin):
 @check_type_arg_with_schema
 class Directory(Container):
 
+    show_childcount = True
+    
     @classmethod
     def treeiconclass(cls):
         return "directory"
@@ -308,12 +312,24 @@ class Collection(Container):
     def get_collection(self):
         return self
 
+    def childcount(self):
+        if self.children.first() is None:
+            return 0
+        
+        return 1
+
 
 @check_type_arg_with_schema
 class Collections(Container):
-
+    
     def get_collection(self):
         return self
+    
+    def childcount(self):
+        if self.children.first() is None:
+            return 0
+        
+        return 1
 
 
 @check_type_arg_with_schema

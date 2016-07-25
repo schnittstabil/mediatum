@@ -267,11 +267,17 @@ class NavTreeEntry(object):
         self.folded = 1
         self.active = 0
         self.small = small
-        self.count = -1
         self.hide_empty = hide_empty
         self.lang = lang
         self.orderpos = 0
-        if self.node.container_children.first() is not None:
+        self.show_childcount = node.show_childcount
+
+        if self.id in child_count_cache:
+            self.count = child_count_cache[self.id]
+        else:
+            child_count_cache[self.id] = self.count = self.node.childcount()
+        
+        if self.count:
             self.hassubdir = 1
             self.folded = 1
 
@@ -294,17 +300,10 @@ class NavTreeEntry(object):
         if accessdata is not None:
             warn("accessdata argument is unused, remove it", DeprecationWarning)
         try:
-            if self.count == -1:
-                if isinstance(self.node, Directory):
-                    if self.id in child_count_cache:
-                        self.count = child_count_cache[self.id]
-                    else:
-                        child_count_cache[self.id] = self.count = self.node.childcount()
+            if self.hide_empty and self.count == 0:
+                return ""  # hides entry
 
-                    if self.hide_empty and self.count == 0:
-                        return ""  # hides entry
-
-            if self.count > 0:
+            if self.show_childcount and self.count > 0:
                 return u"%s <small>(%s)</small>" % (self.node.getLabel(lang=self.lang), unicode(self.count))
             else:
                 return self.node.getLabel(lang=self.lang)
@@ -369,21 +368,26 @@ class Collectionlet(Portlet):
 
         col_data = []
 
-        def f(m, node, indent, hide_empty):
-            if not isinstance(node, (Root, Collections)) and not node.has_read_access():
-                return
-
+        def build_navtree(m, node, indent, hide_empty):
             small = not isinstance(node, (Collection, Collections))
             e = NavTreeEntry(self, node, indent, small, hide_empty, self.lang)
             if node.id == self.collection.id or node.id == self.container.id:
                 e.active = 1
             m.append(e)
-            if node.id in (self.container.id, self.collection.id) or node.id in opened or e.defaultopen:
+            if node.id in opened:
                 e.folded = 0
-                for c in node.container_children.order_by(Node.orderpos).prefetch_attrs():
-                    f(m, c, indent + 1, c.get("style_hide_empty") == "1")
+                for c in node.container_children.filter_read_access().order_by(Node.orderpos).prefetch_attrs():
+                    if hasattr(node, "dont_ask_children_for_hide_empty"):
+                        style_hide_empty = hide_empty
+                    else:
+                        style_hide_empty = c.get("style_hide_empty") == "1"
 
-        f(col_data, q(Collections).one(), 0, self.hide_empty)
+                    build_navtree(m, c, indent + 1, style_hide_empty)
+
+        collections_root = q(Collections).filter_read_access().scalar()
+        
+        if collections_root is not None:
+            build_navtree(col_data, collections_root, 0, self.hide_empty)
 
         self.col_data = col_data
 
