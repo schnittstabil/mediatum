@@ -92,6 +92,7 @@ class PostgresSQLAConnector(object):
             self.database = config.get("database.db", "mediatum")
             self.user = config.get("database.user", "mediatum")
             self.passwd = config.get("database.passwd", "mediatum")
+            self.pool_size = config.get("database.pool_size", 20)
             self.application_name = "{}({})".format(os.path.basename(sys.argv[0]), os.getpid())
             self.connectstr = CONNECTSTR_TEMPLATE.format(**self.__dict__)
             logg.info("using database connection string: %s", CONNECTSTR_TEMPLATE_WITHOUT_PW.format(**self.__dict__))
@@ -166,7 +167,7 @@ class PostgresSQLAConnector(object):
             self.check_run_test_db_server()
             self.check_create_test_db()
 
-        engine = create_engine(self.connectstr, connect_args=connect_args)
+        engine = create_engine(self.connectstr, connect_args=connect_args, pool_size=self.pool_size)
         db_connection_exception = self.check_db_connection(engine)
 
         if db_connection_exception:
