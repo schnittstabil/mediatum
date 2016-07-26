@@ -218,14 +218,22 @@ def searchindex(args):
         init.init_fulltext_search()
         search_initialized = True
 
+    index_type = args.type
+
     action = args.action.lower()
 
     if action == "recreate":
-        logg.info("recreating search indices from node fulltexts...")
-        s.execute(mediatumfunc.recreate_all_tsvectors_fulltext())
-        logg.info("recreating search indices from node attributes...")
-        s.execute(mediatumfunc.recreate_all_tsvectors_attrs())
+
+        if index_type in ("all", "attrs"):
+            logg.info("recreating search indices from node attributes...")
+            s.execute(mediatumfunc.recreate_all_tsvectors_attrs())
+
+        if index_type in ("all", "fulltext"):
+            logg.info("recreating search indices from node fulltexts...")
+            s.execute(mediatumfunc.recreate_all_tsvectors_fulltext())
+
         logg.info("searchindex recreate finished")
+
 
 
 def vacuum(args):
@@ -305,6 +313,8 @@ def main():
 
     searchindex_subparser = subparsers.add_parser("searchindex", help="manage full text search indexing")
     searchindex_subparser.add_argument("action", choices=["recreate"], help="recreate search index from node data")
+    searchindex_subparser.add_argument("--type", "-t", choices=["fulltext", "attrs", "all"], default="all",
+                                     help="which index type to create (fulltext / attrs / all)")
     searchindex_subparser.set_defaults(func=searchindex)
 
     sql_subparser = subparsers.add_parser(
