@@ -24,6 +24,7 @@ import os
 import shutil
 import codecs
 from utils.utils import splitfilename, u, OperationException, utf8_decode_escape
+from utils.search import import_node_fulltext
 from schema.schema import VIEW_HIDE_EMPTY
 from core.translation import lang, t
 from core.styles import getContentStyles
@@ -186,6 +187,9 @@ class Document(Content):
                 self.files.append(File(infoname, "fileinfo", "text/plain"))
 
         db.session.commit()
+
+        if doc:
+            import_node_fulltext(self, overwrite=True)
 
     def get_unwanted_exif_attributes(self):
             '''
