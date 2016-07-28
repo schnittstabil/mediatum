@@ -66,10 +66,11 @@ class AthanaFlaskStyleApp(object):
 
     app_ctx_globals_class = _AppCtxGlobals
 
-    def __init__(self, import_name, template_folder="templates", **config):
+    def __init__(self, import_name, template_folder="templates", name="mediatum", **config):
         if "DEBUG" not in config:
             config["DEBUG"] = True
         self.blueprints = {}
+        self.name = name
         self.config = config.copy()
         self.extensions = {}
         self.template_folder = template_folder
