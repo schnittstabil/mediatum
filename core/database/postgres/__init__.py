@@ -176,8 +176,40 @@ class InfDateAdapter(object):
 psycopg2.extensions.register_adapter(datetime.date, InfDateAdapter)
 
 
-class MtQuery(Query):
+def build_accessfunc_arguments(user=None, ip=None, date=None, req=None):
+    from core.users import get_guest_user
 
+    if user is None and ip is None:
+        if req is None:
+            req = request
+
+        from core.users import user_from_session
+
+        user = user_from_session(req.session)
+        # XXX: like in mysql version, what's the real solution?
+        if "," in req.remote_addr:
+            logg.warn("multiple IP adresses %s, refusing IP-based access", req.remote_addr)
+            ip = None
+        else:
+            ip = IPv4Address(req.remote_addr)
+
+    if user is None:
+        user = get_guest_user()
+
+    # admin sees everything ;)
+    if user.is_admin:
+        return None
+
+    if ip is None:
+        ip = IPv4Address("0.0.0.0")
+    
+    if date is None:
+        date = sqlfunc.current_date()
+
+    return user.group_ids, ip, date
+        
+
+class MtQuery(Query):
 
     def prefetch_attrs(self):
         from core import Node
@@ -202,32 +234,7 @@ class MtQuery(Query):
         return self._filter_access("data", user, ip, req)
 
     def _filter_access(self, accesstype, user=None, ip=None, req=None):
-        from core.users import get_guest_user
-
-        if user is None and ip is None:
-            if req is None:
-                req = request
-
-            from core.users import user_from_session
-            user = user_from_session(req.session)
-
-            # XXX: like in mysql version, what's the real solution?
-            if "," in req.remote_addr:
-                logg.warn("multiple IP adresses %s, refusing IP-based access", req.remote_addr)
-                ip = None
-            else:
-                ip = IPv4Address(req.remote_addr)
-
-        if user is None:
-            user = get_guest_user()
-
-        # admin sees everything ;)
-        if user.is_admin:
-            return self
-
-        if ip is None:
-            ip = IPv4Address("0.0.0.0")
-
+        group_ids, ip, date = build_accessfunc_arguments(user, ip, req)
         nodeclass = self._find_nodeclass()
         if not nodeclass:
             return self
@@ -245,8 +252,8 @@ class MtQuery(Query):
         except KeyError:
             raise ValueError("accesstype '{}' does not exist, accesstype must be one of: read, write, data".format(accesstype))
 
-        read_access = db_accessfunc(nodeclass.id, user.group_ids, ip, sqlfunc.current_date())
-        return self.filter(read_access)
+        access_filter = db_accessfunc(nodeclass.id, group_ids, ip, date)
+        return self.filter(access_filter)
 
     def get(self, ident):
         nodeclass = self._find_nodeclass()
