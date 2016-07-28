@@ -4459,6 +4459,9 @@ except ImportError:
     profiling = 0
 
 
+log_request_time = logg.isEnabledFor(logging.DEBUG)
+
+
 class AthanaThread:
 
     def __init__(self, server, number):
@@ -4487,6 +4490,8 @@ class AthanaThread:
                 if profiling:
                     self.prof = hotshot.Profile("/tmp/athana%d.prof" % self.number)
                     self.prof.start()
+                    
+                if log_request_time or profiling:  
                     timenow = time.time()
                 try:
                     call_handler_func(server, function, req)
@@ -4496,9 +4501,12 @@ class AthanaThread:
                     except:
                         print "FATAL ERROR: error in request, logging the exception failed!"
 
+                if log_request_time or profiling:
+                    duration = time.time() - timenow
+                    logg.debug("time for request %s: %.1fms", req.path, duration * 1000.)
+
                 if profiling:
                     global profiles
-                    duration = time.time() - timenow
                     self.prof.stop()
                     self.prof.close()
                     st = hotshot.stats.load("/tmp/athana%d.prof" % self.number)
