@@ -361,6 +361,11 @@ class Collectionlet(Portlet):
             self.collection = q(Collections).one()
             self.container = self.collection
 
+
+        if req.args.get("disable_navtree"):
+            return
+        
+
         self.hide_empty = self.collection.get("style_hide_empty") == "1"
 
         opened = {t[0] for t in self.container.all_parents.with_entities(Node.id)}
@@ -476,15 +481,16 @@ class NavigationFrame(object):
         # tabs
         navigation = {}
 
-        # collection
-        collection_portlet = self.collection_portlet
-        collection_portlet.feedback(req)
-        navigation["collection"] = collection_portlet
+        if not req.args.get("disable_navbar"):
+            # collection
+            collection_portlet = self.collection_portlet
+            collection_portlet.feedback(req)
+            navigation["collection"] = collection_portlet
 
-        # search
-        search_portlet = Searchlet(collection_portlet.container)
-        search_portlet.feedback(req)
-        navigation["search"] = search_portlet
+            # search
+            search_portlet = Searchlet(collection_portlet.container)
+            search_portlet.feedback(req)
+            navigation["search"] = search_portlet
 
         # languages
         front_lang = {}
@@ -513,7 +519,10 @@ class NavigationFrame(object):
 
         self.params["tree"] = ""
         self.params["search"] = ""
-        if show_navbar == 1:
+        
+        
+        
+        if show_navbar == 1 and not req.args.get("disable_navbar"):
             # search mask
             container = q(Container).get(nid) if nid else None
             if container is None:
@@ -531,9 +540,10 @@ class NavigationFrame(object):
             self.params["search"] = req.getTAL(theme.getTemplate("frame.html"), ctx, macro="frame_search")
 
             # tree
-            self.params["tree"] = req.getTAL(
-                theme.getTemplate("frame.html"), {
-                    "collections": self.collection_portlet.getCollections()}, macro="frame_tree")
+            if not req.args.get("disable_navtree"):
+                self.params["tree"] = req.getTAL(
+                    theme.getTemplate("frame.html"), {
+                        "collections": self.collection_portlet.col_data}, macro="frame_tree")
 
         req.writeTAL(theme.getTemplate("frame.html"), self.params, macro="frame")
 
