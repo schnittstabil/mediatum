@@ -8,6 +8,7 @@ from sqlalchemy.exc import IntegrityError
 from core import AccessRule, AccessRuleset, NodeToAccessRule, NodeToAccessRuleset
 from core import db
 from core.database.postgres import mediatumfunc
+from utils.testing import make_node_public
 
 
 def test_access_rules_query(some_node):
@@ -86,3 +87,13 @@ def test_add_another_private_access_ruleset(session, some_node):
         some_node.access_ruleset_assocs.append(ruleset_assoc)
         # flush to enforce constraints
         session.flush()
+        
+        
+def test_filter_read_access(session, guest_user, req, container_node, other_container_node):
+    from core import Node
+    q = session.query
+    
+    make_node_public(container_node)
+    nodes = q(Node).filter_read_access().all()
+    assert len(nodes) == 1
+    assert nodes[0] == container_node
