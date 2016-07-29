@@ -83,6 +83,12 @@ http {
             try_files /mediatum_myplugin/themes/mytheme/$uri /mediatum/web/$uri /mediatum/web/edit/$uri /mediatum/web/admin/$uri /mediatum/web/root/$uri @backend;
         }
 
+        # entries for X-Accel-Redirect
+        location /data {
+            internal;
+            root /;
+        }
+
         # everything else is passed directly to backend
         location / {
             proxy_read_timeout  300;
