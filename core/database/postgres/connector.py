@@ -151,6 +151,7 @@ class PostgresSQLAConnector(object):
         self.database = "mediatum"
         self.socketdir = socketdir
         self.connectstr = CONNECTSTR_TEMPLATE_TEST_DB.format(**self.__dict__)
+        self.pool_size = 5
         logg.info("using test database connection string: %s", self.connectstr)
 
     def create_engine(self):
