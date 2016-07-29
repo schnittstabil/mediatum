@@ -82,10 +82,12 @@ import mimetypes
 from cgi import escape
 from urllib import unquote, splitquery
 from collections import OrderedDict
+from core import config
 
 # async modules
 import asyncore
 import socket
+
 
 
 class async_chat (asyncore.dispatcher):
