@@ -97,3 +97,16 @@ def test_filter_read_access(session, guest_user, req, container_node, other_cont
     nodes = q(Node).filter_read_access().all()
     assert len(nodes) == 1
     assert nodes[0] == container_node
+
+
+def test_filter_read_access_admin(session, admin_user, req, container_node, other_container_node):
+    from core import Node
+    q = session.query
+    session.flush()
+    req.session["user_id"] = admin_user.id
+    
+    nodes = q(Node).filter_read_access().all()
+    # admin sees everything, even nodes without any access rights
+    assert len(nodes) == 2
+    assert container_node in nodes
+    assert other_container_node in nodes

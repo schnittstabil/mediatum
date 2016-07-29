@@ -177,6 +177,13 @@ psycopg2.extensions.register_adapter(datetime.date, InfDateAdapter)
 
 
 def build_accessfunc_arguments(user=None, ip=None, date=None, req=None):
+    """Build the expected arguments for the DB permission procedures has_*_access_to_node()
+    IP and date are returned unchanged when passed to this function. 
+    For missing arguments, default values are set from request information or current date.
+    :returns: 3-tuple of group_ids, ip and date
+        For admin users, it returns (None, None, None) which means: ignore all access checks.
+        Users can test for this and skip permission checks completely.
+    """
     from core.users import get_guest_user
 
     if user is None and ip is None:
@@ -198,7 +205,7 @@ def build_accessfunc_arguments(user=None, ip=None, date=None, req=None):
 
     # admin sees everything ;)
     if user.is_admin:
-        return None
+        return (None, None, None)
 
     if ip is None:
         ip = IPv4Address("0.0.0.0")
@@ -235,6 +242,12 @@ class MtQuery(Query):
 
     def _filter_access(self, accesstype, user=None, ip=None, req=None):
         group_ids, ip, date = build_accessfunc_arguments(user, ip, req)
+        
+        if group_ids is None and ip is None and date is None:
+            # everything is None means: permission checks always pass, so we can skip access checks completely.
+            # This will happen for an admin user.
+            return self
+        
         nodeclass = self._find_nodeclass()
         if not nodeclass:
             return self
