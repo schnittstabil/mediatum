@@ -13,7 +13,6 @@ import psycopg2.extensions
 from psycopg2.extensions import adapt, AsIs
 import sqlalchemy as sqla
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.engine import Engine
 from sqlalchemy import Column, ForeignKey, event, Integer, DateTime, func as sqlfunc
 from sqlalchemy.orm import relationship, backref, Query, Mapper, undefer
 from sqlalchemy.ext.declarative import declared_attr
@@ -39,9 +38,6 @@ rel = relationship
 bref = backref
 
 DB_SCHEMA_NAME = "mediatum"
-
-# warn when queries take longer than `SLOW_QUERY_SECONDS`
-SLOW_QUERY_SECONDS = config.get("database.slow_query_seconds", 0.2)
 
 
 def dynamic_rel(*args, **kwargs):
@@ -117,26 +113,6 @@ DeclarativeBase.to_dict = to_dict
 DeclarativeBase.to_yaml = to_yaml
 DeclarativeBase.update = update
 DeclarativeBase.__str__ = __str__
-
-
-@event.listens_for(Engine, "before_cursor_execute")
-def before_cursor_execute(conn, cursor, statement,
-                          parameters, context, executemany):
-    conn.info.setdefault('query_start_time', []).append(time.time())
-    conn.info.setdefault('current_query', []).append(statement)
-
-
-@event.listens_for(Engine, "after_cursor_execute")
-def after_cursor_execute(conn, cursor, statement,
-                         parameters, context, executemany):
-    total = time.time() - conn.info['query_start_time'].pop(-1)
-    # total in seconds
-    if total > SLOW_QUERY_SECONDS:
-        if hasattr(conn.connection.connection, "history"):
-            statement = conn.connection.connection.history.last_statement
-        else:
-            statement = conn.info['current_query'].pop(-1)
-        logg.warn("slow query %.1fms:\n%s", total * 1000, statement)
 
 
 # IP types handling
