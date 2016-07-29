@@ -1104,11 +1104,16 @@ class http_request(object):
 
     def sendFile(self, path, content_type, force=0):
 
-        try:
-            file_length = os.stat(path)[stat.ST_SIZE]
-        except OSError:
-            self.error(404)
-            return
+        x_accel_redirect = config.get("nginx.X-Accel-Redirect", "").lower() == "true"
+        file = None
+        file_length = 0
+
+        if not x_accel_redirect:
+            try:
+                file_length = os.stat(path)[stat.ST_SIZE]
+            except OSError:
+                self.error(404)
+                return
 
         ims = get_header_match(IF_MODIFIED_SINCE, self.header)
         length_match = 1
@@ -1135,18 +1140,25 @@ class http_request(object):
                 # print "File "+path+" was not modified since "+ustr(ims_date)+" (current filedate is "+ustr(mtime)+")-> 304"
                 self.reply_code = 304
                 return
-        try:
-            file = open(path, 'rb')
-        except IOError:
-            self.error(404)
-            print "404"
-            return
+
+        if not x_accel_redirect:
+            try:
+                file = open(path, 'rb')
+            except IOError:
+                self.error(404)
+                print "404"
+                return
 
         self.reply_headers['Last-Modified'] = build_http_date(mtime)
         self.reply_headers['Content-Length'] = file_length
         self.reply_headers['Content-Type'] = content_type
+        if x_accel_redirect:
+            self.reply_headers['X-Accel-Redirect'] = path
         if self.command == 'GET':
-            self.push(file_producer(file))
+            if x_accel_redirect:
+                self.done()
+            else:
+                self.push(file_producer(file))
         return
 
     def sendAsBuffer(self, text, content_type, force=0, allow_cross_origin=False):
