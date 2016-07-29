@@ -51,7 +51,7 @@ def get_collections_node():
 
 class SingleFile(object):
 
-    def __init__(self, file, link_params, language, fullstyle_name, words=None):
+    def __init__(self, file, link_params, language, fullstyle_name, words=None, req=None):
         node = file
         sys_filetypes = [unicode(x) for x in node.get_sys_filetypes()]
 
@@ -487,7 +487,7 @@ class ContentList(object):
 
         return ContentNode(show_node, 0, 0, self.words)
 
-    def _page_nav_prev_next(self):
+    def _page_nav_prev_next(self, req=None):
         q_nodes = self.nodes
         nodes_per_page = self.nodes_per_page
         # self.after set <=> moving to next page
@@ -559,7 +559,7 @@ class ContentList(object):
             if "id" not in nav_params:
                 nav_params["id"] = self.collection.id
 
-            sfile = SingleFile(n, nav_params, self.lang, self.default_fullstyle_name)
+            sfile = SingleFile(n, nav_params, self.lang, self.default_fullstyle_name, req=req)
             files.append(sfile)
 
         page_nav = tal.getTAL(theme.getTemplate("content_nav.html"), ctx, macro="page_nav_prev_next", language=self.lang)

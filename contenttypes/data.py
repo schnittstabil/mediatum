@@ -49,13 +49,15 @@ context['host'] = "http://" + config.get("host.name", "")
 
 
 def init_maskcache():
+    return # XXX wn 2016-07-29
     global maskcache, maskcache_accesscount, maskcache_msg
     maskcache = {}
     maskcache_accesscount = {}
     maskcache_msg = '| cache initialized %s\r\n|\r\n' % cache_date2string(time.time(), '%04d-%02d-%02d-%02d-%02d-%02d')
 
 
-def get_maskcache_report():
+def get_maskcache_report(maskcache_accesscount):
+    maskcache_msg = '| cache initialized %s\r\n|\r\n' % cache_date2string(time.time(), '%04d-%02d-%02d-%02d-%02d-%02d')
     s = maskcache_msg + "| %d lookup keys in cache, total access count: %d\r\n|\r\n"
     total_access_count = 0
     for k, v in sorted(maskcache_accesscount.items()):
@@ -93,7 +95,7 @@ def make_lookup_key(node, language=None, labels=True):
         return "%s/%s_%s_%s" % (node.type, node.schema, languages[0], flaglabels)
 
 
-def get_maskcache_entry(lookup_key):
+def get_maskcache_entry(lookup_key, maskcache, maskcache_accesscount):
     try:
         res = maskcache[lookup_key]
         maskcache_accesscount[lookup_key] += 1
@@ -181,6 +183,7 @@ class Data(Node):
 
 
     def show_node_text_deep(self, words=None, language=None, separator="", labels=0):
+
 
         def render_mask_template(node, mask, field_descriptors, words=None, separator="", skip_empty_fields=True):
             
@@ -288,15 +291,22 @@ class Data(Node):
         # if the lookup_key is already in the cache dict: render the cached mask_template
         # else: build the mask_template
 
-        if lookup_key in maskcache:
-            mask_id, field_descriptors = maskcache[lookup_key]
+
+        if not 'maskcache' in request.app_cache:
+            request.app_cache['maskcache'] = {}
+            request.app_cache['maskcache_accesscount'] = {}
+
+        if lookup_key in request.app_cache['maskcache']:
+            mask_id, field_descriptors = request.app_cache['maskcache'][lookup_key]
             mask = get_mask(mask_id)
             
             if mask is None:
                 raise ValueError("mask for cached ID {} not found".format(mask_id))
             
             res = render_mask_template(self, mask_id, field_descriptors, words=words, separator=separator)
-            maskcache_accesscount[lookup_key] += 1
+            request.app_cache['maskcache_accesscount'][lookup_key] = request.app_cache['maskcache_accesscount'].get(lookup_key, 0) + 1
+            #print '--------->', self
+
         else:
             mask = self.metadatatype.get_mask(u"nodesmall")
             for m in self.metadatatype.filter_masks(u"shortview", language=language):
@@ -357,8 +367,8 @@ class Data(Node):
                     long_field_descriptor = (node_attribute, fd)
                     field_descriptors.append(long_field_descriptor)
 
-                maskcache[lookup_key] = (mask.id, field_descriptors)
-                maskcache_accesscount[lookup_key] = 0
+                request.app_cache['maskcache'][lookup_key] = (mask.id, field_descriptors)
+                request.app_cache['maskcache_accesscount'][lookup_key] = 0
                 res = render_mask_template(self, mask, field_descriptors, words=words, separator=separator)
 
             else:
