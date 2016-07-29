@@ -41,7 +41,7 @@ bref = backref
 DB_SCHEMA_NAME = "mediatum"
 
 # warn when queries take longer than `SLOW_QUERY_SECONDS`
-SLOW_QUERY_SECONDS = 0.2
+SLOW_QUERY_SECONDS = config.get("database.slow_query_seconds", 0.2)
 
 
 def dynamic_rel(*args, **kwargs):
