@@ -37,7 +37,6 @@ from .metatype_field import showDetailList, FieldDetail
 # meta mask methods
 from .metatype_mask import showMaskList, MaskDetails
 
-from contenttypes.data import flush_maskcache
 from contenttypes.data import Data
 
 from core import Node
@@ -75,8 +74,6 @@ def validate(req, op):
 
     if len(path) == 4 and path[3] == "editor":
         res = showEditor(req)
-        # mask may have been edited: flush masks cache
-        flush_maskcache(req=req)
         return res
 
     if len(path) == 5 and path[3] == "editor" and path[4] == "show_testnodes":
@@ -274,8 +271,6 @@ def validate(req, op):
         return showDetailList(req, req.params.get("parent"))
 
     elif req.params.get("acttype") == "mask":
-        # mask may have been edited: flush masks cache
-        flush_maskcache(req=req)
 
         # section for masks
         for key in req.params.keys():

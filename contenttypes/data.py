@@ -59,20 +59,6 @@ def get_maskcache_report(maskcache_accesscount):
     return s % (len(maskcache_accesscount), total_access_count)
 
 
-def flush_maskcache(req=None):
-    from core import users
-    global maskcache, maskcache_accesscount, maskcache_msg
-    logg.info("going to flush maskcache, content is: \r\n%s", get_maskcache_report())
-    maskcache = {}
-    maskcache_accesscount = {}
-    if req:
-        user = users.getUserFromRequest(req)
-        logg.info("flush of masks cache triggered by user %s with request on '%s'", user.login_name, req.path)
-
-        sys.stdout.flush()
-    maskcache_msg = '| cache last flushed %s\r\n|\r\n' % cache_date2string(time.time(), '%04d-%02d-%02d-%02d-%02d-%02d')
-
-
 def make_lookup_key(node, language=None, labels=True):
     languages = config.languages
     if language is None:
