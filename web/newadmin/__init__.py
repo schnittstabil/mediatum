@@ -12,6 +12,8 @@
 """
 from flask import Flask, request, url_for, redirect, flash
 from flask_admin import Admin
+from flask_admin.contrib import rediscli
+from redis import Redis
 from web.newadmin.views.user import UserView, UserGroupView, AuthenticatorInfoView
 from wtforms import form, fields, validators
 from core import db, User
@@ -97,6 +99,8 @@ def make_app():
 
     admin.add_view(SettingView())
 
+    admin.add_view(rediscli.RedisCli(Redis(db=1)))
+    
     return admin_app
 
 

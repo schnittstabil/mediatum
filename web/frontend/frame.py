@@ -20,6 +20,7 @@
 import logging
 from collections import OrderedDict
 from warnings import warn
+from dogpile.cache import make_region
 from sqlalchemy import event
 
 import core.config as config
@@ -39,6 +40,16 @@ from schema.searchmask import SearchMask
 from mediatumtal import tal
 from utils.lrucache import lru_cache
 
+
+navtree_cache = make_region().configure(
+    'dogpile.cache.redis',
+    expiration_time=5 * 60, # 10 mins and one second
+    arguments = {
+        'db': 1,
+        'redis_expiration_time': 5 * 60 + 10,
+        'distributed_lock': False
+    }                                     
+)
 
 q = db.query
 logg = logging.getLogger(__name__)
@@ -339,7 +350,7 @@ def make_navtree_entries(language, collection, container):
     return navtree_entries
 
 
-@lru_cache(maxsize=10000)
+@navtree_cache.cache_on_arguments()
 def _render_navtree_cached_for_anon(language, node_id):
     """
     XXX: This can be improved to reduce the number of stored trees. 
@@ -366,7 +377,6 @@ def render_navtree(language, node_id, user):
     """
     if user.is_anonymous:
         html = _render_navtree_cached_for_anon(language, node_id)
-        logg.debug("navtree cache status: %s", _render_navtree_cached_for_anon.cache_info())
         return html
     else:
         return _render_navtree(language, node_id)

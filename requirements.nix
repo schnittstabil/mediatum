@@ -298,6 +298,17 @@ let
     };
   };
 
+
+  dogpile_cache = self.buildPythonPackage {
+    name = "dogpile.cache-0.6.1";
+    src = fetchurl {
+      url = "https://pypi.python.org/packages/f6/a0/6f2142c58c6588d17c734265b103ae1cd0741e1681dd9483a63f22033375/dogpile.cache-0.6.1.tar.gz";
+      sha256= "69b52dc56bb52d974e9e9fb2764e1311abcd1fd625de07b4e5c05550ac9b40c0";
+    };
+    doCheck = false;
+  };
+
+
   ### test /devel deps
 
   inherit (self)
@@ -444,6 +455,7 @@ in {
       coffeescript
       configargparse
       decorator
+      dogpile_cache
       flask-admin
       flask-login
       httplib2
