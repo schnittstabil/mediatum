@@ -3343,8 +3343,9 @@ class WebContext:
                 from contenttypes.data import get_maskcache_report
                 #maskcache = req.app_cache.get('maskcache', {})
                 maskcache_accesscount = req.app_cache.get('maskcache_accesscount', {})
-                s = get_maskcache_report(maskcache_accesscount)
-                logg.debug(req.path + '\n' + s)
+                if maskcache_accesscount:
+                    s = get_maskcache_report(maskcache_accesscount)
+                    logg.debug(req.path + '\n' + s)
             return req.done()
 
         for pattern, call in self.pattern_to_function.items():
