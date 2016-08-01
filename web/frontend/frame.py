@@ -58,58 +58,6 @@ def init_child_count_cache():
         child_count_cache.clear()
 
 
-class Portlet(object):
-
-    def __init__(self):
-        self.folded = 0
-        self.name = "common"
-        self._user = None
-
-    @property
-    def user(self):
-        if self._user is None:
-            logg.warn("accessed Portlet.user but it's not set; using guest user. Is that correct?")
-            self._user = get_guest_user()
-        return self._user
-
-    @user.setter
-    def user(self, user):
-        self._user = user
-
-    def isFolded(self):
-        warn("use Portlet.folded()", DeprecationWarning)
-        return self.folded
-
-    def close(self):
-        if self.canClose():
-            self.folded = 1
-
-    def open(self):
-        if self.canOpen():
-            self.folded = 0
-
-    def canClose(self):
-        return 1
-
-    def canOpen(self):
-        return 1
-
-    def feedback(self, req):
-        self.user = current_user
-        r = req.params.get(self.name, "")
-        if r == "unfold":
-            self.open()
-        elif r == "fold":
-            self.close()
-        self.language = lang(req)
-
-    def getFoldUnfoldLink(self):
-        if self.folded:
-            return "node?" + self.name + "=unfold"
-        else:
-            return "node?" + self.name + "=fold"
-
-
 def getSearchMask(collection):
     if collection.get("searchtype") == "none":
         return None
@@ -126,10 +74,9 @@ def getSearchMask(collection):
     return mask
 
 
-class Searchlet(Portlet):
+class Searchlet(object):
 
     def __init__(self, container):
-        Portlet.__init__(self)
         self.lang = None
         self.ip = None
         self.container = container
@@ -148,7 +95,6 @@ class Searchlet(Portlet):
         self.searchmaskitem_ids = [None] * 11
 
     def feedback(self, req):
-        Portlet.feedback(self, req)
         self.lang = lang(req)
         self.ip = req.ip
         self.url_params = {k: v for k, v in iteritems(req.args) if k not in ()}
@@ -322,14 +268,11 @@ class NavTreeEntry(object):
                 return "lv0"
 
 
-class Collectionlet(Portlet):
+class Collectionlet(object):
 
     def __init__(self):
-        Portlet.__init__(self)
-        self.name = "collectionlet"
         self.collection = None
         self.container = None
-        self.folded = 0
         self.col_data = None
         self.hassubdir = 0
         self.hide_empty = False
@@ -340,7 +283,6 @@ class Collectionlet(Portlet):
         return self.container
 
     def feedback(self, req):
-        Portlet.feedback(self, req)
         self.lang = lang(req)
         nid = req.args.get("id", type=int)
         if nid:
@@ -365,7 +307,6 @@ class Collectionlet(Portlet):
         if req.args.get("disable_navtree"):
             return
         
-
         self.hide_empty = self.collection.get("style_hide_empty") == "1"
 
         opened = {t[0] for t in self.container.all_parents.with_entities(Node.id)}
