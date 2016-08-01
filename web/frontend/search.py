@@ -23,7 +23,6 @@ from core import Node, db
 from core.translation import lang, translate
 from core.search import SearchQueryException
 from core.styles import theme
-from web.frontend import Content
 from utils.strings import ensure_unicode_returned
 from contenttypes.container import Collections, Container
 from schema.searchmask import SearchMaskItem
@@ -36,7 +35,7 @@ q = db.query
 logg = logging.getLogger(__name__)
 
 
-class NoSearchResult(Content):
+class NoSearchResult(object):
     """This content class is used if no search results cannot be displayed.
     Either the result was empty, or an error happened.
     In the error case, NoSearchResult.error is set to True.

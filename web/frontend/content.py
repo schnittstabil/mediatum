@@ -28,7 +28,6 @@ from core.translation import lang, t
 from core.webconfig import node_url
 from contenttypes import Collections
 from contenttypes.container import includetemplate
-from web.frontend import Content
 from utils.strings import ensure_unicode_returned
 from utils.utils import getCollection, Link, getFormatedString, modify_tex
 from utils.compat import iteritems
@@ -229,11 +228,13 @@ def check_node_is_accessible(node):
     if not node.has_read_access():
         return ContentError("Permission denied", 403)
 
+from core.transition import httpstatus
+
 
 SORT_FIELDS = 2
 DEFAULT_FULL_STYLE_NAME = "full_standard"
 
-class ContentList(Content):
+class ContentList(object):
 
     def __init__(self, node_query, collection, words=None, show_sidebar=True):
 
@@ -255,11 +256,6 @@ class ContentList(Content):
         coll_default_full_style_name = collection.get("style_full")
         if coll_default_full_style_name is not None and coll_default_full_style_name != DEFAULT_FULL_STYLE_NAME:
             self.default_fullstyle_name = coll_default_full_style_name
-
-    @property
-    def files(self):
-        warn("ContentList.files is deprecated, use ContentList.nodes", DeprecationWarning)
-        return self.nodes
 
     @property
     def has_elements(self):
@@ -647,7 +643,7 @@ def getPaths(node):
         return []
 
 
-class ContentNode(Content):
+class ContentNode(object):
 
     def __init__(self, node, nr=0, num=0, words=None):
         self.node = node
@@ -723,6 +719,7 @@ def mkContentNode(req):
             c.feedback(req)
             # if ContentList feedback produced a content error, return that instead of the list itself
             if isinstance(c.content, ContentError):
+                req.setStatus(c.status)
                 return c.content
             c.node = node
             return c
@@ -735,7 +732,7 @@ def mkContentNode(req):
     return c
 
 
-class ContentError(Content):
+class ContentError(object):
 
     def __init__(self, error, status):
         self.error = error
@@ -752,7 +749,7 @@ class ContentError(Content):
         return self._status
 
 
-class ContentArea(Content):
+class ContentArea(object):
 
     def __init__(self):
         self._content = None
@@ -890,7 +887,7 @@ def render_content(req):
     return content_area.html(req)
 
 
-class CollectionLogo(Content):
+class CollectionLogo(object):
 
     def __init__(self, collection):
         self.collection = collection
