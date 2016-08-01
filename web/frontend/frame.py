@@ -39,6 +39,7 @@ from schema.schema import getMetadataType
 from utils.compat import iteritems
 from utils.utils import Link
 from utils.url import build_url_from_path_and_params
+from schema.searchmask import SearchMask
 
 
 q = db.query
@@ -64,13 +65,12 @@ def getSearchMask(collection):
     mask = None
     n = collection
     if collection.get("searchtype") == "parent":
-        while len(n.getParents()):
+        while len(n.parents):
             if n.get("searchtype") == "own":
                 break
-            n = n.getParents()[0]
+            n = n.parents[0]
     if n.get("searchtype") == "own":
-        searchmasks = q(Searchmasks).one()
-        mask = searchmasks.children.filter_by(name=n.get("searchmaskname")).scalar()
+        mask = q(SearchMask).filter_by(name=n.get("searchmaskname")).scalar()
     return mask
 
 
