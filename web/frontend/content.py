@@ -789,7 +789,7 @@ class ContentArea(Content):
                     if len(parents) == 0:
                         break
                     cd = parents[0]
-                    if cd is q(Collections).one() or cd is q(Root).one():
+                    if isinstance(cd, (Collections, Root)):
                         break
                     if isinstance(cd, Container):
                         path.append(Link(node_url(cd.id), cd.getLabel(language), cd.getLabel(language)))
