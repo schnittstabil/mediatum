@@ -171,20 +171,6 @@ def display(req):
     req.session["area"] = ""
     content = getContentArea(req)
     
-    if not req.args.get("disable_act_node"):
-        try:  # add export mask data of current node to request object
-            act_node = content.actNode()
-            if act_node and isinstance(act_node, Content):
-                mdt = getMetaType(act_node.schema)
-            else:
-                mdt = None
-            mask = mdt.getMask(u'head_meta') if mdt is not None else None
-            req.params['head_meta'] = mask.getViewHTML([content.actNode()], flags=8) if mask is not None else u''
-        except:
-            # XXX: the "common exception cases" here were act_node, mdt, mask == None. This is handled in the try-block now.
-            # Other exceptions should indicate a real failure.
-            logg.exception("exception in display, setting head_meta to empty string")
-            req.params['head_meta'] = ''
         
     navframe = getNavigationFrame(req)
     navframe.feedback(req)
