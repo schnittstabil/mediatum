@@ -48,14 +48,6 @@ context = default_context.copy()
 context['host'] = "http://" + config.get("host.name", "")
 
 
-def init_maskcache():
-    return # XXX wn 2016-07-29
-    global maskcache, maskcache_accesscount, maskcache_msg
-    maskcache = {}
-    maskcache_accesscount = {}
-    maskcache_msg = '| cache initialized %s\r\n|\r\n' % cache_date2string(time.time(), '%04d-%02d-%02d-%02d-%02d-%02d')
-
-
 def get_maskcache_report(maskcache_accesscount):
     maskcache_msg = '| cache initialized %s\r\n|\r\n' % cache_date2string(time.time(), '%04d-%02d-%02d-%02d-%02d-%02d')
     s = maskcache_msg + "| %d lookup keys in cache, total access count: %d\r\n|\r\n"
@@ -302,7 +294,7 @@ class Data(Node):
             
             if mask is None:
                 raise ValueError("mask for cached ID {} not found".format(mask_id))
-            
+
             res = render_mask_template(self, mask_id, field_descriptors, words=words, separator=separator)
             request.app_cache['maskcache_accesscount'][lookup_key] = request.app_cache['maskcache_accesscount'].get(lookup_key, 0) + 1
             #print '--------->', self

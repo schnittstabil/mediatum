@@ -165,8 +165,6 @@ def init_fulltext_search():
 
 def init_modules():
     """init modules with own init function"""
-    from contenttypes.data import init_maskcache
-    init_maskcache()
     from export import oaisets
     oaisets.init()
     from export import exportutils
