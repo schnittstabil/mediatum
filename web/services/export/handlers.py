@@ -1011,25 +1011,6 @@ def get_cachestatus(req, path, params, data):
     return d['html_response_code'], len(s), d
 
 
-def get_maskcachestatus(req, path, params, data):
-    atime = time.time()
-    from contenttypes.data import get_maskcache_report
-    timetable = []
-    d = {}
-    d['status'] = 'ok'
-    d['html_response_code'] = '200'
-    d['timetable'] = timetable
-    req.reply_headers['Content-Type'] = "text/plain" + "; charset=utf-8"
-
-    s = 'mask cache content (lookup keys): %s\r\n\r\n' % cache_date2string(time.time(), '%04d-%02d-%02d-%02d-%02d-%02d')
-
-    s += get_maskcache_report()
-
-    req.write(s)
-    d['timetable'].append(["writing masks cache access counts to request", time.time() - atime])
-    atime = time.time()
-    return d['html_response_code'], len(s), d
-
 # alternative base dir for static html files
 #
 # relative to mediatum folder:
