@@ -94,14 +94,15 @@ def buildNodeDescriptor(params, node, indent=None, written=None, children=True, 
         # no attributes should be sent
         pass
     elif attrspec == 'default_mask' or attrspec not in ['none', 'all']:
-        from contenttypes.data import make_lookup_key, get_maskcache_entry, maskcache
+        from contenttypes.data import make_lookup_key, get_maskcache_entry
+        from core.transition.globals import request
         language = params.get('lang', '')
         lookup_key = make_lookup_key(node, language=language, labels=False)
-        if lookup_key not in maskcache:
+        if 'maskcache' not in request.app_cache or lookup_key not in request.app_cache['maskcache']:
             # fill cache
             node.show_node_text(labels=False, language=language)
 
-        mask_id, field_descriptors = get_maskcache_entry(lookup_key)
+        mask_id, field_descriptors = get_maskcache_entry(lookup_key, request.app_cache['maskcache'], request.app_cache['maskcache_accesscount'])
 
         try:
             for field_descriptor in field_descriptors:
