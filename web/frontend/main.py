@@ -18,27 +18,24 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 import json
-from functools import wraps
+from functools import partial, wraps
 import logging
 import re
+from werkzeug.datastructures import ImmutableMultiDict
 
 import core.config as config
 from core.metatype import Context
 from core.translation import lang
-from web.frontend.frame import getNavigationFrame
-from web.frontend.content import getContentArea, ContentNode
-from schema.schema import getMetadataType, getMetaType
 from core.transition import httpstatus
-from contenttypes.data import Content
 from core import db
 from core import Node, NodeAlias
 from core.transition import current_user
-from contenttypes import Collection
-from workflow.workflow import Workflows
-from werkzeug.datastructures import ImmutableMultiDict
-from utils.url import build_url_from_path_and_params
 from contenttypes import Collections, Container
-from utils.utils import modify_tex
+from schema.schema import getMetadataType
+from utils.url import build_url_from_path_and_params
+from web.frontend.frame import render_page
+from web.frontend.content import render_content
+from workflow.workflow import Workflows
 
 q = db.query
 
@@ -96,12 +93,12 @@ def change_language_request(req):
 
 def check_change_language_request(func):
     @wraps(func)
-    def checked(req):
+    def checked(req, *args):
         change_lang_http_status = change_language_request(req)
         if change_lang_http_status:
             return change_lang_http_status
 
-        return func(req)
+        return func(req, *args)
 
     return checked
 
@@ -164,50 +161,37 @@ def display_newstyle(req):
 
 
 @check_change_language_request
-def display(req):
+def _display(req, show_navbar):
     if "jsonrequest" in req.params:
         return handle_json_request(req)
 
-    req.session["area"] = ""
-    content = getContentArea(req)
-    
+    nid = req.args.get("id", type=int)
+    if not Node.req_has_access_to_node_id(nid, "read"):
+        nid = None
         
-    navframe = getNavigationFrame(req)
-    navframe.feedback(req)
-
-    if not req.args.get("disable_content"):
-        content.feedback(req)
-        contentHTML = content.html(req)
-        contentHTML = modify_tex(contentHTML, 'html')
+    if req.args.get("disable_content"):
+        content_html = u""
     else:
-        contentHTML = u""
-        
-    navframe.write(req, contentHTML)
-    # set status code here...
-    req.setStatus(content.status())
+        content_html = render_content(req)
+
+    html = render_page(req, nid, content_html, show_navbar)
+    req.write(html)
     # ... Don't return a code because Athana overwrites the content if an http error code is returned from a handler.
+    # instead, req.setStatus() can be used in the rendering code
 
 
 @check_change_language_request
-def display_noframe(req):
-    content = getContentArea(req)
-    content.feedback(req)
+def display(req):
+    _display(req, True)
 
-    navframe = getNavigationFrame(req)
-    navframe.feedback(req)
-    req.params["show_navbar"] = 0
 
-    contentHTML = content.html(req)
+@check_change_language_request
+def display_nonavbar(req):
+    _display(req, False)
 
-    if "raw" in req.params:
-        req.write(contentHTML)
-    else:
-        navframe.write(req, contentHTML, show_navbar=0)
 
-# needed for workflows:
-
+#: needed for workflows:
 PUBPATH = re.compile("/?(publish|pub)/(.*)$")
-
 
 @check_change_language_request
 def publish(req):
@@ -222,12 +206,7 @@ def publish(req):
                     return 404
 
     req = overwrite_id_in_req(node.id, req)
-
-    content = getContentArea(req)
-    content.content = ContentNode(node)
-    req.session["area"] = "publish"
-
-    return display_noframe(req)
+    return display_nonavbar(req)
 
 
 @check_change_language_request
@@ -235,22 +214,15 @@ def show_parent_node(req):
     parent = None
     node = q(Node).get(req.params.get("id"))
     if node is None:
-        return display_noframe(req)
+        return display_nonavbar(req)
 
     for p in node.parents:
         if p.type != "directory" and p.type != "collection":
             parent = p
     if not parent:
-        return display_noframe(req)
+        return display_nonavbar(req)
 
     req.params["id"] = parent.id
     req.params["obj"] = str(node.id)
 
-    content = getContentArea(req)
-    content.content = ContentNode(parent)
-
-    return display_noframe(req)
-
-
-def esc(v):
-    return v.replace("\\", "\\\\").replace("'", "\\'")
+    return display_nonavbar(req)

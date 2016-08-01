@@ -30,7 +30,7 @@ from contenttypes import Collections
 from contenttypes.container import includetemplate
 from web.frontend import Content
 from utils.strings import ensure_unicode_returned
-from utils.utils import getCollection, Link, getFormatedString
+from utils.utils import getCollection, Link, getFormatedString, modify_tex
 from utils.compat import iteritems
 from web.frontend.search import simple_search, extended_search
 from core.systemtypes import Root
@@ -800,7 +800,14 @@ class ContentArea(Content):
         path.reverse()
         return path
 
-    def feedback(self, req):
+    def actNode(self):
+        if hasattr(self.content, 'node'):
+            return self.content.node
+        else:
+            return None
+
+    @ensure_unicode_returned
+    def html(self, req):
         content = None
         if req.args.get("query", "").strip():
             content = simple_search(req)
@@ -828,14 +835,6 @@ class ContentArea(Content):
         if hasattr(self.content, "getParams"):
             self.params = '&' + self.content.getParams()
 
-    def actNode(self):
-        if hasattr(self.content, 'node'):
-            return self.content.node
-        else:
-            return None
-
-    @ensure_unicode_returned
-    def html(self, req):
         if "raw" in req.args:
             path = ""
         else:
@@ -877,10 +876,18 @@ class ContentArea(Content):
                               macro="path",
                               request=req)
 
-        return path + '\n<!-- CONTENT START -->\n' + self.content.html(req) + '\n<!-- CONTENT END -->\n'
+        html = path + '\n<!-- CONTENT START -->\n' + self.content.html(req) + '\n<!-- CONTENT END -->\n'
+        html = modify_tex(html, 'html')
+        return html
 
+    @property
     def status(self):
         return self.content.status()
+
+
+def render_content(req):
+    content_area = ContentArea()
+    return content_area.html(req)
 
 
 class CollectionLogo(Content):
@@ -902,7 +909,3 @@ class CollectionLogo(Content):
 
     def getShowOnHTML(self):
         return self.show_on_html
-
-
-def getContentArea(req=None):
-    return ContentArea()

@@ -19,18 +19,14 @@
 """
 import logging
 from collections import OrderedDict
-import time
-import urllib
 from warnings import warn
 from sqlalchemy import event
 
 import core.config as config
-from core import db, users
-from core import Node
+from core import db, Node
 from core.translation import lang, t
 from core.metatype import Context
 from core.styles import theme
-from core.systemtypes import Searchmasks, Root
 from core.transition import current_user
 from core.users import get_guest_user
 from core.webconfig import node_url
@@ -40,6 +36,8 @@ from utils.compat import iteritems
 from utils.utils import Link
 from utils.url import build_url_from_path_and_params
 from schema.searchmask import SearchMask
+from mediatumtal import tal
+from utils.lrucache import lru_cache
 
 
 q = db.query
@@ -104,7 +102,6 @@ class Searchlet(object):
             if self.searchmask is None:
                 raise ValueError("no searchmask defined, extended search cannot be run for container {}".format(self.container.id))
             self.searchmode = searchmode_from_req
-
 
         if self.searchmode == "extended":
             extendedfields = range(1, 4)
@@ -179,14 +176,14 @@ class Searchlet(object):
                 # quick&dirty
                 field = getMetadataType("text")
             return field.getSearchHTML(Context(
-                                            field,
-                                            value=self.values[pos],
-                                            width=width,
-                                            name="query" + unicode(pos),
-                                            language=self.lang,
-                                            container=self.container,
-                                            user=current_user,
-                                            ip=self.ip))
+                field,
+                value=self.values[pos],
+                width=width,
+                name="query" + unicode(pos),
+                language=self.lang,
+                container=self.container,
+                user=current_user,
+                ip=self.ip))
         except:
             # workaround for unknown error
             logg.exception("exception in getSearchField, return empty string")
@@ -199,10 +196,29 @@ class Searchlet(object):
             None
 
 
+def render_search_box(nid, rootnode, language, req):
+    container = q(Container).get(nid) if nid else None
+    if container is None:
+        container = rootnode
+
+    search_portlet = Searchlet(container)
+    search_portlet.feedback(req)
+    liststyle = req.args.get("liststyle")
+
+    ctx = {
+        "search": search_portlet,
+        "container_id": container.id,
+        "liststyle": liststyle,
+        "search_placeholder": t(language, "search_in") + " " + container.getLabel(language)
+    }
+
+    search_html = tal.getTAL(theme.getTemplate("frame.html"), ctx, macro="frame_search", language=language)
+    return search_html
+
+
 class NavTreeEntry(object):
 
-    def __init__(self, col, node, indent, small=0, hide_empty=0, lang=None):
-        self.col = col
+    def __init__(self, node, indent, small=0, hide_empty=0, lang=None):
         assert isinstance(node, Container)
         self.node = node
         self.id = node.id
@@ -222,7 +238,7 @@ class NavTreeEntry(object):
             self.count = child_count_cache[self.id]
         else:
             child_count_cache[self.id] = self.count = self.node.childcount()
-        
+
         if self.count:
             self.hassubdir = 1
             self.folded = 1
@@ -268,88 +284,98 @@ class NavTreeEntry(object):
                 return "lv0"
 
 
-class Collectionlet(object):
+def find_collection_and_container(node_id):
+    
+    node = q(Node).get(node_id) if node_id else None
+    
+    if node is None:
+        collection = q(Collections).one()
+        container = collection
 
-    def __init__(self):
-        self.collection = None
-        self.container = None
-        self.col_data = None
-        self.hassubdir = 0
-        self.hide_empty = False
+    else:
+        if isinstance(node, Container):
+            container = node
 
-    @property
-    def directory(self):
-        warn("use Collectionlet.container instead", DeprecationWarning)
-        return self.container
+            if isinstance(node, Collection):  # XXX: is Collections also needed here?
+                collection = node
+            else:
+                collection = node.get_collection()
+        else:
+            container = node.get_container()
+            collection = node.get_collection()
 
-    def feedback(self, req):
-        self.lang = lang(req)
-        nid = req.args.get("id", type=int)
-        if nid:
-            node = q(Node).get(nid)
-            if node is not None and node.has_read_access():
-                if isinstance(node, Container):
-                    self.container = node
+    return collection, container
 
-                    if isinstance(node, Collection): # XXX: is Collections also needed here?
-                        self.collection = node
-                    else:
-                        self.collection = node.get_collection()
+
+def make_navtree_entries(language, collection, container):
+    hide_empty = collection.get("style_hide_empty") == "1"
+
+    opened = {t[0] for t in container.all_parents.with_entities(Node.id)}
+    opened.add(container.id)
+
+    navtree_entries = []
+
+    def make_navtree_entries_rec(navtree_entries, node, indent, hide_empty):
+        small = not isinstance(node, (Collection, Collections))
+        e = NavTreeEntry(node, indent, small, hide_empty, language)
+        if node.id == collection.id or node.id == container.id:
+            e.active = 1
+        navtree_entries.append(e)
+        if node.id in opened:
+            e.folded = 0
+            for c in node.container_children.filter_read_access().order_by(Node.orderpos).prefetch_attrs():
+                if hasattr(node, "dont_ask_children_for_hide_empty"):
+                    style_hide_empty = hide_empty
                 else:
-                    self.container = node.get_container()
-                    self.collection = node.get_collection()
+                    style_hide_empty = c.get("style_hide_empty") == "1"
 
-        if self.collection is None:
-            self.collection = q(Collections).one()
-            self.container = self.collection
+                make_navtree_entries_rec(navtree_entries, c, indent + 1, style_hide_empty)
+
+    collections_root = q(Collections).filter_read_access().scalar()
+
+    if collections_root is not None:
+        make_navtree_entries_rec(navtree_entries, collections_root, 0, hide_empty)
+
+    return navtree_entries
 
 
-        if req.args.get("disable_navtree"):
-            return
-        
-        self.hide_empty = self.collection.get("style_hide_empty") == "1"
+@lru_cache(maxsize=10000)
+def _render_navtree_cached_for_anon(language, node_id):
+    """
+    XXX: This can be improved to reduce the number of stored trees. 
+    Trees for sibling containers without own container children are the same except for the directory / collection highlighting.
+    Maybe we can store a generic tree for all of them and just set the highlighting here?
 
-        opened = {t[0] for t in self.container.all_parents.with_entities(Node.id)}
-        opened.add(self.container.id)
+    TODO: cache invalidation / timeout
+    """
+    return _render_navtree(language, node_id)
 
-        col_data = []
 
-        def build_navtree(m, node, indent, hide_empty):
-            small = not isinstance(node, (Collection, Collections))
-            e = NavTreeEntry(self, node, indent, small, hide_empty, self.lang)
-            if node.id == self.collection.id or node.id == self.container.id:
-                e.active = 1
-            m.append(e)
-            if node.id in opened:
-                e.folded = 0
-                for c in node.container_children.filter_read_access().order_by(Node.orderpos).prefetch_attrs():
-                    if hasattr(node, "dont_ask_children_for_hide_empty"):
-                        style_hide_empty = hide_empty
-                    else:
-                        style_hide_empty = c.get("style_hide_empty") == "1"
+def _render_navtree(language, node_id):
+    collection, container = find_collection_and_container(node_id)
+    navtree_entries = make_navtree_entries(language, collection, container)
+    html = tal.getTAL(theme.getTemplate("frame.html"), {"navtree_entries": navtree_entries}, macro="frame_tree", language=language)
+    logg.debug("rendered navtree with %s unicode chars", len(html))
+    return html
 
-                    build_navtree(m, c, indent + 1, style_hide_empty)
 
-        collections_root = q(Collections).filter_read_access().scalar()
-        
-        if collections_root is not None:
-            build_navtree(col_data, collections_root, 0, self.hide_empty)
-
-        self.col_data = col_data
-
-    def getCollections(self):
-        return self.col_data
-
+def render_navtree(language, node_id, user):
+    """Renders the navigation tree HTML.
+    Results are cached (key is (language, node_id)) for anonymous users only. 
+    They all see the same tree, so it's feasible to cache the HTML.
+    """
+    if user.is_anonymous:
+        html = _render_navtree_cached_for_anon(language, node_id)
+        logg.debug("navtree cache status: %s", _render_navtree_cached_for_anon.cache_info())
+        return html
+    else:
+        return _render_navtree(language, node_id)
 
 class UserLinks(object):
 
-    def __init__(self, user, host=""):
+    def __init__(self, user, req):
         self.user = user
-        self.id = None
-        self.language = ""
-        self.host = host
-
-    def feedback(self, req):
+        self.host = req.get_header("HOST")
         # show_id: edit currently shown content node
         nid = req.args.get("show_id")
         # id: edit current container
@@ -376,10 +402,9 @@ class UserLinks(object):
                 l = [Link("/login", t(self.language, "sub_header_login_title"),
                           t(self.language, "sub_header_login"), icon="/img/login.gif")]
 
-        
         if self.is_workflow_area:
             l += [Link("/", t(self.language, "sub_header_frontend_title"),
-                   t(self.language, "sub_header_frontend"), icon="/img/frontend.gif")]
+                       t(self.language, "sub_header_frontend"), icon="/img/frontend.gif")]
 
         if self.user.is_editor:
             idstr = ""
@@ -407,87 +432,45 @@ class UserLinks(object):
         return build_url_from_path_and_params(self.path, params)
 
 
-class NavigationFrame(object):
+def render_page(req, nid, contentHTML, show_navbar=True):
+    """Renders the navigation frame with the inserted content HTML and returns the whole page.
+    """
+    user = current_user
+    userlinks = UserLinks(user, req)
+    language = lang(req)
+    rootnode = q(Collections).one()
+    frame_template = theme.getTemplate("frame.html")
 
-    def __init__(self):
-        self.collection_portlet = Collectionlet()
+    front_lang = {
+        "name": config.languages,
+        "actlang": language
+    }
+    frame_context = {
+        "content": contentHTML,
+        "footer_left_items": rootnode.getCustomItems("footer_left"),
+        "footer_right_items": rootnode.getCustomItems("footer_right"),
+        "header_items": rootnode.getCustomItems("header"),
+        "id": nid,
+        "language": front_lang,
+        "show_navbar": show_navbar,
+        "user": user, 
+        "userlinks": userlinks
+    }
 
-    def feedback(self, req):
-        user = current_user
+    navtree_html = u""
+    search_html = u""
 
-        host = req.get_header("HOST")
-        userlinks = UserLinks(user, host=host)
-        userlinks.feedback(req)
+    if show_navbar and not req.args.get("disable_navbar"):
+        if not req.args.get("disable_search"):
+            search_html = render_search_box(nid, rootnode, language, req)
 
-        # tabs
-        navigation = {}
+        if not req.args.get("disable_navtree"):
+            navtree_html = render_navtree(language, nid, user)
 
-        if not req.args.get("disable_navbar"):
-            # collection
-            collection_portlet = self.collection_portlet
-            collection_portlet.feedback(req)
-            navigation["collection"] = collection_portlet
+    frame_context["search"] = search_html
+    frame_context["tree"] = navtree_html
+    frame_context["footer"] = tal.getTAL(frame_template, frame_context, macro="frame_footer", language=language)
+    frame_context["header"] = tal.getTAL(frame_template, frame_context, macro="frame_header", language=language)
 
-            # search
-            search_portlet = Searchlet(collection_portlet.container)
-            search_portlet.feedback(req)
-            navigation["search"] = search_portlet
-
-        # languages
-        front_lang = {}
-        front_lang["name"] = config.languages
-        front_lang["actlang"] = lang(req)
-
-        self.params = {"show_navbar": True, "user": user, "userlinks": userlinks, "navigation": navigation, "language": front_lang}
-
-    def write(self, req, contentHTML, show_navbar=1):
-        self.params["show_navbar"] = show_navbar
-        self.params["content"] = contentHTML
-        self.params["id"] = nid = req.params.get("id", req.params.get("dir", ""))
-
-        rootnode = q(Collections).one()
-        self.params["header_items"] = rootnode.getCustomItems("header")
-        self.params["footer_left_items"] = rootnode.getCustomItems("footer_left")
-        self.params["footer_right_items"] = rootnode.getCustomItems("footer_right")
-        self.params["t"] = time.strftime("%d.%m.%Y %H:%M:%S")
-        self.params["head_meta"] = req.params.get('head_meta', '')
-
-        # header
-        self.params["header"] = req.getTAL(theme.getTemplate("frame.html"), self.params, macro="frame_header")
-
-        # footer
-        self.params["footer"] = req.getTAL(theme.getTemplate("frame.html"), self.params, macro="frame_footer")
-
-        self.params["tree"] = ""
-        self.params["search"] = ""
-        
-        
-        
-        if show_navbar == 1 and not req.args.get("disable_navbar"):
-            # search mask
-            container = q(Container).get(nid) if nid else None
-            if container is None:
-                container = rootnode
-            language = lang(req)
-            liststyle = req.args.get("liststyle")
-
-            ctx = {
-                "search": self.params["navigation"]["search"],
-                "container_id": container.id,
-                "liststyle": liststyle,
-                "search_placeholder": t(language, "search_in") + " " + container.getLabel(language)
-            }
-
-            self.params["search"] = req.getTAL(theme.getTemplate("frame.html"), ctx, macro="frame_search")
-
-            # tree
-            if not req.args.get("disable_navtree"):
-                self.params["tree"] = req.getTAL(
-                    theme.getTemplate("frame.html"), {
-                        "collections": self.collection_portlet.col_data}, macro="frame_tree")
-
-        req.writeTAL(theme.getTemplate("frame.html"), self.params, macro="frame")
-
-
-def getNavigationFrame(req):
-    return NavigationFrame()
+    html = tal.getTAL(frame_template, frame_context, macro="frame", language=language)
+    return html
