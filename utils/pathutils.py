@@ -84,6 +84,7 @@ def checkPath(parent_node, sPath, sSeparator='/'):
 
 
 def getBrowsingPathList(node):
+    warn("use get_accessible_paths()", DeprecationWarning)
     from contenttypes import Container
     list = []
     collections = q(Collections).one()
@@ -131,6 +132,43 @@ def getSubdirsContaining(path, filelist=[]):
     if filelist:
         result = [d for d in result if set(filelist).issubset(os.listdir(os.path.join(path, d)))]
     return result
+
+
+def getPaths(node):
+    warn("use get_accessible_paths()", DeprecationWarning)
+    res = []
+
+    def r(node, path):
+        node = node.getActiveVersion()
+        if isinstance(node, Root):
+            return
+        for p in node.getParents():
+            path.append(p)
+            if not isinstance(p, Collections):
+                r(p, path)
+        return path
+
+    paths = []
+
+    p = r(node, [])
+    omit = 0
+    if p:
+        for node in p:
+            if node.has_read_access() or node.type in ("home", "root"):
+                if node.type in ("directory", "home", "collection") or node.type.startswith("directory"):
+                    paths.append(node)
+                if isinstance(node, (Collections, Root)):
+                    paths.reverse()
+                    if len(paths) > 0 and not omit:
+                        res.append(paths)
+                    omit = 0
+                    paths = []
+            else:
+                omit = 1
+    if len(res) > 0:
+        return res
+    else:
+        return []
 
 
 def get_accessible_paths(node, node_query=None):

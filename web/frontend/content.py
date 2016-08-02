@@ -40,6 +40,7 @@ from core.database.postgres import mediatumfunc
 from sqlalchemy_continuum.utils import version_class
 import json
 from core.nodecache import get_collections_node
+from utils.pathutils import get_accessible_paths
 
 
 logg = logging.getLogger(__name__)
@@ -601,42 +602,6 @@ class ContentList(object):
         return u'{0}<div id="nodes">{1}</div>{0}'.format(filesHTML, contentList)
 
 
-def getPaths(node):
-    res = []
-
-    def r(node, path):
-        node = node.getActiveVersion()
-        if isinstance(node, Root):
-            return
-        for p in node.getParents():
-            path.append(p)
-            if not isinstance(p, Collections):
-                r(p, path)
-        return path
-
-    paths = []
-
-    p = r(node, [])
-    omit = 0
-    if p:
-        for node in p:
-            if node.has_read_access() or node.type in ("home", "root"):
-                if node.type in ("directory", "home", "collection") or node.type.startswith("directory"):
-                    paths.append(node)
-                if isinstance(node, (Collections, Root)):
-                    paths.reverse()
-                    if len(paths) > 0 and not omit:
-                        res.append(paths)
-                    omit = 0
-                    paths = []
-            else:
-                omit = 1
-    if len(res) > 0:
-        return res
-    else:
-        return []
-
-
 class ContentNode(object):
 
     def __init__(self, node, nr=0, num=0, words=None):
@@ -665,19 +630,21 @@ class ContentNode(object):
     @ensure_unicode_returned(name="web.frontend.content:html")
     def html(self, req):
         language = lang(req)
-        paths = u""
+        paths_html = u""
         show_node_big = ensure_unicode_returned(self.node.show_node_big, name="show_node_big of %s" % self.node)
 
+        paths = get_accessible_paths(self.node, q(Node).prefetch_attrs())
+        self.paths = paths
+
         if not isinstance(self.node, Container):
-            plist = getPaths(self.node)
-            paths = tal.getTAL(theme.getTemplate("content_nav.html"), {"paths": plist}, macro="paths", language=language)
+            paths_html = tal.getTAL(theme.getTemplate("content_nav.html"), {"paths": paths}, macro="paths", language=language)
 
         full_styles = getContentStyles("bigview", self.full_style_name or DEFAULT_FULL_STYLE_NAME, contenttype=self.node.type)
 
         if full_styles:
-            return getFormatedString(show_node_big(req, template=full_styles[0].getTemplate())) + paths
+            return getFormatedString(show_node_big(req, template=full_styles[0].getTemplate())) + paths_html
         else:
-            return getFormatedString(show_node_big(req)) + paths
+            return getFormatedString(show_node_big(req)) + paths_html
 
 
 def fileIsNotEmpty(file):
@@ -761,36 +728,6 @@ class ContentArea(object):
     def content(self, content):
         self._content = content
 
-    def getPath(self, language=None, check_access=False):
-        path = []
-        if hasattr(self.content, "node"):
-            cd = self.content.node
-            if cd is not None:
-                if isinstance(cd, Container):
-                    path.append(Link('', cd.getLabel(language), ''))
-                else:
-                    path.append(Link('', cd.getLabel(), ''))
-                cd = cd.getActiveVersion()
-                while True:
-                    parents = cd.parents
-                    if check_access:
-                        parents = list(cd.parents.filter_read_access())
-                    else:
-                        parents = list(cd.parents)
-                    if len(parents) == 0:
-                        break
-                    cd = parents[0]
-                    if isinstance(cd, (Collections, Root)):
-                        break
-                    if isinstance(cd, Container):
-                        path.append(Link(node_url(cd.id), cd.getLabel(language), cd.getLabel(language)))
-                    else:
-                        path.append(Link(node_url(cd.id), cd.getLabel(), cd.getLabel()))
-        elif hasattr(self.content, "linkname") and hasattr(self.content, "linktarget"):
-            path.append(Link(self.content.linktarget, self.content.linkname, self.content.linkname))
-        path.reverse()
-        return path
-
     def actNode(self):
         if hasattr(self.content, 'node'):
             return self.content.node
@@ -827,7 +764,7 @@ class ContentArea(object):
             self.params = '&' + self.content.getParams()
 
         if "raw" in req.args:
-            path = ""
+            path_html = ""
         else:
             if hasattr(self.content, "node"):
                 node = self.content.node
@@ -843,31 +780,35 @@ class ContentArea(object):
             if printlink and "sortfield0" in req.args:
                 printlink += '?sortfield0=' + req.args.get("sortfield0") + '&sortfield1=' + req.args.get("sortfield1")
 
-            if req.args.get("show_navbar") == 0 or req.session.get("area") == "publish":
-                breadcrumbs = []
+            if req.args.get("show_navbar") == 0:
+                shortest_path = []
             else:
                 try:
-                    breadcrumbs = self.getPath(lang(req), check_access=True)
+                    paths = get_accessible_paths(node)
+                    if paths:
+                        shortest_path = sorted(paths, key=lambda p: (len(p), p[-1].id))[0]
+                    else:
+                        shortest_path = []
                 except AttributeError:
                     logg.exception("exception in html")
                     return req.error(404, "Object cannot be shown")
 
             styles = self.content.getContentStyles()
 
-            path = tal.getTAL(theme.getTemplate("content_nav.html"),
+            path_html = tal.getTAL(theme.getTemplate("content_nav.html"),
                               {"params": self.params,
-                               "path": breadcrumbs,
+                               "path": shortest_path,
                                "styles": styles,
                                "logo": self.collectionlogo,
                                "select_style_link": self.content.select_style_link,
-                               "id": id,
+                               "node": node,
                                "nodeprint": "1" if printlink else "0",  # XXX: template compat for non-default templates
                                "printlink": printlink,
                                "area": req.session.get("area", "")},
                               macro="path",
                               request=req)
 
-        html = path + '\n<!-- CONTENT START -->\n' + self.content.html(req) + '\n<!-- CONTENT END -->\n'
+        html = path_html + '\n<!-- CONTENT START -->\n' + self.content.html(req) + '\n<!-- CONTENT END -->\n'
         html = modify_tex(html, 'html')
         return html
 

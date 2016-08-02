@@ -19,10 +19,10 @@
 
 
 from schema.schema import loadTypesFromDB, getMetaType
-from web.frontend.content import getPaths
 from utils.utils import u, dec_entry_log
 from core import Node
 from core import db
+from utils.pathutils import getPaths
 
 q = db.query
 

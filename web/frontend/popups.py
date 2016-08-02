@@ -23,13 +23,13 @@ from schema.schema import getMetadataType
 from lib.pdf import printview
 
 from schema.schema import VIEW_DATA_ONLY, VIEW_HIDE_EMPTY
-from web.frontend.content import getPaths
 from core.translation import t, lang
 from utils.utils import getCollection
 from core.styles import theme
 from core import db
 from core import Node
 from contenttypes import Container
+from utils.pathutils import getPaths
 
 #
 # execute fullsize method from node-type

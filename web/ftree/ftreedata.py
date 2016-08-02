@@ -18,7 +18,6 @@
 """
 import logging
 
-from web.frontend.content import getPaths
 from core.translation import translate, lang
 from core.transition import current_user
 from contenttypes import Collections, Container
@@ -26,9 +25,12 @@ from core import Node
 from core import db
 from web.edit.edit import get_special_dir_type
 from web.edit.edit_common import get_edit_label
+from core.systemtypes import Root
+from utils.pathutils import getPaths
 
 logg = logging.getLogger(__name__)
 q = db.query
+
 
 def getData(req):
     pid = req.params.get("parentId")
