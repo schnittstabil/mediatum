@@ -26,27 +26,24 @@ from core import db, Node, File
 from core.styles import getContentStyles, theme
 from core.translation import lang, t
 from core.webconfig import node_url
+from core.systemtypes import Root
 from contenttypes import Collections
 from contenttypes.container import includetemplate
 from utils.strings import ensure_unicode_returned
 from utils.utils import getCollection, Link, getFormatedString, modify_tex
 from utils.compat import iteritems
 from web.frontend.search import simple_search, extended_search
-from core.systemtypes import Root
 from contenttypes.container import Container
 from mediatumtal import tal
 from schema.schema import Metadatatype
 from core.database.postgres import mediatumfunc
 from sqlalchemy_continuum.utils import version_class
 import json
+from core.nodecache import get_collections_node
 
 
 logg = logging.getLogger(__name__)
 q = db.query
-
-
-def get_collections_node():
-    return q(Collections).one()
 
 
 class SingleFile(object):

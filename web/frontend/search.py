@@ -24,10 +24,11 @@ from core.translation import lang, translate
 from core.search import SearchQueryException
 from core.styles import theme
 from utils.strings import ensure_unicode_returned
-from contenttypes.container import Collections, Container
+from contenttypes.container import Container
 from schema.searchmask import SearchMaskItem
 from core.webconfig import node_url
 from core.search.representation import FullMatch
+from core.nodecache import get_collections_node
 
 q = db.query
 
@@ -76,7 +77,7 @@ def search(searchtype, searchquery, readable_query, req):
     if container is None or not container.has_read_access():
         # XXX: The collections root is always searchable. Could there be situations in which we don't want to allow this?
         # XXX: We could check the read permission for Collections to decide if search is allowed.
-        container = q(Collections).one()
+        container = get_collections_node()
 
     try:
         result = container.search(searchquery).filter_read_access()

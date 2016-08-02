@@ -31,7 +31,6 @@ from sqlalchemy.orm import undefer, joinedload
 from core.users import get_guest_user
 from core import config, search
 from core import Node, db, User
-from contenttypes import Collections, Home
 from schema.schema import VIEW_DATA_ONLY, Metadatatype
 from utils.date import format_date
 from utils.pathutils import getBrowsingPathList
@@ -47,9 +46,7 @@ from sqlalchemy import sql
 from itertools import izip_longest
 from sqlalchemy import Unicode, Float, Integer
 from utils.xml import xml_remove_illegal_chars
-from core.search import SearchQueryException
-from core.search.representation import FullMatch
-
+from core.nodecache import get_collections_node, get_home_root_node
 import core.oauth as oauth
 from core.search.config import get_service_search_languages
 
@@ -373,7 +370,7 @@ def struct2rss(req, path, params, data, struct, debug=False, singlenode=False, s
     items_list = []
 
     host = u"http://" + unicode(req.get_header("HOST") or configured_host)
-    collections = q(Collections).one()
+    collections = get_collections_node()
     user = get_guest_user()
 
     for n in nodelist:
@@ -624,8 +621,8 @@ def get_node_data_struct(
     if node is None:
         return _client_error_response(404, u"node not found")
 
-    home = q(Home).one()
-    collections = q(Collections).one()
+    home = get_home_root_node()
+    collections = get_collections_node()
     # check node access
     if node.has_read_access(user=user) and (node.is_descendant_of(collections) or node.is_descendant_of(home)):
         pass

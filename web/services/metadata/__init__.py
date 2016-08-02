@@ -31,9 +31,6 @@ response_code_dict = BaseHTTPServer.BaseHTTPRequestHandler.responses
 
 LOCALES = ["en_US.UTF-8", "english", "german"]
 
-#import core.tree as tree
-#collections_id = tree.getRoot('collections').id
-
 try:
     locale.setlocale(locale.LC_ALL, LOCALES[0])  # for thousands separator
 except:

@@ -25,13 +25,13 @@ from core.transition import httpstatus
 from core.webconfig import node_url
 import core.users as users
 import core.config as config
+from core.nodecache import get_collections_node
 import utils.mail as mail
 import utils.date as date
 from web.frontend import frame
 from core.translation import lang, t
 from utils.utils import mkKey
 from core.styles import theme
-from contenttypes import Collections
 from core.auth import PasswordsDoNotMatch, WrongPassword, PasswordChangeNotAllowed
 from core.users import get_guest_user
 from datetime import datetime
@@ -49,7 +49,7 @@ def _make_collection_root_link():
     global _collection_root_link
 
     if _collection_root_link is None:
-        _collection_root_link = node_url(q(Collections.id).one()[0])
+        _collection_root_link = node_url(get_collections_node().id)
 
     return _collection_root_link
 

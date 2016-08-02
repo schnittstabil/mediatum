@@ -31,14 +31,14 @@ from core.styles import theme
 from core.transition import current_user
 from core.users import get_guest_user
 from core.webconfig import node_url
-from contenttypes import Directory, Container, Collections, Collection
+from contenttypes import Directory, Container, Collection, Collections
 from schema.schema import getMetadataType
 from utils.compat import iteritems
 from utils.utils import Link
 from utils.url import build_url_from_path_and_params
 from schema.searchmask import SearchMask
 from mediatumtal import tal
-from utils.lrucache import lru_cache
+from core.nodecache import get_collections_node
 
 
 navtree_cache = make_region().configure(
@@ -300,7 +300,7 @@ def find_collection_and_container(node_id):
     node = q(Node).get(node_id) if node_id else None
     
     if node is None:
-        collection = q(Collections).one()
+        collection = get_collections_node()
         container = collection
 
     else:
@@ -342,7 +342,7 @@ def make_navtree_entries(language, collection, container):
 
                 make_navtree_entries_rec(navtree_entries, c, indent + 1, style_hide_empty)
 
-    collections_root = q(Collections).filter_read_access().scalar()
+    collections_root = get_collections_node()
 
     if collections_root is not None:
         make_navtree_entries_rec(navtree_entries, collections_root, 0, hide_empty)
@@ -448,7 +448,7 @@ def render_page(req, nid, contentHTML, show_navbar=True):
     user = current_user
     userlinks = UserLinks(user, req)
     language = lang(req)
-    rootnode = q(Collections).one()
+    rootnode = get_collections_node()
     frame_template = theme.getTemplate("frame.html")
 
     front_lang = {

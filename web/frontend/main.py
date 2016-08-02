@@ -30,12 +30,13 @@ from core.transition import httpstatus
 from core import db
 from core import Node, NodeAlias
 from core.transition import current_user
-from contenttypes import Collections, Container
+from contenttypes import Container
 from schema.schema import getMetadataType
 from utils.url import build_url_from_path_and_params
 from web.frontend.frame import render_page
 from web.frontend.content import render_content
 from workflow.workflow import Workflows
+from core.nodecache import get_collections_node
 
 q = db.query
 
@@ -59,7 +60,7 @@ def handle_json_request(req):
         container = q(Container).get(container_id) if container_id else None
 
         if container is None or not container.has_read_access():
-            container = q(Collections).one()
+            container = get_collections_node()
 
         s = [
             f.getSearchHTML(
