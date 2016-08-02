@@ -29,7 +29,7 @@ import core.config as config
 from core.translation import lang, t
 from core.styles import getContentStyles
 from core.transition.postgres import check_type_arg_with_schema
-from export.exportutils import runTALSnippet, default_context
+from export.exportutils import default_context
 from schema.schema import getMetadataType, VIEW_HIDE_EMPTY, SchemaMixin
 from utils.utils import highlight
 from core.transition.globals import request
@@ -146,11 +146,6 @@ def render_mask_template(node, mask, field_descriptors, language, words=None, se
                         value = value.replace("&lt;" + var + "&gt;", val)
                 value = value.replace("&lt;", "<").replace("&gt;", ">")
 
-            if value.find('tal:') >= 0:
-                context['node'] = node
-                value = runTALSnippet(value, context)
-
-            # don't escape before running TAL
             default = fd['default']
             if not value and default:
                 value = default

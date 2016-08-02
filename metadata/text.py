@@ -27,7 +27,6 @@ import core.config as config
 from utils.utils import esc
 from utils.utils import modify_tex
 from core.metatype import Metatype, charmap
-from export.exportutils import runTALSnippet
 
 
 logg = logging.getLogger(__name__)
@@ -133,7 +132,6 @@ class m_text(Metatype):
             else:
                 # treat as monolingual
                 pass
-        unescaped_value = value
 
         if html:
             value = esc(value)
@@ -159,20 +157,6 @@ class m_text(Metatype):
         # use default value from mask if value is empty
         if value == u'':
             value = maskitem.getDefault()
-
-        if template_from_caller and template_from_caller[0] and maskitem and unicode(maskitem.id) == template_from_caller[3]:
-            value = template_from_caller[0]
-
-        context = {'node': node, 'host': "http://" + config.get("host.name", "")}
-
-        if (template_from_caller and template_from_caller[0]) and (not node.get(metafield.getName())):
-            value = runTALSnippet(value, context)
-        else:
-            try:
-                value = runTALSnippet(value, context)
-            except:
-                logg.exception("exception in getFormattedValue, runTALSnippet failed, using unescaped string")
-                value = runTALSnippet(unescaped_value, context)
 
         return (metafield.getLabel(), value)
 
