@@ -25,6 +25,10 @@ from core import db
 from core import Node
 from contenttypes import Collections
 from core.systemtypes import Root
+from core.database.postgres.alchemyext import exec_sqlfunc
+from core.database.postgres import mediatumfunc, build_accessfunc_arguments
+from itertools import chain
+from core.nodecache import get_home_root_node
 
 q = db.query
 
@@ -127,3 +131,23 @@ def getSubdirsContaining(path, filelist=[]):
     if filelist:
         result = [d for d in result if set(filelist).issubset(os.listdir(os.path.join(path, d)))]
     return result
+
+
+def get_accessible_paths(node, node_query=None):
+    from core.nodecache import get_collections_node, get_root_node
+    if node_query is None:
+        node_query = q(Node)
+
+    group_ids, ip, date = build_accessfunc_arguments()
+    excluded_node_ids = [get_collections_node().id, get_root_node().id, get_home_root_node().id]
+
+    f = mediatumfunc.accessible_container_paths(node.id, excluded_node_ids, group_ids, ip, date)
+    id_paths = [t[0] for t in db.session.execute(f).fetchall()]
+    # fetch all nodes at once to reduce DB load
+    path_nodes = node_query.filter(Node.id.in_(chain(*id_paths)))
+
+    # convert node ids to nodes
+    nid_to_node ={n.id: n for n in path_nodes}
+    node_paths = [[nid_to_node.get(nid) for nid in id_path] for id_path in id_paths]
+    return node_paths
+    

@@ -395,6 +395,7 @@ class PostgresSQLAConnector(object):
         conn.execute(read_and_prepare_sql("node_access_funcs.sql"))
         conn.execute(read_and_prepare_sql("node_access_rules_and_triggers.sql"))
         conn.execute(read_and_prepare_sql("noderelation_rules_and_triggers.sql"))
+        conn.execute(read_and_prepare_sql("speedups.sql"))
 
     def drop_functions(self, conn):
         pass
