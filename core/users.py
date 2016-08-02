@@ -70,17 +70,28 @@ def getExternalAuthentificators():
 
 
 def user_from_session(session):
-    user_id = session.get("user_id")
-    if user_id is not None:
-        user = q(User).get(user_id)
+    
+    from core.transition import request
+    user_from_cache = request.app_cache.get("user")
+    if user_from_cache is not None:
+        return user_from_cache
+    
+    def _user_from_session():
+        user_id = session.get("user_id")
+        if user_id is not None:
+            user = q(User).get(user_id)
 
-        if user is not None:
-            return user
+            if user is not None:
+                return user
 
-        logg.warn("invalid user id %s from session, falling back to guest user", user_id)
-        del session["user_id"]
+            logg.warn("invalid user id %s from session, falling back to guest user", user_id)
+            del session["user_id"]
 
-    return get_guest_user()
+        return get_guest_user()
+    
+    user = _user_from_session()
+    request.app_cache["user"] = user
+    return user
 
 
 def getUserFromRequest(req):
