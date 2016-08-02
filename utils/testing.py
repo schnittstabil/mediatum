@@ -22,6 +22,9 @@ def make_files_munch(node):
 
 
 def make_node_public(node, ruletype=u"all"):
+    """
+    Sets public rights (the "everybody" rule) for a node for the given `ruletype` or all ruletypes. 
+    """
     from core import AccessRulesetToRule
     from core.permission import get_or_add_everybody_rule
     er = get_or_add_everybody_rule()
@@ -38,7 +41,27 @@ def make_node_public(node, ruletype=u"all"):
         _add(ruletype)
 
 
+def append_chain_of_containers(length, head, node_factory=DirectoryFactory):
+    """Uses the `head` node as start node and appends a chain of container children with `length`.
+    Like: head -> generated_node_1 -> ... -> generated_node_<length>
+
+    Returns a list of nodes, starting with `head` and containing the generated nodes.
+    """
+    node = head
+    nodes = [head]
+    
+    for _ in xrange(length):
+        node, prev_node = node_factory(), node
+        prev_node.container_children.append(node)
+        nodes.append(node)
+    
+    return nodes
+
+
 def test_setup():
+    """Call this in `conftest.py` before running unit tests.
+    Is used by the mediaTUM core unit tests and can be used by plugin `conftest.py` modules.
+    """
     import logging
     import os
     import warnings
