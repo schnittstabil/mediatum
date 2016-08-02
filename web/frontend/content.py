@@ -28,9 +28,8 @@ from core.translation import lang, t
 from core.webconfig import node_url
 from contenttypes import Collections
 from contenttypes.container import includetemplate
-from web.frontend import Content
 from utils.strings import ensure_unicode_returned
-from utils.utils import getCollection, Link, getFormatedString
+from utils.utils import getCollection, Link, getFormatedString, modify_tex
 from utils.compat import iteritems
 from web.frontend.search import simple_search, extended_search
 from core.systemtypes import Root
@@ -229,11 +228,13 @@ def check_node_is_accessible(node):
     if not node.has_read_access():
         return ContentError("Permission denied", 403)
 
+from core.transition import httpstatus
+
 
 SORT_FIELDS = 2
 DEFAULT_FULL_STYLE_NAME = "full_standard"
 
-class ContentList(Content):
+class ContentList(object):
 
     def __init__(self, node_query, collection, words=None, show_sidebar=True):
 
@@ -255,11 +256,6 @@ class ContentList(Content):
         coll_default_full_style_name = collection.get("style_full")
         if coll_default_full_style_name is not None and coll_default_full_style_name != DEFAULT_FULL_STYLE_NAME:
             self.default_fullstyle_name = coll_default_full_style_name
-
-    @property
-    def files(self):
-        warn("ContentList.files is deprecated, use ContentList.nodes", DeprecationWarning)
-        return self.nodes
 
     @property
     def has_elements(self):
@@ -647,7 +643,7 @@ def getPaths(node):
         return []
 
 
-class ContentNode(Content):
+class ContentNode(object):
 
     def __init__(self, node, nr=0, num=0, words=None):
         self.node = node
@@ -723,6 +719,7 @@ def mkContentNode(req):
             c.feedback(req)
             # if ContentList feedback produced a content error, return that instead of the list itself
             if isinstance(c.content, ContentError):
+                req.setStatus(c.status)
                 return c.content
             c.node = node
             return c
@@ -735,7 +732,7 @@ def mkContentNode(req):
     return c
 
 
-class ContentError(Content):
+class ContentError(object):
 
     def __init__(self, error, status):
         self.error = error
@@ -752,7 +749,7 @@ class ContentError(Content):
         return self._status
 
 
-class ContentArea(Content):
+class ContentArea(object):
 
     def __init__(self):
         self._content = None
@@ -789,7 +786,7 @@ class ContentArea(Content):
                     if len(parents) == 0:
                         break
                     cd = parents[0]
-                    if cd is q(Collections).one() or cd is q(Root).one():
+                    if isinstance(cd, (Collections, Root)):
                         break
                     if isinstance(cd, Container):
                         path.append(Link(node_url(cd.id), cd.getLabel(language), cd.getLabel(language)))
@@ -800,7 +797,14 @@ class ContentArea(Content):
         path.reverse()
         return path
 
-    def feedback(self, req):
+    def actNode(self):
+        if hasattr(self.content, 'node'):
+            return self.content.node
+        else:
+            return None
+
+    @ensure_unicode_returned
+    def html(self, req):
         content = None
         if req.args.get("query", "").strip():
             content = simple_search(req)
@@ -828,14 +832,6 @@ class ContentArea(Content):
         if hasattr(self.content, "getParams"):
             self.params = '&' + self.content.getParams()
 
-    def actNode(self):
-        if hasattr(self.content, 'node'):
-            return self.content.node
-        else:
-            return None
-
-    @ensure_unicode_returned
-    def html(self, req):
         if "raw" in req.args:
             path = ""
         else:
@@ -877,13 +873,21 @@ class ContentArea(Content):
                               macro="path",
                               request=req)
 
-        return path + '\n<!-- CONTENT START -->\n' + self.content.html(req) + '\n<!-- CONTENT END -->\n'
+        html = path + '\n<!-- CONTENT START -->\n' + self.content.html(req) + '\n<!-- CONTENT END -->\n'
+        html = modify_tex(html, 'html')
+        return html
 
+    @property
     def status(self):
         return self.content.status()
 
 
-class CollectionLogo(Content):
+def render_content(req):
+    content_area = ContentArea()
+    return content_area.html(req)
+
+
+class CollectionLogo(object):
 
     def __init__(self, collection):
         self.collection = collection
@@ -902,7 +906,3 @@ class CollectionLogo(Content):
 
     def getShowOnHTML(self):
         return self.show_on_html
-
-
-def getContentArea(req=None):
-    return ContentArea()

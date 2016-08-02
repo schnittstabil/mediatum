@@ -23,14 +23,13 @@ from schema.schema import getMetadataType
 from lib.pdf import printview
 
 from schema.schema import VIEW_DATA_ONLY, VIEW_HIDE_EMPTY
-from web.frontend.content import getPaths, getContentArea
+from web.frontend.content import getPaths
 from core.translation import t, lang
-from utils.utils import u, getCollection
+from utils.utils import getCollection
 from core.styles import theme
 from core import db
 from core import Node
 from contenttypes import Container
-from content import ContentNode
 
 #
 # execute fullsize method from node-type
@@ -101,6 +100,7 @@ def getPrintChildren(req, node, ret):
 
 
 def show_printview(req):
+    raise NotImplementedError("later!")
     from web.edit.edit import printmethod
     """ create a pdf preview of given node (id in path e.g. /print/[id]/[area])"""
     p = req.path[1:].split("/")
@@ -122,14 +122,14 @@ def show_printview(req):
     # use objects from session
     if unicode(nodeid) == "0":
         children = []
-        # XXX: test that, don't know if that works
-        content_area = getContentArea()
-        content_area.feedback(req)
+        content_area = ContentArea()
+        # XXX: doesn't work anymore
         try:
             nodes = content_area.content.files
         except:
             c = content_area.content
             nodes = c.resultlist[c.active].files
+        # XXX: why don't we use the mask cache here? This is wildy inefficient for many nodes!        
         for n in nodes:
             c_mtype = n.metadatatype
             c_mask = c_mtype.getMask("printlist")

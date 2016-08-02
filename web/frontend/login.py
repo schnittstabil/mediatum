@@ -35,6 +35,8 @@ from contenttypes import Collections
 from core.auth import PasswordsDoNotMatch, WrongPassword, PasswordChangeNotAllowed
 from core.users import get_guest_user
 from datetime import datetime
+from mediatumtal import tal
+from web.frontend.frame import render_page
 
 q = db.query
 logg = logging.getLogger(__name__)
@@ -108,10 +110,10 @@ def login(req):
 
     # show login form
     user = users.user_from_session(req.session)
-    navframe = frame.getNavigationFrame(req)
-    navframe.feedback(req)
-    navframe.write(req, req.getTAL(theme.getTemplate("login.html"),
-                                   {"error": error, "user": user, "email": config.get("email.support")}, macro="login"))
+    ctx = {"error": error, "user": user, "email": config.get("email.support")}
+    login_html = tal.getTAL(theme.getTemplate("login.html"), ctx, macro="login", language=lang(req))
+    html = render_page(req, None, login_html)
+    req.write(html)
     return httpstatus.HTTP_OK
 
 
@@ -152,10 +154,9 @@ def pwdchange(req):
                 req["Location"] = _make_collection_root_link()
                 return httpstatus.HTTP_MOVED_TEMPORARILY
 
-    navframe = frame.getNavigationFrame(req)
-    navframe.feedback(req)
-    contentHTML = req.getTAL(theme.getTemplate("login.html"), {"error": error, "user": user}, macro="change_pwd")
-    navframe.write(req, contentHTML)
+    content_html = tal.getTAL(theme.getTemplate("login.html"), {"error": error, "user": user}, macro="change_pwd", language=lang(req))
+    html = render_page(req, None, content_html)
+    req.write(html)
     return httpstatus.HTTP_OK
 
 
