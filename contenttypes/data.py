@@ -365,9 +365,10 @@ def _get_node_metadata_html(node, req):
     """Renders HTML data for displaying metadata using the the fullview mask.
     :rtype: unicode
     """
-    mask = node.getFullView(lang(req))
+    language = lang(req)
+    mask = node.getFullView(language)
     if mask is not None:
-        return mask.getViewHTML([node], VIEW_HIDE_EMPTY, lang(req))  # hide empty elements
+        return mask.getViewHTML([node], VIEW_HIDE_EMPTY, language)  # hide empty elements
     else:
         return t(req, "no_metadata_to_display")
 
