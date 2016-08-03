@@ -946,14 +946,14 @@ class Mask(Node):
             x.sort_by_orderpos()
             return getMetadataType("mappingfield").getViewHTML(
                 x, nodes, flags, language=language, template_from_caller=template_from_caller, mask=self)
-        for field in self.maskitems.sort_by_orderpos().options(undefer(Node.attrs)):
-            t = getMetadataType(field.get("type"))
+        for maskitem in self.maskitems.sort_by_orderpos().options(undefer(Node.attrs)):
+            t = getMetadataType(maskitem.get("type"))
             if flags & 4:  # data mode
-                v = t.getViewHTML(field, nodes, flags, language=language, template_from_caller=template_from_caller, mask=self)
-                format = field.getFormat()
+                v = t.getViewHTML(maskitem, nodes, flags, language=language, template_from_caller=template_from_caller, mask=self)
+                format = maskitem.getFormat()
                 if format != "":
                     v[1] = format.replace("<value>", v[1])
-                v.append(field.getSeparator())
+                v.append(maskitem.getSeparator())
 
                 if flags & 2:   # hide empty
                     if v[1].strip() != "":
@@ -961,7 +961,7 @@ class Mask(Node):
                 else:
                     ret.append(v)
             else:
-                ret += t.getViewHTML(field, nodes, flags, language=language, template_from_caller=template_from_caller, mask=self)
+                ret += t.getViewHTML(maskitem, nodes, flags, language=language, template_from_caller=template_from_caller, mask=self)
         return ret
 
     def getViewList(self, node, flags=0, language=None):

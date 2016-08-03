@@ -43,22 +43,22 @@ class m_hgroup(Metatype):
             ret += f.getFormHTML(item, nodes, req, True)
         return ret + '</div>'
 
-    def getViewHTML(self, field, nodes, flags, language=None, template_from_caller=None, mask=None, use_label=True):
+    def getViewHTML(self, maskitem, nodes, flags, language=None, template_from_caller=None, mask=None, use_label=True):
         if flags & VIEW_DATA_ONLY:
             ret = []
-            for item in field.getChildren().sort_by_orderpos():
+            for item in maskitem.getChildren().sort_by_orderpos():
                 f = getMetadataType(item.get("type"))
                 ret.append(f.getViewHTML(item, nodes, flags, language=language))
             return ret
         else:
             if use_label:
-                snippets = ['<div class="mask_row hgroup hgroup-%s"><div class="mask_label">%s: </div><div class="mask_value">' % (field.id, field.getLabel())]
+                snippets = ['<div class="mask_row hgroup hgroup-%s"><div class="mask_label">%s: </div><div class="mask_value">' % (maskitem.id, maskitem.getLabel())]
             else:
-                snippets = ['<div class="mask_row hgroup hgroup-%s"><div class="mask_value">' % (field.id)]
+                snippets = ['<div class="mask_row hgroup hgroup-%s"><div class="mask_value">' % (maskitem.id)]
             raw_values = ['&nbsp;']
             sep = ''
             has_raw_value = False  # skip group display if no item has raw_value
-            items = field.getChildren().sort_by_orderpos()
+            items = maskitem.getChildren().sort_by_orderpos()
             for i, item in enumerate(items):
                 f = getMetadataType(item.get("type"))
                 raw_value = f.getViewHTML(item, nodes, flags | VIEW_SUB_ELEMENT, language=language)
@@ -73,11 +73,11 @@ class m_hgroup(Metatype):
                 else:
                     sep = ''  # no separator before or after empty sub element
 
-            unit = field.get('unit').strip()
+            unit = maskitem.get('unit').strip()
             if not has_raw_value:
                 snippets = []  # no value when all sub elements are empty
             elif raw_values and unit:
-                snippets.append('&nbsp;<span class="hgroup_unit field_unit hgroup-%s">%s</span></div></div>' % (field.id, unit))
+                snippets.append('&nbsp;<span class="hgroup_unit field_unit hgroup-%s">%s</span></div></div>' % (maskitem.id, unit))
             elif raw_values:
                 snippets.append('</div></div>')
             ret = ''.join(snippets)
