@@ -3338,12 +3338,6 @@ class WebContext:
                 req.reply_code = status
                 if(status >= 400 and status <= 500):
                     return req.error(status)
-            if logg.level == logging.DEBUG:
-                from contenttypes.data import get_maskcache_report
-                maskcache_accesscount = req.app_cache.get('maskcache_accesscount', {})
-                if maskcache_accesscount:
-                    s = get_maskcache_report(maskcache_accesscount)
-                    logg.debug(req.path + '\n' + s)
             return req.done()
 
         for pattern, call in self.pattern_to_function.items():

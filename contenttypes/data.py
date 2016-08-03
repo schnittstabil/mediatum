@@ -18,26 +18,24 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 import re
-import sys
 from functools import partial
 import logging
-import time
 from warnings import warn
 import humanize
 from mediatumtal import tal
 
-from core import Node, db
+from core import Node, db, athana
 from core.database.postgres.node import children_rel
 import core.config as config
 from core.translation import lang, t
 from core.styles import getContentStyles
 from core.transition.postgres import check_type_arg_with_schema
 from export.exportutils import runTALSnippet, default_context
-from schema.schema import getMetadataType, VIEW_DATA_ONLY, VIEW_HIDE_EMPTY, SchemaMixin, Metafield, Metadatatype, Mask
-from web.services.cache import date2string as cache_date2string
+from schema.schema import getMetadataType, VIEW_HIDE_EMPTY, SchemaMixin, Metafield, Mask
 from utils.utils import highlight
 from core.transition.globals import request
 from core.node import get_node_from_request_cache
+from utils.compat import iteritems
 
 logg = logging.getLogger(__name__)
 
@@ -49,14 +47,10 @@ context['host'] = "http://" + config.get("host.name", "")
 
 
 def get_maskcache_report(maskcache_accesscount):
-    maskcache_msg = '| cache initialized %s\r\n|\r\n' % cache_date2string(time.time(), '%04d-%02d-%02d-%02d-%02d-%02d')
-    s = maskcache_msg + "| %d lookup keys in cache, total access count: %d\r\n|\r\n"
-    total_access_count = 0
-    for k, v in sorted(maskcache_accesscount.items()):
-        s += u"| {} : {}\r\n".format(k.ljust(60, '.'),
-                                     unicode(v).rjust(8, '.'))
-        total_access_count += v
-    return s % (len(maskcache_accesscount), total_access_count)
+    sorted_entries = [(k, v) for k, v in sorted(iteritems(maskcache_accesscount))]
+    total_access_count = sum(v for k, v in sorted_entries)
+    num_cache_keys = len(sorted_entries)
+    return "keys: %s, total access count: %s, %s" % (num_cache_keys, total_access_count, sorted_entries)
 
 
 def make_lookup_key(node, language=None, labels=True):
@@ -80,6 +74,15 @@ def get_maskcache_entry(lookup_key, maskcache, maskcache_accesscount):
     except:
         res = None
     return res
+
+
+@athana.request_finished
+def log_maskcache_accesscount(req, *args):
+    if logg.isEnabledFor(logging.DEBUG):
+        maskcache_accesscount = req.app_cache.get('maskcache_accesscount', {})
+        if maskcache_accesscount:
+            maskcache_report = get_maskcache_report(maskcache_accesscount)
+            logg.debug("mask cache status for req to %s: %s", req.path, maskcache_report)
 
 
 get_mask = partial(get_node_from_request_cache, Mask)
@@ -283,7 +286,6 @@ class Data(Node):
 
             res = render_mask_template(self, mask_id, field_descriptors, words=words, separator=separator)
             request.app_cache['maskcache_accesscount'][lookup_key] = request.app_cache['maskcache_accesscount'].get(lookup_key, 0) + 1
-            #print '--------->', self
 
         else:
             mask = self.metadatatype.get_mask(u"nodesmall")
