@@ -18,7 +18,6 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 import re
-from functools import partial
 import logging
 from warnings import warn
 import humanize
@@ -31,10 +30,9 @@ from core.translation import lang, t
 from core.styles import getContentStyles
 from core.transition.postgres import check_type_arg_with_schema
 from export.exportutils import runTALSnippet, default_context
-from schema.schema import getMetadataType, VIEW_HIDE_EMPTY, SchemaMixin, Metafield, Mask
+from schema.schema import getMetadataType, VIEW_HIDE_EMPTY, SchemaMixin
 from utils.utils import highlight
 from core.transition.globals import request
-from core.node import get_node_from_request_cache
 from utils.compat import iteritems
 
 logg = logging.getLogger(__name__)
@@ -84,9 +82,6 @@ def log_maskcache_accesscount(req, *args):
             maskcache_report = get_maskcache_report(maskcache_accesscount)
             logg.debug("mask cache status for req to %s: %s", req.path, maskcache_report)
 
-
-get_mask = partial(get_node_from_request_cache, Mask)
-get_metafield = partial(get_node_from_request_cache, Metafield)
 
 
 def render_mask_template(node, mask, field_descriptors, language, words=None, separator="", skip_empty_fields=True):
