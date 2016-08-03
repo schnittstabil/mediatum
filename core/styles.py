@@ -63,7 +63,7 @@ theme = Theme("default", "web/themes/mediatum/", "default")
 class ContentStyle:
 
     def __init__(self, type="type", contenttype="all", name="name", label="label",
-                 icon="icon", template="template", default="", description="", nodes_per_page=10):
+                 icon="icon", template="template", default="", description="", nodes_per_page=10, maskfield_separator=""):
         self.type = type
         self.contenttype = contenttype
         self.name = name
@@ -73,6 +73,7 @@ class ContentStyle:
         self.default = default
         self.description = description
         self.nodes_per_page = nodes_per_page
+        self.maskfield_separator = maskfield_separator
 
     def getID(self):
         if self.contenttype != "all" and self.contenttype != "":
@@ -120,7 +121,7 @@ class ContentStyle:
 def readStyleConfig(filename):
     path, file = splitpath(filename)
     attrs = {"type": "", "contenttype": "", "name": "", "label": "", "icon": "", "nodes_per_page": 10,
-             "template": path.replace(config.basedir, "") + "/", "description": "", "default": ""}
+             "template": path.replace(config.basedir, "") + "/", "description": "", "default": "", "maskfield_separator": ""}
 
     with codecs.open(filename, "rb", encoding='utf8') as fi:
         for line in fi:
@@ -137,9 +138,7 @@ def readStyleConfig(filename):
                         except ValueError:
                             logg.exception("error in style config {}, key {} must be of type integer".format(filename, key))
                             
-
-    return ContentStyle(attrs["type"], attrs["contenttype"], attrs["name"], attrs["label"],
-                        attrs["icon"], attrs["template"], attrs["default"], attrs["description"], attrs["nodes_per_page"])
+    return ContentStyle(**attrs)
 
 
 def getContentStyles(type, name=None, contenttype=None):
