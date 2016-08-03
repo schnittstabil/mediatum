@@ -211,6 +211,7 @@ from core import db, Node, File, NodeToFile
 from core import User, UserGroup, AuthenticatorInfo
 from core import AccessRule, AccessRuleset, NodeToAccessRule, NodeToAccessRuleset
 from core import Fts, Setting
+from core import app
 
 q = core.db.query
 s = core.db.Session
