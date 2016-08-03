@@ -146,7 +146,7 @@ msgid "startpage"
 msgstr "Home"
 
 msgid "occurences:"
-msgstr "Folder:"
+msgstr "Occurrences:"
 
 msgid "printview"
 msgstr "Print view"
