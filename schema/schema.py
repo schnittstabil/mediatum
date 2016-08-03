@@ -1450,9 +1450,10 @@ mytypes = {}
 def _metatype_class(name, cls):
     name = name[2:] if name.startswith("m_") else name
     logg.debug("loading metatype class %s", name)
-    mytypes[name] = cls
-    if hasattr(cls(), "getLabels"):
-        translation.addLabels(cls().getLabels())
+    instance = cls()
+    mytypes[name] = instance
+    if hasattr(instance, "getLabels"):
+        translation.addLabels(instance.getLabels())
 
 
 def load_metatype_module(prefix_path, pkg_dir):
@@ -1477,7 +1478,7 @@ def init():
 
 def getMetadataType(mtype):
     if mtype in mytypes:
-        return mytypes[mtype]()
+        return mytypes[mtype]
     else:
         raise LookupError("No such metatype: " + mtype)
 
