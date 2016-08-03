@@ -227,7 +227,7 @@ class WorkflowStep_AddFormPage(WorkflowStep):
                     value = ''
                     if fieldname in dict(node.attrs.items()):
                         schemafield = schema.children.filter_by(name=fieldname).first()
-                        value = schemafield.getFormatedValue(node)[1]
+                        value = schemafield.getFormattedValue(node)[1]
                         if fieldname.find('author') >= 0:
                             value = reformatAuthors(value)
                     elif fieldname.lower() == 'node.schema':
@@ -258,7 +258,7 @@ class WorkflowStep_AddFormPage(WorkflowStep):
                                     v = getMetaType(node.schema).getLongName()
                                 else:
                                     schemafield = schema.children.filter_by(name=m.group(0)).first()
-                                    v = schemafield.getFormatedValue(node)[0]
+                                    v = schemafield.getFormattedValue(node)[0]
                                 value = value.replace('[att:%s]' % (m.group(0)), v)
                     else:
                         logg.warning("workflowstep %s (%s): could not find attribute for pdf form field '%s' - node: '%s' (%s)",

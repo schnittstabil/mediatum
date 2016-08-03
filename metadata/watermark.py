@@ -53,7 +53,7 @@ class m_watermark(Metatype):
     def getSearchHTML(self, context):
         return tal.getTAL("metadata/watermark.html", {"context": context}, macro="searchfield", language=context.language)
 
-    def getFormatedValue(self, metafield, maskitem, mask, node, language, html=True):
+    def getFormattedValue(self, metafield, maskitem, mask, node, language, html=True):
         value = node.get(metafield.getName()).replace(";", "; ")
         if html:
             value = esc(value)

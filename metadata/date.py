@@ -59,7 +59,7 @@ class m_date(Metatype):
             context.value.append('')
         return tal.getTAL("metadata/date.html", {"context": context}, macro="searchfield", language=context.language)
 
-    def getFormatedValue(self, metafield, maskitem, mask, node, language, html=True):
+    def getFormattedValue(self, metafield, maskitem, mask, node, language, html=True):
         ''' search with re if string could be a date
             appends this to a list and returns this
 

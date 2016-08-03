@@ -156,7 +156,7 @@ class m_upload(Metatype):
             logg.warn("metadata: m_upload: no fieldname found")
         return s
 
-    def getFormatedValue(self, metafield, maskitem, mask, node, language, html=True):
+    def getFormattedValue(self, metafield, maskitem, mask, node, language, html=True):
 
         check_context()
 

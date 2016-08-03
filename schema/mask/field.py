@@ -118,9 +118,9 @@ class m_field(Metatype):
         metatype = getMetadataType(fieldtype)
 
         if flags & VIEW_DATA_EXPORT:
-            return metatype.getFormatedValue(metafield, maskitem, mask, first_node, language, html=0)
+            return metatype.getFormattedValue(metafield, maskitem, mask, first_node, language, html=0)
         
-        value = metatype.getFormatedValue(metafield, maskitem, mask, first_node, language)[1]
+        value = metatype.getFormattedValue(metafield, maskitem, mask, first_node, language)[1]
         if not flags & VIEW_DATA_ONLY:
             if maskitem.getFormat() != "":
                 value = maskitem.getFormat().replace("<value>", value)

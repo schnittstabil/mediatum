@@ -801,13 +801,13 @@ class Metafield(Node):
         context.field = self
         return t.getSearchHTML(context)
 
-    def getFormatedValue(self, node, language=None):
+    def getFormattedValue(self, node, language=None):
         try:
             t = getMetadataType(self.getFieldtype())
         except LookupError:
             t = getMetadataType("default")
 
-        return t.getFormatedValue(self, node, language=language)
+        return t.getFormattedValue(self, node, language=language)
 
 # helper class for masks
 

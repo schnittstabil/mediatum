@@ -39,7 +39,7 @@ def node():
 
 def test_get_formated_value(m, node, field):
     assert isinstance(m, url.m_url)
-    ret = m.getFormatedValue(field, node)
+    ret = m.getFormattedValue(field, node)
     expected = '<a href="http://dx.doi.org/10.1002/%28SICI%291522-2594%28199911%2942%3A5%3C952%3A%3AAID-MRM16%3E3.0.CO%3B2-S" target="_blank" title="?show in new window?">Name</a>'
     assert ret[1] == expected
     return ret

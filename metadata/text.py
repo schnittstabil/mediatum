@@ -103,7 +103,7 @@ class m_text(Metatype):
             multilingual = u""
         return tal.getTAL("metadata/text.html", {"multilingual": multilingual}, macro="maskeditor", language=language)
 
-    def getFormatedValue(self, metafield, maskitem, mask, node, language, html=True, template_from_caller=None):
+    def getFormattedValue(self, metafield, maskitem, mask, node, language, html=True, template_from_caller=None):
 
         value = node.get_special(metafield.name)
         # consider int, long values like filesize
@@ -122,7 +122,7 @@ class m_text(Metatype):
                     index = valuesList.index(language)
                     value = valuesList[index + 1]
                 except ValueError as e:
-                    msg = "Exception in getFormatedValue for textfield:\n"
+                    msg = "Exception in getFormattedValue for textfield:\n"
                     msg += " valuesList=%r\n" % valuesList
                     msg += " node.name=%r, node.id=%r, node.type=%r\n" % (node.name, node.id, node.type)
                     msg += " metafield.name=%r, metafield.id=%r, metafield.type=%r\n" % (metafield.name, metafield.id, metafield.type)
@@ -171,7 +171,7 @@ class m_text(Metatype):
             try:
                 value = runTALSnippet(value, context)
             except:
-                logg.exception("exception in getFormatedValue, runTALSnippet failed, using unescaped string")
+                logg.exception("exception in getFormattedValue, runTALSnippet failed, using unescaped string")
                 value = runTALSnippet(unescaped_value, context)
 
         return (metafield.getLabel(), value)

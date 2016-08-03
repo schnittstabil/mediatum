@@ -90,7 +90,7 @@ class m_url(Metatype):
     #
     # format node value depending on field definition
     #
-    def getFormatedValue(self, metafield, maskitem, mask, node, language, html=True):
+    def getFormattedValue(self, metafield, maskitem, mask, node, language, html=True):
         try:
             value = node.get(metafield.getName()).split(";")
             fielddef = metafield.getValues().split("\r\n")
@@ -137,7 +137,7 @@ class m_url(Metatype):
 
             return (metafield.getLabel(), value)
         except:
-            logg.exception("exception in getFormatedValue, error getting formatted value for URI")
+            logg.exception("exception in getFormattedValue, error getting formatted value for URI")
             return (metafield.getLabel(), "")
 
     def format_request_value_for_db(self, field, params, item, language=None):
