@@ -142,11 +142,11 @@ class m_dlist(Metatype):
                           macro="searchfield",
                           language=context.language)
 
-    def getFormatedValue(self, field, node, language=None, html=1):
-        value = node.get(field.getName())
+    def getFormatedValue(self, metafield, maskitem, mask, node, language, html=True):
+        value = node.get(metafield.getName())
         if html:
             value = esc(value)
-        return (field.getLabel(), value)
+        return (metafield.getLabel(), value)
 
     def getMaskEditorHTML(self, field, metadatatype=None, language=None):
         try:

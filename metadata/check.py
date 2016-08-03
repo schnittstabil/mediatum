@@ -38,9 +38,9 @@ class m_check(Metatype):
     def getSearchHTML(self, context):
         return tal.getTAL("metadata/check.html", {"context": context}, macro="searchfield", language=context.language)
 
-    def getFormatedValue(self, field, node, language=None, html=1):
-        value = node.get(field.getName()).replace(";", "; ")
-        return (field.getLabel(), value)
+    def getFormatedValue(self, metafield, maskitem, mask, node, language, html=True):
+        value = node.get(metafield.getName()).replace(";", "; ")
+        return (metafield.getLabel(), value)
 
     def getName(self):
         return "fieldtype_check"

@@ -32,20 +32,20 @@ class m_hlist(Metatype):
             values.append(u'')
         return tal.getTAL("metadata/hlist.html", {"lock": lock, "startnode": values[0], "attrname": values[1], "onlylast": values[2], "value": value, "width": width, "name": field.getName(), "field": field, "required": self.is_required(required)}, macro="editorfield", language=language)
 
-    def getFormatedValue(self, field, node, language=None, html=1, template_from_caller=None, mask=None):
+    def getFormatedValue(self, metafield, maskitem, mask, node, language, html=True):
         value = []
-        ids = node.get(field.getName())
+        ids = node.get(metafield.getName())
         if ids:
             for n in ids.split(';'):
                 vn = q(Node).get(n)
                 if vn is not None:
                     value.append(vn.getName())
-        values = field.get("valuelist").split(';')
+        values = metafield.get("valuelist").split(';')
         while len(values) < 3:
             values.append(u'')
         if values[2] == '1':
-            return field.getLabel(), value[-1]
-        return field.getLabel(), u' - '.join(value)
+            return metafield.getLabel(), value[-1]
+        return metafield.getLabel(), u' - '.join(value)
 
     def getName(self):
         return "fieldtype_hlist"

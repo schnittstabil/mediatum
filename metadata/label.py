@@ -105,11 +105,11 @@ class m_label(Metatype):
     def getSearchHTML(self, context):
         return tal.getTAL("metadata/label.html", {"context": context}, macro="searchfield", language=context.language)
 
-    def getFormatedValue(self, field, node, language=None, html=1, template_from_caller=None, mask=None):
-        value = node.get(field.getName())
+    def getFormatedValue(self, metafield, maskitem, mask, node, language, html=True):
+        value = node.get(metafield.getName())
         if html:
             value = esc(value)
-        return (field.getLabel(), value)
+        return (metafield.getLabel(), value)
 
     @classmethod
     def isContainer(cls):

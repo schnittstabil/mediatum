@@ -156,12 +156,12 @@ class m_upload(Metatype):
             logg.warn("metadata: m_upload: no fieldname found")
         return s
 
-    def getFormatedValue(self, field, node, language=None, html=1, template_from_caller=None, mask=None):
+    def getFormatedValue(self, metafield, maskitem, mask, node, language, html=True):
 
         check_context()
 
-        fieldname = field.getName()
-        value = node.get(field.getName())
+        fieldname = metafield.getName()
+        value = node.get(metafield.getName())
 
         filelist, filelist2 = getFilelist(node, fieldname)
         #filecount = len(filelist2)
@@ -180,7 +180,7 @@ class m_upload(Metatype):
             html_filelist = html_filelist.replace("____FIELDNAME____", "%s" % fieldname)
             value = html_filelist
 
-        return (field.getLabel(), value)
+        return (metafield.getLabel(), value)
 
     def getName(self):
         return "fieldtype_upload"

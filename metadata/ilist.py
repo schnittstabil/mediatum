@@ -73,8 +73,8 @@ class m_ilist(Metatype):
         return tal.getTAL("metadata/ilist.html", {"context": context, "valuelist": value_and_count},
                           macro="searchfield", language=context.language)
 
-    def getFormatedValue(self, field, node, language=None, html=1):
-        value = node.get(field.getName())
+    def getFormatedValue(self, metafield, maskitem, mask, node, language, html=True):
+        value = node.get(metafield.getName())
         try:
             if value and value[-1] == ";":
                 value = value[0:-1]
@@ -85,7 +85,7 @@ class m_ilist(Metatype):
         value = value.replace(";", "; ")
         if html:
             value = esc(value)
-        return (field.getLabel(), value)
+        return (metafield.getLabel(), value)
 
     def format_request_value_for_db(self, field, params, item, language=None):
         value = params.get(item)

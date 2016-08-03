@@ -53,7 +53,7 @@ class Metatype(object):
     def getSearchHTML(self, context):
         None
 
-    def getFormatedValue(self, field, node, language=None):
+    def getFormatedValue(self, metafield, maskitem, mask, node, language, html):
         None
 
     def format_request_value_for_db(self, field, params, item, language=None):

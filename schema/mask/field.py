@@ -109,87 +109,55 @@ class m_field(Metatype):
             ret += '</div>'
         return ret
 
-    """ create view format """
 
-
-    def getViewHTML(self, field, nodes, flags, language=None, template_from_caller=None, mask=None):
+    def getViewHTML(self, maskitem, nodes, flags, language=None, template_from_caller=None, mask=None):
         # XXX: this method claims to support multiple nodes. Unfortunately, this is not true at all...
         first_node = nodes[0]
-        element = field.metafield
-        if not element:
-            return []
-        fieldtype = element.get("type")
+        metafield = maskitem.metafield
+        fieldtype = metafield.get("type")
+        metatype = getMetadataType(fieldtype)
 
-        def get_formatted_value(*args, **kwargs):
-            _t = getMetadataType(element.get("type"))
-            result = _t.getFormatedValue(element, first_node, language, *args, **kwargs)[1]
-            return ensure_unicode(result)
-
-        unit = u''
-        if field.getUnit() != "":
-            unit = ' ' + field.getUnit()
-
-        if flags & VIEW_DATA_ONLY:
-            if fieldtype in ['text']:
-                value = get_formatted_value(template_from_caller=template_from_caller, mask=mask)
+        if flags & VIEW_DATA_EXPORT:
+            return metatype.getFormatedValue(metafield, maskitem, mask, first_node, language, html=0)
+        
+        value = metatype.getFormatedValue(metafield, maskitem, mask, first_node, language)[1]
+        if not flags & VIEW_DATA_ONLY:
+            if maskitem.getFormat() != "":
+                value = maskitem.getFormat().replace("<value>", value)
             else:
-                value = get_formatted_value()
-        else:
-            if field.getFormat() != "":
-                if fieldtype in ['text']:
-                    value = get_formatted_value(template_from_caller=template_from_caller, mask=mask)
-                else:
-                    value = get_formatted_value()
-                value = field.getFormat().replace("<value>", value)
-            else:
-                if fieldtype in ['text']:
-                    if template_from_caller and template_from_caller[0]:  # checking template on test nodes: show full length
-                        fieldvalue = first_node.get(element.name)
-                        if fieldvalue.strip():  # field is filled for this node
-                            value = get_formatted_value(template_from_caller=fieldvalue, mask=mask)
-                        else:  # use default
-                            value = get_formatted_value(template_from_caller=template_from_caller, mask=mask)
-                    else:  # cut long values
-                        value = formatLongText(get_formatted_value(template_from_caller=template_from_caller,
-                                                                  mask=mask),
-                                                element)
-                elif fieldtype in ['upload']:
-                    # passing mask necessary for fieldtype='upload'
-                    value = formatLongText(get_formatted_value(mask=mask), element)
-                else:
-                    value = formatLongText(get_formatted_value(), element)
+                value = formatLongText(value, metafield)
 
-        if len(value.strip()) > 0:
-            value += unit
+        value = value.strip()
 
-        label = u'&nbsp;'
-        if field.getLabel() != "":
-            label = u'{}: '.format(field.getLabel())
+        if flags & VIEW_HIDE_EMPTY and not value:
+            # hide empty elements
+            return u''
+
+        unit = maskitem.getUnit()
+
+        if value and unit:
+            value += value + " " + unit
 
         if flags & VIEW_DATA_ONLY:
             # return a valuelist
-            return [element.getName(), value, element.getLabel(), element.get("type")]
+            return [metafield.name, value, metafield.getLabel(), fieldtype]
 
-        elif flags & VIEW_SUB_ELEMENT:
-            # element in hgroup
+        if flags & VIEW_SUB_ELEMENT:
+            # metafield in hgroup
             # only using value omitting label, delimiter like '&nbsp;' may be inserted in hgroup.getViewHTML
             return value
 
-        elif flags & VIEW_HIDE_EMPTY and value.strip() == "":
-            # hide empty elements
-            return u''
-        elif flags & VIEW_DATA_EXPORT:
-            if fieldtype in ['text']:
-                return get_formatted_value(element, nodes[0], language, html=0, template_from_caller=template_from_caller, mask=mask)
-            else:
-                return get_formatted_value(element, nodes[0], language, html=0)
-            # return element.get("type")
+        maskitem_label = maskitem.getLabel()
+        if maskitem_label:
+            label = maskitem_label + u":"
         else:
-            # standard view
-            ret = u'<div class="mask_row field-{}"><div>'.format(element.getName())
-            ret += u'<div class="mask_label">{}</div>\n<div class="mask_value">{}&nbsp;</div>\n'.format(label, value)
-            ret += u'</div></div>'
-            return ret
+            label = u'&nbsp;'
+
+        # render HTML
+        ret = u'<div class="mask_row field-{}"><div>'.format(metafield.name)
+        ret += u'<div class="mask_label">{}</div>\n<div class="mask_value">{}&nbsp;</div>\n'.format(label, value)
+        ret += u'</div></div>'
+        return ret
 
     def getMetaHTML(self, parent, index, sub=False, language=None, itemlist=[], ptype="", fieldlist={}):
         """ return formated row for metaeditor """

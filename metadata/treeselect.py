@@ -31,12 +31,12 @@ logg = logging.getLogger(__name__)
 
 class m_treeselect(Metatype):
 
-    def getEditorHTML(self, field, value="", width=40, lock=0, language=None, required=None):
+    def getEditorHTML(self, metafield, value="", width=40, lock=0, language=None, required=None):
         return tal.getTAL("metadata/treeselect.html", {"lock": lock,
                                                        "value": value,
                                                        "width": width,
-                                                       "name": field.getName(),
-                                                       "field": field,
+                                                       "name": metafield.getName(),
+                                                       "metafield": metafield,
                                                        "required": self.is_required(required)},
                           macro="editorfield",
                           language=language)
@@ -44,11 +44,11 @@ class m_treeselect(Metatype):
     def getSearchHTML(self, context):
         return tal.getTAL("metadata/treeselect.html", {"context": context}, macro="searchfield", language=context.language)
 
-    def getFormatedValue_(self, field, node, language=None, html=1, template_from_caller=None, mask=None):
-        value = node.get(field.getName())
+    def getFormatedValue_(self, metafield, maskitem, mask, node, language, html=True, template_from_caller=None):
+        value = node.get(metafield.getName())
         if html:
             value = esc(value)
-        return (field.getLabel(), value)
+        return (metafield.getLabel(), value)
 
     def format_request_value_for_db(self, field, params, item, language=None):
         value = params.get(item)

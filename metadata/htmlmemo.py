@@ -189,10 +189,10 @@ class m_htmlmemo(Metatype):
     def getSearchHTML(self, context):
         return tal.getTAL("metadata/htmlmemo.html", {"context": context}, macro="searchfield", language=context.language)
 
-    def getFormatedValue(self, field, node, language=None, html=1):
-        value = node.get(field.getName()).replace(";", "; ")
+    def getFormatedValue(self, metafield, maskitem, mask, node, language, html=True):
+        value = node.get(metafield.getName()).replace(";", "; ")
         value = self.language_snipper(value, language, joiner="\n")
-        return (field.getLabel(), value)
+        return (metafield.getLabel(), value)
 
     def getMaskEditorHTML(self, field, metadatatype=None, language=None, attr_dict={}):
         try:

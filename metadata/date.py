@@ -59,24 +59,24 @@ class m_date(Metatype):
             context.value.append('')
         return tal.getTAL("metadata/date.html", {"context": context}, macro="searchfield", language=context.language)
 
-    def getFormatedValue(self, field, node, language=None, html=1):
+    def getFormatedValue(self, metafield, maskitem, mask, node, language, html=True):
         ''' search with re if string could be a date
             appends this to a list and returns this
 
-            :param field: metadatafield
+            :param metafield: metadatafield
             :param node: node with fields
             :return: formatted value
         '''
-        value = node.get(field.getName())
+        value = node.get(metafield.getName())
 
         if not value or value == "0000-00-00T00:00:00":  # dummy for unknown
-            return (field.getLabel(), u"")
+            return (metafield.getLabel(), u"")
         else:
             try:
                 d = parse_date(value)
             except ValueError:
-                return (field.getLabel(), value)
-            value = format_date(d, format=field.getValues())
+                return (metafield.getLabel(), value)
+            value = format_date(d, format=metafield.getValues())
 
         value_list = []
 
@@ -90,7 +90,7 @@ class m_date(Metatype):
         elif re.search(r'\d{4}', value):
             value_list.append(re.search(r'\d{4}', value).group())
 
-        return (field.getLabel(), ''.join(value_list))
+        return (metafield.getLabel(), ''.join(value_list))
 
     def format_request_value_for_db(self, field, params, item, language=None):
         value = params.get(item)

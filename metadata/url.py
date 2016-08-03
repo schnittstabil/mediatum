@@ -90,10 +90,10 @@ class m_url(Metatype):
     #
     # format node value depending on field definition
     #
-    def getFormatedValue(self, field, node, language=None, html=1):
+    def getFormatedValue(self, metafield, maskitem, mask, node, language, html=True):
         try:
-            value = node.get(field.getName()).split(";")
-            fielddef = field.getValues().split("\r\n")
+            value = node.get(metafield.getName()).split(";")
+            fielddef = metafield.getValues().split("\r\n")
 
             while len(fielddef) < 4:
                 fielddef.append(u"")
@@ -135,10 +135,10 @@ class m_url(Metatype):
             if icon != "":
                 value += u'<img src="{}"/>'.format(icon)
 
-            return (field.getLabel(), value)
+            return (metafield.getLabel(), value)
         except:
             logg.exception("exception in getFormatedValue, error getting formatted value for URI")
-            return (field.getLabel(), "")
+            return (metafield.getLabel(), "")
 
     def format_request_value_for_db(self, field, params, item, language=None):
         uri = params.get(item)

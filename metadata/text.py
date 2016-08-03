@@ -24,34 +24,13 @@ import re
 from mediatumtal import tal
 from core.transition import httpstatus
 import core.config as config
-from core import Node
 from utils.utils import esc
 from utils.utils import modify_tex
 from core.metatype import Metatype, charmap
 from export.exportutils import runTALSnippet
-from schema.schema import Mask
-from core.database.postgres.node import t_noderelation
 
 
 logg = logging.getLogger(__name__)
-
-
-def getMaskitemForField(field, language=None, mask=None):
-    if mask:
-        mask_ids = [mask.id]
-    else:
-        mdt = field.parents.filter_by(type=u"metadatatype").one()
-        q_masks = mdt.children.with_entities(Node.id).filter(Node.attrs[u"masktype"].astext.in_([u'shortview', u'fullview', u'editmask']))
-        if language:
-            q_masks = q_masks.filter(Node.a.language == language)
-
-        mask_ids = [t[0] for t in q_masks]
-
-    # t_noderelation is postgres-specific, maybe there's a better way?
-    maskitem = (field.parents.filter_by(type=u'maskitem')
-                .join(t_noderelation, t_noderelation.c.cid==Node.id)
-                .filter(t_noderelation.c.nid.in_(mask_ids)))
-    return maskitem.first()
 
 
 class m_text(Metatype):
@@ -124,9 +103,9 @@ class m_text(Metatype):
             multilingual = u""
         return tal.getTAL("metadata/text.html", {"multilingual": multilingual}, macro="maskeditor", language=language)
 
-    def getFormatedValue(self, field, node, language=None, html=1, template_from_caller=None, mask=None):
+    def getFormatedValue(self, metafield, maskitem, mask, node, language, html=True, template_from_caller=None):
 
-        value = node.get_special(field.name)
+        value = node.get_special(metafield.name)
         # consider int, long values like filesize
         if isinstance(value, (int, long)):
             value = str(value)
@@ -146,7 +125,7 @@ class m_text(Metatype):
                     msg = "Exception in getFormatedValue for textfield:\n"
                     msg += " valuesList=%r\n" % valuesList
                     msg += " node.name=%r, node.id=%r, node.type=%r\n" % (node.name, node.id, node.type)
-                    msg += " field.name=%r, field.id=%r, field.type=%r\n" % (field.name, field.id, field.type)
+                    msg += " metafield.name=%r, metafield.id=%r, metafield.type=%r\n" % (metafield.name, metafield.id, metafield.type)
                     msg += " language=%r, mask=%r" % (language, mask)
                     logg.exception(msg)
 
@@ -174,20 +153,19 @@ class m_text(Metatype):
                 value = value.replace("&lt;" + var + "&gt;", val)
         value = value.replace("&lt;", "<").replace("&gt;", ">")
 
-        maskitem = getMaskitemForField(field, language=language, mask=mask)
         if not maskitem:
-            return (field.getLabel(), value)
+            return (metafield.getLabel(), value)
 
         # use default value from mask if value is empty
         if value == u'':
             value = maskitem.getDefault()
 
-        if template_from_caller and template_from_caller[0] and maskitem and ustr(maskitem.id) == template_from_caller[3]:
+        if template_from_caller and template_from_caller[0] and maskitem and unicode(maskitem.id) == template_from_caller[3]:
             value = template_from_caller[0]
 
         context = {'node': node, 'host': "http://" + config.get("host.name", "")}
 
-        if (template_from_caller and template_from_caller[0]) and (not node.get(field.getName())):
+        if (template_from_caller and template_from_caller[0]) and (not node.get(metafield.getName())):
             value = runTALSnippet(value, context)
         else:
             try:
@@ -196,7 +174,7 @@ class m_text(Metatype):
                 logg.exception("exception in getFormatedValue, runTALSnippet failed, using unescaped string")
                 value = runTALSnippet(unescaped_value, context)
 
-        return (field.getLabel(), value)
+        return (metafield.getLabel(), value)
 
     def format_request_value_for_db(self, field, params, item, language=None):
         value = params.get(item, '')

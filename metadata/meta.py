@@ -39,8 +39,8 @@ class m_meta(Metatype):
     def getSearchHTML(self, context):
         return tal.getTAL("metadata/meta.html", {"context": context}, macro="searchfield", language=context.language)
 
-    def getFormatedValue(self, field, node, language=None, html=1):
-        return (field.getLabel(), node.get(field.getValues()))
+    def getFormatedValue(self, metafield, maskitem, mask, node, language, html=True):
+        return (metafield.getLabel(), node.get(metafield.getValues()))
 
     def getMaskEditorHTML(self, field, metadatatype=None, language=None):
         try:

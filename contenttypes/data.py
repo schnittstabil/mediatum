@@ -89,16 +89,13 @@ def render_mask_template(node, mask, field_descriptors, language, words=None, se
      
     for node_attribute, fd in field_descriptors:
         metafield_type = fd['metafield_type']
-        maskitem_type = fd['maskitem_type']
+        maskitem = fd['maskitem']
         metafield = fd["metafield"]
         metatype = fd["metatype"]
+        maskitem_type = fd["maskitem_type"]
         
         if metafield_type in ['date', 'url', 'hlist']:
-            value = node.get_special(node_attribute)
-            try:
-                value = metatype.getFormatedValue(metafield, node, language=language, mask=mask)[1]
-            except:
-                value = metatype.getFormatedValue(metafield, node, language=language)[1]
+            value = metatype.getFormatedValue(metafield, maskitem, mask, node, language)[1]
 
         elif metafield_type in ['field']:
             if maskitem_type in ['hgroup', 'vgroup']:
@@ -281,6 +278,7 @@ class Data(Node):
                     fd['format'] = maskitem.getFormat()
                     fd['unit'] = maskitem.getUnit()
                     fd['label'] = maskitem.getLabel()
+                    fd['maskitem'] = maskitem
                     
                     default = maskitem.getDefault()
                     fd['default'] = default

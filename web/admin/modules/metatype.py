@@ -77,6 +77,8 @@ def validate(req, op):
         return res
 
     if len(path) == 5 and path[3] == "editor" and path[4] == "show_testnodes":
+        
+        raise NotImplementedError("")
 
         template = req.params.get('template', '')
         testnodes_list = req.params.get('testnodes', '')
