@@ -113,6 +113,8 @@ class m_field(Metatype):
 
 
     def getViewHTML(self, field, nodes, flags, language=None, template_from_caller=None, mask=None):
+        # XXX: this method claims to support multiple nodes. Unfortunately, this is not true at all...
+        first_node = nodes[0]
         element = field.metafield
         if not element:
             return []
@@ -120,7 +122,7 @@ class m_field(Metatype):
 
         def get_formatted_value(*args, **kwargs):
             _t = getMetadataType(element.get("type"))
-            result = _t.getFormatedValue(*args, **kwargs)[1]
+            result = _t.getFormatedValue(element, first_node, language, *args, **kwargs)[1]
             return ensure_unicode(result)
 
         unit = u''
@@ -129,36 +131,33 @@ class m_field(Metatype):
 
         if flags & VIEW_DATA_ONLY:
             if fieldtype in ['text']:
-                value = get_formatted_value(element, nodes[0], language, template_from_caller=template_from_caller, mask=mask)
+                value = get_formatted_value(template_from_caller=template_from_caller, mask=mask)
             else:
-                value = get_formatted_value(element, nodes[0], language)
+                value = get_formatted_value()
         else:
             if field.getFormat() != "":
                 if fieldtype in ['text']:
-                    value = get_formatted_value(element, nodes[0], language, template_from_caller=template_from_caller, mask=mask)
+                    value = get_formatted_value(template_from_caller=template_from_caller, mask=mask)
                 else:
-                    value = get_formatted_value(element, nodes[0], language)
+                    value = get_formatted_value()
                 value = field.getFormat().replace("<value>", value)
             else:
                 if fieldtype in ['text']:
                     if template_from_caller and template_from_caller[0]:  # checking template on test nodes: show full length
-                        fieldvalue = nodes[0].get(element.name)
+                        fieldvalue = first_node.get(element.name)
                         if fieldvalue.strip():  # field is filled for this node
-                            value = get_formatted_value(element, nodes[0], language, template_from_caller=fieldvalue, mask=mask)
+                            value = get_formatted_value(template_from_caller=fieldvalue, mask=mask)
                         else:  # use default
-                            value = get_formatted_value(element, nodes[0], language, template_from_caller=template_from_caller, mask=mask)
+                            value = get_formatted_value(template_from_caller=template_from_caller, mask=mask)
                     else:  # cut long values
-                        value = formatLongText(get_formatted_value(element,
-                                                                  nodes[0],
-                                                                  language,
-                                                                  template_from_caller=template_from_caller,
+                        value = formatLongText(get_formatted_value(template_from_caller=template_from_caller,
                                                                   mask=mask),
                                                 element)
                 elif fieldtype in ['upload']:
                     # passing mask necessary for fieldtype='upload'
-                    value = formatLongText(get_formatted_value(element, nodes[0], language, mask=mask), element)
+                    value = formatLongText(get_formatted_value(mask=mask), element)
                 else:
-                    value = formatLongText(get_formatted_value(element, nodes[0], language), element)
+                    value = formatLongText(get_formatted_value(), element)
 
         if len(value.strip()) > 0:
             value += unit
