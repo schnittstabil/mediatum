@@ -41,12 +41,16 @@ def make_node_public(node, ruletype=u"all"):
         _add(ruletype)
 
 
-def append_chain_of_containers(length, head, node_factory=DirectoryFactory):
+def append_chain_of_containers(length, head, node_factory=None):
     """Uses the `head` node as start node and appends a chain of container children with `length`.
     Like: head -> generated_node_1 -> ... -> generated_node_<length>
 
     Returns a list of nodes, starting with `head` and containing the generated nodes.
     """
+    if node_factory is None:
+        from core.test.factories import DirectoryFactory
+        node_factory = DirectoryFactory
+
     node = head
     nodes = [head]
     
