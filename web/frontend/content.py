@@ -51,7 +51,7 @@ def get_collections_node():
 
 class SingleFile(object):
 
-    def __init__(self, file, link_params, language, fullstyle_name, words=None):
+    def __init__(self, file, link_params, language, fullstyle_name, separator=None):
         node = file
         sys_filetypes = [unicode(x) for x in node.get_sys_filetypes()]
 
@@ -62,7 +62,7 @@ class SingleFile(object):
         self.attachment = attachment
         self.datatype = node
         self.image = node.show_node_image()
-        self.text = node.show_node_text(words, language=language)
+        self.text = node.show_node_text(separator=separator, language=language)
         self.thumbnail = self.image
         if fullstyle_name:
             link_params["style"] = fullstyle_name
@@ -73,9 +73,6 @@ class SingleFile(object):
     def getLink(self):
         warn("SingleFile.getLink() is deprecated, use SingleFile.link", DeprecationWarning)
         return self.link
-
-    def getMetadata(self, separator=".", language=None):
-        return self.node.show_node_text(separator=separator, language=language)
 
     @property
     def file(self):
@@ -559,7 +556,7 @@ class ContentList(object):
             if "id" not in nav_params:
                 nav_params["id"] = self.collection.id
 
-            sfile = SingleFile(n, nav_params, self.lang, self.default_fullstyle_name)
+            sfile = SingleFile(n, nav_params, self.lang, self.default_fullstyle_name, self.liststyle.maskfield_separator)
             files.append(sfile)
 
         page_nav = tal.getTAL(theme.getTemplate("content_nav.html"), ctx, macro="page_nav_prev_next", language=self.lang)

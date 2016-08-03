@@ -63,7 +63,6 @@ urls = [
 
     ["GET", "/static/(?P<filepath>.*)$", handlers.serve_file, None, SERVICES_URL_HAS_HANDLER, None],
     ["GET", "/cachestatus/{0,1}$", handlers.get_cachestatus, None, SERVICES_URL_HAS_HANDLER, None],
-    ["GET", "/maskcachestatus/{0,1}$", handlers.get_maskcachestatus, None, SERVICES_URL_HAS_HANDLER, None],
 ]
 
 request_count = 0

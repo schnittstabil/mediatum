@@ -18,26 +18,24 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 import re
-import sys
 from functools import partial
 import logging
-import time
 from warnings import warn
 import humanize
 from mediatumtal import tal
 
-from core import Node, db
+from core import Node, db, athana
 from core.database.postgres.node import children_rel
 import core.config as config
 from core.translation import lang, t
 from core.styles import getContentStyles
 from core.transition.postgres import check_type_arg_with_schema
 from export.exportutils import runTALSnippet, default_context
-from schema.schema import getMetadataType, VIEW_DATA_ONLY, VIEW_HIDE_EMPTY, SchemaMixin, Metafield, Metadatatype, Mask
-from web.services.cache import date2string as cache_date2string
+from schema.schema import getMetadataType, VIEW_HIDE_EMPTY, SchemaMixin, Metafield, Mask
 from utils.utils import highlight
 from core.transition.globals import request
 from core.node import get_node_from_request_cache
+from utils.compat import iteritems
 
 logg = logging.getLogger(__name__)
 
@@ -48,35 +46,11 @@ context = default_context.copy()
 context['host'] = "http://" + config.get("host.name", "")
 
 
-def init_maskcache():
-    global maskcache, maskcache_accesscount, maskcache_msg
-    maskcache = {}
-    maskcache_accesscount = {}
-    maskcache_msg = '| cache initialized %s\r\n|\r\n' % cache_date2string(time.time(), '%04d-%02d-%02d-%02d-%02d-%02d')
-
-
-def get_maskcache_report():
-    s = maskcache_msg + "| %d lookup keys in cache, total access count: %d\r\n|\r\n"
-    total_access_count = 0
-    for k, v in sorted(maskcache_accesscount.items()):
-        s += u"| {} : {}\r\n".format(k.ljust(60, '.'),
-                                     unicode(v).rjust(8, '.'))
-        total_access_count += v
-    return s % (len(maskcache_accesscount), total_access_count)
-
-
-def flush_maskcache(req=None):
-    from core import users
-    global maskcache, maskcache_accesscount, maskcache_msg
-    logg.info("going to flush maskcache, content is: \r\n%s", get_maskcache_report())
-    maskcache = {}
-    maskcache_accesscount = {}
-    if req:
-        user = users.getUserFromRequest(req)
-        logg.info("flush of masks cache triggered by user %s with request on '%s'", user.login_name, req.path)
-
-        sys.stdout.flush()
-    maskcache_msg = '| cache last flushed %s\r\n|\r\n' % cache_date2string(time.time(), '%04d-%02d-%02d-%02d-%02d-%02d')
+def get_maskcache_report(maskcache_accesscount):
+    sorted_entries = [(k, v) for k, v in sorted(iteritems(maskcache_accesscount))]
+    total_access_count = sum(v for k, v in sorted_entries)
+    num_cache_keys = len(sorted_entries)
+    return "keys: %s, total access count: %s, %s" % (num_cache_keys, total_access_count, sorted_entries)
 
 
 def make_lookup_key(node, language=None, labels=True):
@@ -93,7 +67,7 @@ def make_lookup_key(node, language=None, labels=True):
         return "%s/%s_%s_%s" % (node.type, node.schema, languages[0], flaglabels)
 
 
-def get_maskcache_entry(lookup_key):
+def get_maskcache_entry(lookup_key, maskcache, maskcache_accesscount):
     try:
         res = maskcache[lookup_key]
         maskcache_accesscount[lookup_key] += 1
@@ -102,8 +76,105 @@ def get_maskcache_entry(lookup_key):
     return res
 
 
+@athana.request_finished
+def log_maskcache_accesscount(req, *args):
+    if logg.isEnabledFor(logging.DEBUG):
+        maskcache_accesscount = req.app_cache.get('maskcache_accesscount', {})
+        if maskcache_accesscount:
+            maskcache_report = get_maskcache_report(maskcache_accesscount)
+            logg.debug("mask cache status for req to %s: %s", req.path, maskcache_report)
+
+
 get_mask = partial(get_node_from_request_cache, Mask)
 get_metafield = partial(get_node_from_request_cache, Metafield)
+
+
+def render_mask_template(node, mask, field_descriptors, language, words=None, separator="", skip_empty_fields=True):
+    res = []
+     
+    for node_attribute, fd in field_descriptors:
+        metafield_type = fd['metafield_type']
+        maskitem_type = fd['maskitem_type']
+        metafield = fd["metafield"]
+        metatype = fd["metatype"]
+        
+        if metafield_type in ['date', 'url', 'hlist']:
+            value = node.get_special(node_attribute)
+            try:
+                value = metatype.getFormatedValue(metafield, node, language=language, mask=mask)[1]
+            except:
+                value = metatype.getFormatedValue(metafield, node, language=language)[1]
+
+        elif metafield_type in ['field']:
+            if maskitem_type in ['hgroup', 'vgroup']:
+                _sep = ''
+                if maskitem_type == 'hgroup':
+                    fd['unit'] = ''  # unit will be taken from definition of the hgroup
+                    use_label = False
+                else:
+                    use_label = True
+                value = getMetadataType(maskitem_type).getViewHTML(
+                                                                 metafield,
+                                                                 [node],  # nodes
+                                                                 0,  # flags
+                                                                 language=language,
+                                                                 mask=mask, use_label=use_label)
+        else:
+            value = node.get_special(node_attribute)
+
+            if hasattr(metatype, "language_snipper"):
+                if (metafield.get("type") == "text" and metafield.get("valuelist") == "multilingual") \
+                    or \
+                   (metafield.get("type") in ['memo', 'htmlmemo'] and metafield.get("multilang") == '1'):
+                    value = metatype.language_snipper(value, language)
+
+            if value.find('&lt;') >= 0:
+                # replace variables
+                for var in re.findall(r'&lt;(.+?)&gt;', value):
+                    if var == "att:id":
+                        value = value.replace("&lt;" + var + "&gt;", unicode(node.id))
+                    elif var.startswith("att:"):
+                        val = node.get_special(var[4:])
+                        if val == "":
+                            val = "____"
+
+                        value = value.replace("&lt;" + var + "&gt;", val)
+                value = value.replace("&lt;", "<").replace("&gt;", ">")
+
+            if value.find('<') >= 0:
+                # replace variables
+                for var in re.findall(r'\<(.+?)\>', value):
+                    if var == "att:id":
+                        value = value.replace("<" + var + ">", unicode(node.id))
+                    elif var.startswith("att:"):
+                        val = node.get_special(var[4:])
+                        if val == "":
+                            val = "____"
+
+                        value = value.replace("&lt;" + var + "&gt;", val)
+                value = value.replace("&lt;", "<").replace("&gt;", ">")
+
+            if value.find('tal:') >= 0:
+                context['node'] = node
+                value = runTALSnippet(value, context)
+
+            # don't escape before running TAL
+            default = fd['default']
+            if not value and default:
+                value = default
+
+        if skip_empty_fields and not value:
+            continue
+
+        if fd["unit"]:
+            value = value + " " + fd["unit"]
+        if fd["format"]:
+            value = fd["format"].replace("<value>", value)
+        if words:
+            value = highlight(value, words, '<font class="hilite">', "</font>")
+        res.append(fd["template"] % value)
+        
+    return separator.join(res)
 
 
 class Data(Node):
@@ -181,122 +252,24 @@ class Data(Node):
 
 
     def show_node_text_deep(self, words=None, language=None, separator="", labels=0):
-
-        def render_mask_template(node, mask, field_descriptors, words=None, separator="", skip_empty_fields=True):
-            
-            res = []
-             
-            for node_attribute, fd in field_descriptors:
-                metafield_type = fd['metafield_type']
-                maskitem_type = fd['maskitem_type']
-                metafield_id = fd["metafield_id"]
-                metafield = get_metafield(metafield_id)
-                
-                if metafield is None:
-                    raise ValueError("metafield with ID {} not found!".format(metafield_id))
-                
-                metatype = fd["metatype"]
-                
-                if metafield_type in ['date', 'url', 'hlist']:
-                    value = node.get_special(node_attribute)
-                    try:
-                        value = metatype.getFormatedValue(metafield, node, language=language, mask=mask)[1]
-                    except:
-                        value = metatype.getFormatedValue(metafield, node, language=language)[1]
-
-                elif metafield_type in ['field']:
-                    if maskitem_type in ['hgroup', 'vgroup']:
-                        _sep = ''
-                        if maskitem_type == 'hgroup':
-                            fd['unit'] = ''  # unit will be taken from definition of the hgroup
-                            use_label = False
-                        else:
-                            use_label = True
-                        value = getMetadataType(maskitem_type).getViewHTML(
-                                                                         fd['field'],  # field
-                                                                         [node],  # nodes
-                                                                         0,  # flags
-                                                                         language=language,
-                                                                         mask=mask, use_label=use_label)
-                else:
-                    value = node.get_special(node_attribute)
-
-                    if hasattr(metatype, "language_snipper"):
-                        if (metafield.get("type") == "text" and metafield.get("valuelist") == "multilingual") \
-                            or \
-                           (metafield.get("type") in ['memo', 'htmlmemo'] and metafield.get("multilang") == '1'):
-                            value = metatype.language_snipper(value, language)
-
-                    if value.find('&lt;') >= 0:
-                        # replace variables
-                        for var in re.findall(r'&lt;(.+?)&gt;', value):
-                            if var == "att:id":
-                                value = value.replace("&lt;" + var + "&gt;", unicode(node.id))
-                            elif var.startswith("att:"):
-                                val = node.get_special(var[4:])
-                                if val == "":
-                                    val = "____"
-
-                                value = value.replace("&lt;" + var + "&gt;", val)
-                        value = value.replace("&lt;", "<").replace("&gt;", ">")
-
-                    if value.find('<') >= 0:
-                        # replace variables
-                        for var in re.findall(r'\<(.+?)\>', value):
-                            if var == "att:id":
-                                value = value.replace("<" + var + ">", unicode(node.id))
-                            elif var.startswith("att:"):
-                                val = node.get_special(var[4:])
-                                if val == "":
-                                    val = "____"
-
-                                value = value.replace("&lt;" + var + "&gt;", val)
-                        value = value.replace("&lt;", "<").replace("&gt;", ">")
-
-                    if value.find('tal:') >= 0:
-                        context['node'] = node
-                        value = runTALSnippet(value, context)
-
-                    # don't escape before running TAL
-                    if (not value) and fd['default']:
-                        default = fd['default']
-                        if fd['default_has_tal']:
-                            context['node'] = node
-                            value = runTALSnippet(default, context)
-                        else:
-                            value = default
-
-
-                if skip_empty_fields and not value:
-                    continue
-
-                if fd["unit"]:
-                    value = value + " " + fd["unit"]
-                if fd["format"]:
-                    value = fd["format"].replace("<value>", value)
-                if words:
-                    value = highlight(value, words, '<font class="hilite">', "</font>")
-                res.append(fd["template"] % value)
-                
-            return separator.join(res)
-
+        
         if not separator:
-            separator = "<br/>"
+            separator = u"<br/>"
 
         lookup_key = make_lookup_key(self, language, labels)
 
         # if the lookup_key is already in the cache dict: render the cached mask_template
         # else: build the mask_template
 
-        if lookup_key in maskcache:
-            mask_id, field_descriptors = maskcache[lookup_key]
-            mask = get_mask(mask_id)
-            
-            if mask is None:
-                raise ValueError("mask for cached ID {} not found".format(mask_id))
-            
-            res = render_mask_template(self, mask_id, field_descriptors, words=words, separator=separator)
-            maskcache_accesscount[lookup_key] += 1
+        if not 'maskcache' in request.app_cache:
+            request.app_cache['maskcache'] = {}
+            request.app_cache['maskcache_accesscount'] = {}
+
+        if lookup_key in request.app_cache['maskcache']:
+            mask, field_descriptors = request.app_cache['maskcache'][lookup_key]
+            res = render_mask_template(self, mask, field_descriptors, language, words=words, separator=separator)
+            request.app_cache['maskcache_accesscount'][lookup_key] = request.app_cache['maskcache_accesscount'].get(lookup_key, 0) + 1
+
         else:
             mask = self.metadatatype.get_mask(u"nodesmall")
             for m in self.metadatatype.filter_masks(u"shortview", language=language):
@@ -309,22 +282,19 @@ class Data(Node):
                 
                 for _, maskitem in ordered_fields:
                     fd = {}  # field descriptor
-                    fd['maskitem_id'] = maskitem.id
                     fd['maskitem_type'] = maskitem.get('type')
                     fd['format'] = maskitem.getFormat()
                     fd['unit'] = maskitem.getUnit()
                     fd['label'] = maskitem.getLabel()
-
-                    metafield = maskitem.getField()
+                    
                     default = maskitem.getDefault()
                     fd['default'] = default
-                    fd['default_has_tal'] = (default.find('tal:') >= 0)
-
-                    metafield_type = metafield.get('type')
                     
+                    metafield = maskitem.metafield
+                    metafield_type = metafield.get('type')
+                    fd['metafield'] = metafield
                     fd['metafield_type'] = metafield_type
-                    fd['metafield_id'] = metafield.id
-
+                    
                     t = getMetadataType(metafield_type)
                     fd['metatype'] = t
 
@@ -357,9 +327,9 @@ class Data(Node):
                     long_field_descriptor = (node_attribute, fd)
                     field_descriptors.append(long_field_descriptor)
 
-                maskcache[lookup_key] = (mask.id, field_descriptors)
-                maskcache_accesscount[lookup_key] = 0
-                res = render_mask_template(self, mask, field_descriptors, words=words, separator=separator)
+                request.app_cache['maskcache'][lookup_key] = (mask, field_descriptors)
+                request.app_cache['maskcache_accesscount'][lookup_key] = 0
+                res = render_mask_template(self, mask, field_descriptors, language, words=words, separator=separator)
 
             else:
                 res = '&lt;smallview mask not defined&gt;'
