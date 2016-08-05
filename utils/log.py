@@ -45,17 +45,17 @@ dlogfiles = {}
 def tal_traceback_info():
     info = {}
     tal_traceback_line = None
-    
+
     # hack for additional traceback info for TAL traces
     try:
         # XXX: this can fail with an index error, don't know why
-        stack = inspect.stack() # search for a python expr evaluation in the TAL interpreter stack trace
+        stack = inspect.stack()  # search for a python expr evaluation in the TAL interpreter stack trace
     except IndexError:
         return info, tal_traceback_line
-        
+
     eval_frame_result = [f for f in stack if f[3] == "evaluate" and "talextracted" in f[1]]
     if eval_frame_result:
-    
+
         eval_frame_locals = eval_frame_result[0][0].f_locals
         info["tal_expr"] = tal_expr = eval_frame_locals["expr"]
         tal_engine = eval_frame_locals["self"]
@@ -77,12 +77,12 @@ def tal_traceback_info():
             if tal_filename:
                 tal_filepath = os.path.join(config.basedir, tal_filename)
             else:
-                tal_filepath = "<string>" # no filename? template was rendered from a string
-            tal_traceback_line = u'\n  File "{}", line {}, in {}\n    {}'.format(tal_filepath, 
-                tal_lineno, 
-                tal_macro or "<template>", 
-                tal_expr)
-        
+                tal_filepath = "<string>"  # no filename? template was rendered from a string
+            tal_traceback_line = u'\n  File "{}", line {}, in {}\n    {}'.format(tal_filepath,
+                                                                                 tal_lineno,
+                                                                                 tal_macro or "<template>",
+                                                                                 tal_expr)
+
     return info, tal_traceback_line
 
 
@@ -326,29 +326,29 @@ def make_xid_and_errormsg_hash():
 
 
 def extra_log_info_from_req(req, add_user_info=True):
-    
+
     extra = {"args": dict(req.args),
-                 "path": req.path,
-                 "method": req.method}
+             "path": req.path,
+             "method": req.method}
 
     if req.method == "POST":
         extra["form"] = dict(req.form)
-        extra["files"] = [{"filename": f.filename, 
-                           "tempname": f.tempname, 
-                           "content_type": f.content_type, 
-                           "filesize" : f.filesize} for f in req.files.values()]
+        extra["files"] = [{"filename": f.filename,
+                           "tempname": f.tempname,
+                           "content_type": f.content_type,
+                           "filesize": f.filesize} for f in req.files.values()]
 
     if add_user_info:
         from core.users import user_from_session
         user = user_from_session(req.session)
         extra["user_is_anonymous"] = user.is_anonymous
-        
+
         if not user.is_anonymous:
             extra["user_id"] = user.id
-            
+
         extra["user_is_editor"] = user.is_editor
         extra["user_is_admin"] = user.is_admin
-        
-        extra["headers"] = { k.lower(): v for k, v in [h.split(": ", 1) for h in req.header] }
-    
+
+        extra["headers"] = {k.lower(): v for k, v in [h.split(": ", 1) for h in req.header]}
+
     return extra
