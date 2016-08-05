@@ -143,7 +143,9 @@ def init_app():
 
 
 def init_db_connector():
-    import core.database  # init DB connector
+    import core
+    from core.database.postgres.connector import PostgresSQLAConnector  # init DB connector
+    core.db = PostgresSQLAConnector()
     # assign model classes for selected DB connector to the core package
     for cls in core.db.get_model_classes():
         setattr(core, cls.__name__, cls)

@@ -389,8 +389,8 @@ def req(app, guest_user):
 
 @yield_fixture
 def enable_athana_continuum_plugin():
-    from core.database.postgres import athana_continuum_plugin
-    athana_continuum_plugin.disabled = False
+    from core import db
+    db.athana_continuum_plugin.disabled = False
     yield
-    athana_continuum_plugin.disabled = True
+    db.athana_continuum_plugin.disabled = True
     

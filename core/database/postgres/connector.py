@@ -21,10 +21,13 @@ from core.database.postgres.psycopg2_debug import make_debug_connection_factory
 from core.database.init import init_database_values
 from utils.utils import find_free_port
 from utils.postgres import schema_exists, table_exists
-from core.database.postgres.permission import AccessRulesetToRule
 import utils.process
 import sys
 from core.search.config import get_fulltext_autoindex_languages, get_attribute_autoindex_languages
+from sqlalchemy_continuum import make_versioned
+from sqlalchemy_continuum.plugins.transaction_meta import TransactionMetaPlugin
+from core.transition.athana_continuum_plugin import AthanaContinuumPlugin
+from core.database.postgres.continuumext import MtVersionBase
 
 # set this to True or False to override debug config settings
 DEBUG = None
@@ -71,6 +74,22 @@ class PostgresSQLAConnector(object):
         session_factory = sessionmaker(query_cls=MtQuery)
         self.Session = scoped_session(session_factory)
         self.metadata = db_metadata
+        self.meta_plugin = TransactionMetaPlugin()
+        self.athana_continuum_plugin = AthanaContinuumPlugin()
+ 
+        # XXX: maybe there is a better place for this, but we need it before some methods in this class are called.
+        # XXX: maybe we could make it optionsl
+        self.setup_versioning()
+
+    def setup_versioning(self):
+        make_versioned(
+            plugins=[self.meta_plugin, self.athana_continuum_plugin],
+            options={
+                'native_versioning': True,
+                'base_classes': (MtVersionBase, DeclarativeBase),
+                'extension_schema': config.get("database.extension_schema", "public")
+            }
+        )
 
     def configure(self, force_test_db=False):
         if DEBUG is None:
@@ -252,7 +271,7 @@ class PostgresSQLAConnector(object):
         from core.database.postgres.file import File, NodeToFile
         from core.database.postgres.node import NodeType, Node, NodeAlias
         from core.database.postgres.user import User, UserGroup, UserToUserGroup, AuthenticatorInfo, OAuthUserCredentials
-        from core.database.postgres.permission import AccessRule, AccessRuleset, NodeToAccessRule, NodeToAccessRuleset
+        from core.database.postgres.permission import AccessRule, AccessRuleset, NodeToAccessRule, NodeToAccessRuleset, AccessRulesetToRule
         from core.database.postgres.setting import Setting
         from core.database.postgres.search import Fts
         return (

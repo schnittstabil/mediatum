@@ -26,7 +26,6 @@ from core import config
 from core.transition import request
 from core.database.postgres.continuumext import MtVersionBase
 from utils.compat import iteritems
-from core.transition.athana_continuum_plugin import AthanaContinuumPlugin
 
 
 logg = logging.getLogger(__name__)
@@ -47,22 +46,6 @@ def dynamic_rel(*args, **kwargs):
 db_metadata = sqla.MetaData(schema=DB_SCHEMA_NAME)
 mediatumfunc = getattr(sqlfunc, DB_SCHEMA_NAME)
 DeclarativeBase = declarative_base(metadata=db_metadata)
-
-
-meta_plugin = TransactionMetaPlugin()
-athana_continuum_plugin = AthanaContinuumPlugin()
-
-def setup_versioning():
-    make_versioned(
-        plugins=[meta_plugin, athana_continuum_plugin],
-        options={
-            'native_versioning': True,
-            'base_classes': (MtVersionBase, DeclarativeBase),
-            'extension_schema': config.get("database.extension_schema", "public")
-        }
-    )
-
-setup_versioning()
 
 
 class TimeStamp(object):
@@ -259,3 +242,4 @@ class MtQuery(Query):
                     .filter_by(key=u'alias_id', value=unicode(ident)).scalar())
 
         return active_version
+    

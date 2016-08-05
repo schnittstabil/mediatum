@@ -112,5 +112,4 @@ def test_setup():
 
     # Disable setting the user and ip for each version. This leads to some failures in tests and we don't need it there anyways.
     # Versioning tests can enable this later.
-    from core.database.postgres import athana_continuum_plugin
-    athana_continuum_plugin.disabled = True
+    db.athana_continuum_plugin.disabled = True
