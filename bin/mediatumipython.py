@@ -165,13 +165,16 @@ import core.config as config
 import filecmp
 import magic
 from utils.compat import *
+import core.database.postgres.connector
 
 # log settings #
 
 # set this to INFO for SQL statement echo, DEBUG for even more info from SQLAlchemy
 SQLALCHEMY_LOGGING = logging.WARN
-SQL_LOGGING = logging.WARN
+SQL_LOGGING = logging.DEBUG
 
+core.database.postgres.connector.DEBUG_SHOW_TRACE = False
+core.database.postgres.connector.DEBUG = True
 # / log settings #
 
 INIT_ARGS = dict(prefer_config_filename="mediatumipython.cfg")
@@ -181,14 +184,10 @@ initmodule.register_workflow()
 
 from core.database.postgres.node import t_noderelation
 from core.database.postgres import alchemyext
-import core.database.postgres.connector
 
 # change this to True in your IPython notebook after running mediatumipython.py
 IPYTHON_NOTEBOOK = False
 
-core.database.postgres.connector.DEBUG_SHOW_TRACE = False
-core.database.postgres.connector.DEBUG = True
-core.database.postgres.SLOW_QUERY_SECONDS = 3600
 
 # use default connection specified by mediatum config for ipython-sql magic
 SQLMAGICS_CONNECTION_FACTORY = lambda: core.db.connectstr
@@ -884,6 +883,11 @@ def explain(query, analyze=False, pygments_style="native"):
         print()
         print(formatted_statement)
         print(explained)
+
+
+def eanalyze(query, pygments_style="native"):
+    """Shortcut for explain(query, analyze=True)"""
+    explain(query, True, pygments_style)
 
 
 def handle_sqla_exception(self, etype, value, tb, tb_offset=None):
