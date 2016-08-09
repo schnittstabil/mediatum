@@ -181,6 +181,10 @@ class MtQuery(Query):
         from core import Node
         return self.options(undefer(Node.attrs))
 
+    def prefetch_system_attrs(self):
+        from core import Node
+        return self.options(undefer(Node.system_attrs))
+
     def _find_nodeclass(self):
         from core import Node
         """Returns the query's underlying model classes."""
