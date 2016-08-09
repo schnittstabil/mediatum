@@ -24,17 +24,6 @@ def test_set_metafield_none(some_maskitem):
         some_maskitem.metafield = None
 
 
-def test_mask_metafield_query_neq(some_mask, some_metafield):
-    other_maskitems = some_mask.maskitems.filter(Maskitem.metafield != some_metafield).all()
-    assert(some_metafield not in other_maskitems)
-
-
-def test_mask_metafield_query_eq(some_mask):
-    maskitem = some_mask.maskitems[0]
-    metafield = maskitem.metafield
-    maskitems_found = some_mask.maskitems.filter(Maskitem.metafield == metafield).all()
-    assert(maskitem in maskitems_found)
-
 
 def test_del_metafield(some_maskitem):
     with raises(AttributeError):

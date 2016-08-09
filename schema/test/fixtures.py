@@ -36,7 +36,7 @@ def some_metafield(session):
 def some_maskitem(some_metafield):
     """Doesn't make much sense, but ok for hierarchy / getter testing"""
     maskitem = FieldMaskitemFactory()
-    maskitem.children.append(some_metafield)
+    maskitem.metafield = some_metafield
     return maskitem
 
 

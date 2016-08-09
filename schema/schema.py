@@ -894,7 +894,7 @@ def update_multilang_field(node, field, mdt, req, updated_attrs):
 @check_type_arg
 class Mask(Node):
 
-    maskitems = children_rel("Maskitem")
+    maskitems = children_rel("Maskitem", lazy="joined", order_by="Maskitem.orderpos")
 
     _metadatatypes = parents_rel("Metadatatype")
 
@@ -946,7 +946,7 @@ class Mask(Node):
             x.sort_by_orderpos()
             return getMetadataType("mappingfield").getViewHTML(
                 x, nodes, flags, language=language, template_from_caller=template_from_caller, mask=self)
-        for maskitem in self.maskitems.sort_by_orderpos().options(undefer(Node.attrs)):
+        for maskitem in self.maskitems:
             t = getMetadataType(maskitem.get("type"))
             if flags & 4:  # data mode
                 v = t.getViewHTML(maskitem, nodes, flags, language=language, template_from_caller=template_from_caller, mask=self)
@@ -1334,21 +1334,11 @@ class Mask(Node):
 @check_type_arg
 class Maskitem(Node):
 
-    _metafield_rel = children_rel("Metafield", backref="maskitems")
+    _metafield_rel = children_rel("Metafield", backref="maskitems", lazy="joined")
 
-    @hybrid_property
+    @property
     def metafield(self):
-        if not hasattr(self, "_metafield"):
-            self._metafield = self._metafield_rel.options(undefer(Node.attrs)).scalar()
-        return self._metafield
-
-    @metafield.expression
-    def metafield_expr(cls):
-        class MetafieldExpr(object):
-            def __eq__(self, other):
-                return cls._metafield_rel.contains(other)
-
-        return MetafieldExpr()
+        return self._metafield_rel[0] if self._metafield_rel else None
 
     @metafield.setter
     def metafield(self, metafield):
@@ -1356,7 +1346,6 @@ class Maskitem(Node):
             raise ValueError("setting metafield to None is not allowed!")
 
         self._metafield_rel = [metafield]
-        self._metafield = metafield
 
     def getLabel(self):
         return self.getName()
