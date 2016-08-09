@@ -778,15 +778,11 @@ class ContentArea(object):
             if req.args.get("show_navbar") == 0:
                 shortest_path = []
             else:
-                try:
-                    paths = get_accessible_paths(node)
-                    if paths:
-                        shortest_path = sorted(paths, key=lambda p: (len(p), p[-1].id))[0]
-                    else:
-                        shortest_path = []
-                except AttributeError:
-                    logg.exception("exception in html")
-                    return req.error(404, "Object cannot be shown")
+                paths = get_accessible_paths(node)
+                if paths:
+                    shortest_path = sorted(paths, key=lambda p: (len(p), p[-1].id))[0]
+                else:
+                    shortest_path = []
 
             styles = self.content.getContentStyles()
 
