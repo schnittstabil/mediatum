@@ -213,14 +213,16 @@ class Container(Data, ContainerMixin, SchemaMixin):
         return {}
 
     def getLogoPath(self):
-        items = [f.base_name for f in self.files.filter_by(filetype=u"image")]
-        if "system.logo" not in self.attributes.keys() and len(items) == 1:
-            return items[0]
-        else:
-            logoname = self.get("system.logo")
-            for item in items:
-                if item == logoname:
-                    return item
+        logo_name = self.system_attrs.get("logo")
+        logo_base_names = [f.base_name for f in self.files.filter_by(filetype=u"image")]
+        
+        if logo_name:
+            found_logos = [f for f in logo_base_names if f == logo_name]
+            if found_logos:
+                return found_logos[0]
+        elif logo_base_names:
+            return logo_base_names[0]
+
         return ""
 
     def metaFields(self, lang=None):
@@ -321,7 +323,7 @@ class Collection(Container):
 
 @check_type_arg_with_schema
 class Collections(Container):
-    
+
     def get_collection(self):
         return self
     
