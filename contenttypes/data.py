@@ -385,6 +385,7 @@ def prepare_node_data(node, req):
     data["metadata"] = _get_node_metadata_html(node, req)
     data['node'] = node
     data['children'] = node.children.filter_read_access().all()
+    data['versions'] = node.tagged_versions.all()
     # XXX: this is a hack, remove child display from contenttypes!
     data['child_node_url'] = child_node_url
     data['path'] = req.params.get("path", "")
