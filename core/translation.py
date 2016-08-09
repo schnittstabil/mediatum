@@ -86,6 +86,10 @@ def translate(key, language=None, request=None):
     if request and not language:
         language = lang(request)
 
+    if not request and not language:
+        from core.transition import request as _request
+        language = lang(_request)
+
     if not language:
         return "?%s?" % key
 
