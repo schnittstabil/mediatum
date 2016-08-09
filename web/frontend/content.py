@@ -217,14 +217,11 @@ def apply_order_by_for_sortfields(query, sortfields_to_comp, before=False):
     return query
 
 
-def check_node_is_accessible(node):
-    if node is None:
-        return ContentError("No such node", 404)
-    if not node.has_read_access():
-        return ContentError("Permission denied", 403)
-
-from core.transition import httpstatus
-
+def get_accessible_node(nid):
+    """Fetches node by ID, checking read access.
+    Returns a Node or Node if node not found or not accessible by user."""
+    return q(Node).filter_by(id=nid).filter_read_access().prefetch_attrs().prefetch_system_attrs().first()
+    
 
 SORT_FIELDS = 2
 DEFAULT_FULL_STYLE_NAME = "full_standard"
@@ -317,7 +314,7 @@ class ContentList(object):
         return self.nav_link(liststyle=style)
 
     def feedback(self, req):
-        self.container_id = req.args.get("id")
+        self.container_id = req.args.get("id", type=int)
         self.lang = lang(req)
 
         self.before = req.args.get("before", type=int)
@@ -449,11 +446,10 @@ class ContentList(object):
 
         if self.show_id:
             # show_id needed for all cases except first and last
-            show_node = q(Node).get(self.show_id)
-
-            maybe_content_error = check_node_is_accessible(show_node)
-            if maybe_content_error is not None:
-                return maybe_content_error
+            show_node = get_accessible_node(self.show_id)
+            
+            if show_node is None:
+                return NodeNotAccessible()
 
         nav = self.result_nav
 
@@ -657,12 +653,11 @@ def fileIsNotEmpty(file):
 
 
 def mkContentNode(req):
-    id = req.params.get("id", get_collections_node().id)
-    node = q(Node).get(id)
+    nid = req.args.get("id", get_collections_node().id, type=int)
+    node = get_accessible_node(nid)
 
-    maybe_content_error = check_node_is_accessible(node)
-    if maybe_content_error is not None:
-        return maybe_content_error
+    if node is None:
+        return NodeNotAccessible()
 
     if isinstance(node, Container):
         # try to find a start page
@@ -679,7 +674,7 @@ def mkContentNode(req):
             c = ContentList(allowed_nodes, getCollection(node))
             c.feedback(req)
             # if ContentList feedback produced a content error, return that instead of the list itself
-            if isinstance(c.content, ContentError):
+            if isinstance(c.content, NodeNotAccessible):
                 req.setStatus(c.status)
                 return c.content
             c.node = node
@@ -693,9 +688,9 @@ def mkContentNode(req):
     return c
 
 
-class ContentError(object):
+class NodeNotAccessible(object):
 
-    def __init__(self, error, status):
+    def __init__(self, error="no such node", status=404):
         self.error = error
         self._status = status
 
@@ -755,7 +750,7 @@ class ContentArea(object):
 
         if content is None:
             self.content = mkContentNode(req)
-            if not isinstance(self.content, ContentError):
+            if not isinstance(self.content, NodeNotAccessible):
                 self.collectionlogo = CollectionLogo(self.content.collection)
         else:
             self.content = content
