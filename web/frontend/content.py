@@ -41,6 +41,7 @@ from sqlalchemy_continuum.utils import version_class
 import json
 from core.nodecache import get_collections_node
 from utils.pathutils import get_accessible_paths
+from web.frontend import ContentBase
 
 
 logg = logging.getLogger(__name__)
@@ -226,10 +227,12 @@ def get_accessible_node(nid):
 SORT_FIELDS = 2
 DEFAULT_FULL_STYLE_NAME = "full_standard"
 
-class ContentList(object):
 
-    def __init__(self, node_query, collection, words=None, show_sidebar=True):
+class ContentList(ContentBase):
 
+    def __init__(self, node_query, container, words=None, show_sidebar=True):
+
+        self.container = container
         self.show_sidebar = show_sidebar
         self.nodes_per_page = None
         self.nav_params = None
@@ -241,13 +244,17 @@ class ContentList(object):
         self._num = -1
         self.content = None
         self.liststyle_name = None
-        self.collection = collection
+        self.collection = container.get_collection()
         self.sortfields = OrderedDict()
         self.default_fullstyle_name = None
 
-        coll_default_full_style_name = collection.get("style_full")
+        coll_default_full_style_name = self.collection.get("style_full")
         if coll_default_full_style_name is not None and coll_default_full_style_name != DEFAULT_FULL_STYLE_NAME:
             self.default_fullstyle_name = coll_default_full_style_name
+
+    @property
+    def node(self):
+        return self.container
 
     @property
     def has_elements(self):
@@ -598,10 +605,10 @@ class ContentList(object):
         return u'{0}<div id="nodes">{1}</div>{0}'.format(filesHTML, contentList)
 
 
-class ContentNode(object):
+class ContentNode(ContentBase):
 
     def __init__(self, node, nr=0, num=0, words=None):
-        self.node = node
+        self._node = node
         self.collection = node.get_collection()
         self.id = node.id
         self.paths = []
@@ -610,32 +617,36 @@ class ContentNode(object):
         self.words = words
         self.full_style_name = None
 
+    @property
+    def node(self):
+        return self._node
+
     def feedback(self, req):
         self.full_style_name = req.args.get("style")
 
     def getContentStyles(self):
-        return getContentStyles("bigview", contenttype=self.node.type)
+        return getContentStyles("bigview", contenttype=self._node.type)
 
     def actual(self):
         return "(%d/%d)" % (int(self.nr) + 1, self.num)
 
     def select_style_link(self, style):
-        version = self.node.tag if isinstance(self.node, version_class(Node)) else None
+        version = self._node.tag if isinstance(self._node, version_class(Node)) else None
         return node_url(self.id, version=version, style=style)
 
     @ensure_unicode_returned(name="web.frontend.content:html")
     def html(self, req):
         language = lang(req)
         paths_html = u""
-        show_node_big = ensure_unicode_returned(self.node.show_node_big, name="show_node_big of %s" % self.node)
+        show_node_big = ensure_unicode_returned(self._node.show_node_big, name="show_node_big of %s" % self._node)
 
-        paths = get_accessible_paths(self.node, q(Node).prefetch_attrs())
+        paths = get_accessible_paths(self._node, q(Node).prefetch_attrs())
         self.paths = paths
 
-        if not isinstance(self.node, Container):
+        if not isinstance(self._node, Container):
             paths_html = tal.getTAL(theme.getTemplate("content_nav.html"), {"paths": paths}, macro="paths", language=language)
 
-        full_styles = getContentStyles("bigview", self.full_style_name or DEFAULT_FULL_STYLE_NAME, contenttype=self.node.type)
+        full_styles = getContentStyles("bigview", self.full_style_name or DEFAULT_FULL_STYLE_NAME, contenttype=self._node.type)
 
         if full_styles:
             return getFormatedString(show_node_big(req, template=full_styles[0].getTemplate())) + paths_html
@@ -671,13 +682,12 @@ def mkContentNode(req):
         if node.show_list_view:
             # no startpage found, list view requested
             allowed_nodes = node.content_children_for_all_subcontainers_with_duplicates.filter_read_access()
-            c = ContentList(allowed_nodes, getCollection(node))
+            c = ContentList(allowed_nodes, node)
             c.feedback(req)
             # if ContentList feedback produced a content error, return that instead of the list itself
             if isinstance(c.content, NodeNotAccessible):
                 req.setStatus(c.status)
                 return c.content
-            c.node = node
             return c
 
     version_id = req.args.get("v")
@@ -688,7 +698,7 @@ def mkContentNode(req):
     return c
 
 
-class NodeNotAccessible(object):
+class NodeNotAccessible(ContentBase):
 
     def __init__(self, error="no such node", status=404):
         self.error = error
@@ -752,10 +762,7 @@ class ContentArea(object):
         if "raw" in req.args:
             path_html = ""
         else:
-            if hasattr(self.content, "node"):
-                node = self.content.node
-            else:
-                node = None
+            node = self.content.node
 
             # printing is allowed for containers by default, unless system.print != "1" is set on the node
             printlink = None

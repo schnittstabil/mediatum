@@ -29,6 +29,7 @@ from schema.searchmask import SearchMaskItem
 from core.webconfig import node_url
 from core.search.representation import FullMatch
 from core.nodecache import get_collections_node
+from web.frontend import ContentBase
 
 q = db.query
 
@@ -36,7 +37,7 @@ q = db.query
 logg = logging.getLogger(__name__)
 
 
-class NoSearchResult(object):
+class NoSearchResult(ContentBase):
     """This content class is used if no search results cannot be displayed.
     Either the result was empty, or an error happened.
     In the error case, NoSearchResult.error is set to True.
@@ -47,6 +48,10 @@ class NoSearchResult(object):
         self.container = container
         self.searchmode = searchmode
         self.error = error
+
+    @property
+    def node(self):
+        return self.container
 
     def getLink(self, container):
         return node_url(container)
