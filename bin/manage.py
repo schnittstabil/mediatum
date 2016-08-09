@@ -84,7 +84,7 @@ def _drop_index_for_attribute(name_or_all, index_type):
             try:
                 created = exec_sqlfunc(s, drop_func(attrname))
             except sqlalchemy.exc.OperationalError:
-                logg.exception("failed to create index for %s", index_type, attrname)
+                logg.exception("failed to drop %s index for %s", index_type, attrname)
                 s.rollback()
                 failed_indices.append(attrname)
             else:
@@ -124,7 +124,7 @@ def _create_index_for_attribute(name_or_all, index_type, recreate=False):
             try:
                 created = exec_sqlfunc(s, creation_func(attrname, recreate))
             except sqlalchemy.exc.OperationalError:
-                logg.exception("failed to create index for %s", index_type, attrname)
+                logg.exception("failed to create %s index for %s", index_type, attrname)
                 s.rollback()
                 failed_indices.append(attrname)
             else:
