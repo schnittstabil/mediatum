@@ -723,12 +723,6 @@ class ContentArea(object):
     def content(self, content):
         self._content = content
 
-    def actNode(self):
-        if hasattr(self.content, 'node'):
-            return self.content.node
-        else:
-            return None
-
     @ensure_unicode_returned
     def html(self, req):
         content = None
@@ -754,9 +748,6 @@ class ContentArea(object):
                 self.collectionlogo = CollectionLogo(self.content.collection)
         else:
             self.content = content
-
-        if hasattr(self.content, "getParams"):
-            self.params = '&' + self.content.getParams()
 
         if "raw" in req.args:
             path_html = ""
