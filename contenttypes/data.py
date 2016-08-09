@@ -333,25 +333,6 @@ class Data(Node):
     def has_object(self):
         return False
 
-    def getFullView(self, language):
-        """Gets the fullview mask for the given `language`.
-        If no matching language mask is found, return a mask without language specification or None.
-        :rtype: Mask
-        """
-        
-        from sqlalchemy.orm import joinedload, undefer
-        from schema.schema import Mask, Maskitem
-        
-        mask_load_opts = (undefer("attrs"), 
-                          joinedload(Mask.maskitems).undefer("attrs").joinedload(Maskitem._metafield_rel).undefer("attrs"))
-
-        lang_mask = self.metadatatype.filter_masks(masktype=u"fullview", language=language).options(mask_load_opts).first()
-
-        if lang_mask is not None:
-            return lang_mask
-        else:
-            return self.metadatatype.filter_masks(masktype=u"fullview").options(mask_load_opts).first()
-
     @classmethod
     def get_sys_filetypes(cls):
         return []
