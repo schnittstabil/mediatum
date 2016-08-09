@@ -30,6 +30,7 @@ from warnings import warn
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import undefer
+from werkzeug.utils import cached_property
 import core.config as config
 import core.translation as translation
 from core import Node
@@ -1523,7 +1524,7 @@ class SchemaMixin(object):
         else:
             return self.metadatatype.filter_masks(masktype=u"fullview").options(mask_load_opts).first()
 
-    @property
+    @cached_property
     def metadatatype(self):
         try:
             return q(Metadatatype).filter_by(name=self.schema).one()
