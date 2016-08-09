@@ -486,10 +486,9 @@ class Node(DeclarativeBase, NodeMixin):
         from contenttypes import Collection
         return self._get_nearest_ancestor_by_type(Collection)
 
-    @cached_property
+    @property
     def has_files(self):
-        # XXX: can we really cache this?
-        return self.files.first() is not None
+        return len(self.file_objects) == 0
 
     __mapper_args__ = {
         'polymorphic_identity': 'node',
