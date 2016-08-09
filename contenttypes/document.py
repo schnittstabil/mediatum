@@ -77,11 +77,17 @@ def _prepare_document_data(node, req, words=""):
         obj['documentthumb'] += "?v=" + node.tag
         obj['tag'] = node.tag
 
-    if "oogle" not in (req.get_header("user-agent") or ""):
+    # XXX: do we really need this spider filtering?
+    user_agent = req.get_header("user-agent") or ""
+    is_spider = "oogle" in user_agent or "aidu" in user_agent
+    
+    obj['print_url'] = None
+
+    if config.getboolean("config.enable_printing") and not is_spider:
         obj['print_url'] = u'/print/{}'.format(node.id)
-    else:
+    
+    if is_spider:
         # don't confuse search engines with the PDF link
-        obj['print_url'] = None
         obj['documentdownload'] = None
 
     full_style = req.args.get("style", "full_standard")

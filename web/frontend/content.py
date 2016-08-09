@@ -22,7 +22,7 @@ import logging
 import urllib
 from warnings import warn
 
-from core import db, Node, File
+from core import db, config, Node, File
 from core.styles import getContentStyles, theme
 from core.translation import lang, t
 from core.webconfig import node_url
@@ -767,7 +767,7 @@ class ContentArea(object):
             # printing is allowed for containers by default, unless system.print != "1" is set on the node
             printlink = None
 
-            if isinstance(node, Container) and node.system_attrs.get("print", "1") == "1":
+            if isinstance(node, Container) and config.getboolean("config.enable_printing") and node.system_attrs.get("print", "1") == "1":
                 printlink = '/print/' + unicode(node.id)
 
             if printlink and "sortfield0" in req.args:
