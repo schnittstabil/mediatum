@@ -76,7 +76,7 @@ def handle_json_request(req):
     req.write(req.params.get("jsoncallback") + "(%s)" % json.dumps(s, indent=4))
 
 
-DISPLAY_PATH = re.compile("/([-.~_/a-zA-Z0-9]+)$")
+DISPLAY_PATH = re.compile("/([_a-zA-Z][_/a-zA-Z0-9]+)$")
 known_node_aliases = {}
 
 
