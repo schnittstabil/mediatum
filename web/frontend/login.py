@@ -120,9 +120,10 @@ def login(req):
 def logout(req):
     # if the session has expired, there may be no user in the session dictionary
     user = users.user_from_session(req.session)
-    auth.logout_user(user, req)
-    if "user_id" in req.session:
-        del req.session["user_id"]
+    if not user.is_anonymous:
+        auth.logout_user(user, req)
+        if "user_id" in req.session:
+            del req.session["user_id"]
 
     req.request["Location"] = '/'
     return httpstatus.HTTP_MOVED_TEMPORARILY
@@ -133,7 +134,7 @@ def pwdchange(req):
     error = 0
 
     if "ChangeSubmit" in req.form:
-        if user is get_guest_user():
+        if user.is_anonymous:
             req.request["Location"] = _make_collection_root_link()
             return httpstatus.HTTP_MOVED_TEMPORARILY
 

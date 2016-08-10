@@ -29,7 +29,6 @@ from core.xmlnode import getNodeXML, readNodeXML
 
 import utils.date as date
 from core.translation import t, lang, addLabels, getDefaultLanguage, switch_language
-from core.users import get_guest_user
 from core.transition import current_user
 from core.transition.postgres import check_type_arg
 from core.database.postgres.permission import NodeToAccessRuleset
@@ -459,7 +458,7 @@ class WorkflowStep(Node):
 
                 if self in node.parents:
                     # set correct language for workflow for guest user only
-                    if node.get('key') == node.get('system.key') and current_user is get_guest_user():
+                    if node.get('key') == node.get('system.key') and current_user.is_anonymous:
                         switch_language(req, node.get('system.wflanguage'))
 
                     link = req.makeLink("/mask", {"id": self.id})
