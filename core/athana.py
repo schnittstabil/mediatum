@@ -1039,6 +1039,9 @@ class http_request(object):
             # when using telnet to debug a server.
             close_it = 1
 
+        if self.session and "PSESSION" not in self.Cookies:
+            self.setCookie('PSESSION', self.sessionid, path="/", secure=config.getboolean("host.ssl", True))
+
         reply_header = self.build_reply_header()
         if isinstance(reply_header, unicode):
             reply_header = reply_header.encode('utf8')
@@ -3896,7 +3899,6 @@ MULTIPART = re.compile('multipart/form-data.*boundary=([^ ]*)', re.IGNORECASE)
 SESSION_PATTERN = re.compile("^;[a-z0-9]{6}-[a-z0-9]{6}-[a-z0-9]{6}$")
 SESSION_PATTERN2 = re.compile("[a-z0-9]{6}-[a-z0-9]{6}-[a-z0-9]{6}")
 
-use_cookies = 1
 SESSION_COOKIES_LIVE_SECS = 3600 * 2  # unused sessions may be valid for 2 hours
 
 
@@ -4054,11 +4056,8 @@ class AthanaHandler:
         request.Cookies = cookies
 
         sessionid = None
-        if params is not None and SESSION_PATTERN.match(params):
-            sessionid = params
-            if sessionid[0] == ';':
-                sessionid = sessionid[1:]
-        elif use_cookies and "PSESSION" in cookies:
+                
+        if "PSESSION" in cookies:
             sessionid = cookies["PSESSION"]
 
         if USE_PERSISTENT_SESSIONS:
@@ -4125,8 +4124,6 @@ class AthanaHandler:
         request.uri = request.uri.replace(context.name, "/")
         request._split_uri = None
 
-        if use_cookies:
-            request.setCookie('PSESSION', sessionid, time.time() + SESSION_COOKIES_LIVE_SECS)
 
         request.channel.current_request = None
 
