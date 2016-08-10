@@ -23,6 +23,7 @@ RETURN QUERY SELECT
 
     FROM nodemapping nm
     WHERE cid=node_id 
+    AND NOT ARRAY[nm.nid] <@ exclude_container_ids
     AND has_read_access_to_node(nm.nid, group_ids, ipaddr, date);
 END;
 $f$;
