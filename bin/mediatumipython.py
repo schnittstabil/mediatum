@@ -171,7 +171,7 @@ import core.database.postgres.connector
 
 # set this to INFO for SQL statement echo, DEBUG for even more info from SQLAlchemy
 SQLALCHEMY_LOGGING = logging.WARN
-SQL_LOGGING = logging.DEBUG
+SQL_LOGGING = logging.WARN
 
 core.database.postgres.connector.DEBUG_SHOW_TRACE = False
 core.database.postgres.connector.DEBUG = True
