@@ -53,12 +53,6 @@ class NoSearchResult(ContentBase):
     def node(self):
         return self.container
 
-    def getLink(self, container):
-        return node_url(container)
-
-    def getContentStyles(self):
-        return []
-
     @ensure_unicode_returned(name="searchresult:html")
     def html(self, req):
         if self.error:

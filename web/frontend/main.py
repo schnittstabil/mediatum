@@ -136,7 +136,7 @@ def display_alias(req):
         # redirect to regular display handler
         display(req)
     else:
-        raise RuntimeError(u"illegal alias '{}', should not be passed to this handler!".format(alias_name))
+        raise RuntimeError(u"illegal alias '{}', should not be passed to this handler!".format(req.path))
 
 
 RE_NEWSTYLE_NODE_URL = re.compile("/(nodes/)?(\d+).*")

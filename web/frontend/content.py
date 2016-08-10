@@ -257,6 +257,10 @@ class ContentList(ContentBase):
         return self.container
 
     @property
+    def logo(self):
+        return CollectionLogo(self.collection)
+
+    @property
     def has_elements(self):
         if self._num > 0:
             return True
@@ -434,7 +438,8 @@ class ContentList(ContentBase):
 
         return l
 
-    def getContentStyles(self):
+    @property
+    def content_styles(self):
         if isinstance(self.content, ContentNode):
             return getContentStyles("bigview", contenttype=self.content.node.getContentType())
         else:
@@ -617,18 +622,20 @@ class ContentNode(ContentBase):
         self.words = words
         self.full_style_name = None
 
+    def feedback(self, req):
+        self.full_style_name = req.args.get("style")
+
     @property
     def node(self):
         return self._node
 
-    def feedback(self, req):
-        self.full_style_name = req.args.get("style")
+    @property
+    def logo(self):
+        return CollectionLogo(self.collection)
 
-    def getContentStyles(self):
+    @property
+    def content_styles(self):
         return getContentStyles("bigview", contenttype=self._node.type)
-
-    def actual(self):
-        return "(%d/%d)" % (int(self.nr) + 1, self.num)
 
     def select_style_link(self, style):
         version = self._node.tag if isinstance(self._node, version_class(Node)) else None
@@ -654,16 +661,20 @@ class ContentNode(ContentBase):
             return getFormatedString(show_node_big(req)) + paths_html
 
 
-def fileIsNotEmpty(file):
-    with open(file) as f:
-        s = f.read().strip()
-    if s:
-        return 1
-    else:
-        return 0
+class NodeNotAccessible(object):
+
+    def __init__(self, error="no such node", status=404):
+        self.error = error
+        self.status = status
 
 
-def mkContentNode(req):
+def make_node_content(req):
+    """Renders the inner parts of the content area.
+    The current node can be a container or a content node. 
+    A container can render a static HTML page, a node list view or a single node from that list.
+    For a content node, the detail view is displayed.
+    If the wanted node cannot be accessed, a NodeNotAccessible instance is returned.
+    """
     nid = req.args.get("id", get_collections_node().id, type=int)
     node = get_accessible_node(nid)
 
@@ -686,7 +697,6 @@ def mkContentNode(req):
             c.feedback(req)
             # if ContentList feedback produced a content error, return that instead of the list itself
             if isinstance(c.content, NodeNotAccessible):
-                req.setStatus(c.status)
                 return c.content
             return c
 
@@ -698,116 +708,92 @@ def mkContentNode(req):
     return c
 
 
-class NodeNotAccessible(ContentBase):
+def make_content_nav_printlink(req, node):
+    printlink = None
+    if isinstance(node, Container) and config.getboolean("config.enable_printing") and node.system_attrs.get("print", "1") == "1":
+        # printing is allowed for containers by default, unless system.print != "1" is set on the node
+        printlink = '/print/' + unicode(node.id)
 
-    def __init__(self, error="no such node", status=404):
-        self.error = error
-        self._status = status
+    if printlink and "sortfield0" in req.args:
+        printlink += '?sortfield0=' + req.args.get("sortfield0") + '&sortfield1=' + req.args.get("sortfield1")
 
-    @ensure_unicode_returned(name="contenterror.html")
-    def html(self, req):
-        return tal.getTAL(theme.getTemplate("content_error.html"), {"error": self.error}, language=lang(req))
+    return printlink
+    
 
-    def getContentStyles(self):
-        return []
+def make_content_nav_path(node):
+    paths = get_accessible_paths(node)
+    if paths:
+        shortest_path = sorted(paths, key=lambda p: (len(p), p[-1].id))[0]
+        return shortest_path
 
-    def status(self):
-        return self._status
+    return []
 
 
-class ContentArea(object):
+def render_content_nav(req, node, logo, styles, select_style_link):
 
-    def __init__(self):
-        self._content = None
-        self.collection = None
-        self.collectionlogo = None
-        self.params = ""
+    content_nav_html = tal.getTAL(theme.getTemplate("content_nav.html"),
+                      {"path": make_content_nav_path(node),
+                       "styles": styles,
+                       "logo": logo,
+                       "select_style_link": select_style_link,
+                       "node": node,
+                       "printlink": make_content_nav_printlink(req, node)},
+                      macro="path",
+                      request=req)
 
-    @property
-    def content(self):
-        if self._content is None:
-            self._content = ContentNode(get_collections_node())
-        return self._content
+    return content_nav_html
 
-    @content.setter
-    def content(self, content):
-        self._content = content
 
-    @ensure_unicode_returned
-    def html(self, req):
-        content = None
-        if req.args.get("query", "").strip():
-            content = simple_search(req)
-        else:
-            searchmode = req.args.get("searchmode")
+def get_make_search_content_function(req):
+    """Derives from query parameters if a simple or extended search should be run.
+    Returns the function that renders the search content or None, if no search should be done.
+    """
+        
+    if req.args.get("query", "").strip():
+        return simple_search
+    else:
+        searchmode = req.args.get("searchmode")
 
-            if searchmode in ("extended", "extendedsuper"):
-                if searchmode == "extended":
-                    field_range = xrange(1,4)
-                elif searchmode == "extendedsuper":
-                    field_range = xrange(1,11)
+        if searchmode in ("extended", "extendedsuper"):
+            if searchmode == "extended":
+                field_range = xrange(1,4)
+            elif searchmode == "extendedsuper":
+                field_range = xrange(1,11)
 
-                for ii in field_range:
-                    if req.args.get("query" + str(ii), "").strip():
-                        content = extended_search(req)
-                        break
+            for ii in field_range:
+                if req.args.get("query" + str(ii), "").strip():
+                    return extended_search
 
-        if content is None:
-            self.content = mkContentNode(req)
-            if not isinstance(self.content, NodeNotAccessible):
-                self.collectionlogo = CollectionLogo(self.content.collection)
-        else:
-            self.content = content
 
-        if "raw" in req.args:
-            path_html = ""
-        else:
-            node = self.content.node
-
-            # printing is allowed for containers by default, unless system.print != "1" is set on the node
-            printlink = None
-
-            if isinstance(node, Container) and config.getboolean("config.enable_printing") and node.system_attrs.get("print", "1") == "1":
-                printlink = '/print/' + unicode(node.id)
-
-            if printlink and "sortfield0" in req.args:
-                printlink += '?sortfield0=' + req.args.get("sortfield0") + '&sortfield1=' + req.args.get("sortfield1")
-
-            if req.args.get("show_navbar") == 0:
-                shortest_path = []
-            else:
-                paths = get_accessible_paths(node)
-                if paths:
-                    shortest_path = sorted(paths, key=lambda p: (len(p), p[-1].id))[0]
-                else:
-                    shortest_path = []
-
-            styles = self.content.getContentStyles()
-
-            path_html = tal.getTAL(theme.getTemplate("content_nav.html"),
-                              {"params": self.params,
-                               "path": shortest_path,
-                               "styles": styles,
-                               "logo": self.collectionlogo,
-                               "select_style_link": self.content.select_style_link,
-                               "node": node,
-                               "nodeprint": "1" if printlink else "0",  # XXX: template compat for non-default templates
-                               "printlink": printlink},
-                              macro="path",
-                              request=req)
-
-        html = path_html + '\n<!-- CONTENT START -->\n' + self.content.html(req) + '\n<!-- CONTENT END -->\n'
-        html = modify_tex(html, 'html')
-        return html
-
-    @property
-    def status(self):
-        return self.content.status()
+def render_content_error(error, language):
+    return tal.getTAL(theme.getTemplate("content_error.html"), {"error": error}, language=language)
 
 
 def render_content(req):
-    content_area = ContentArea()
-    return content_area.html(req)
+    make_search_content = get_make_search_content_function(req)
+
+    if make_search_content is None:
+        content_or_error = make_node_content(req)
+    else:
+        content_or_error = make_search_content(req)
+
+    if isinstance(content_or_error, NodeNotAccessible):
+        req.setStatus(content_or_error.status)
+        return render_content_error(content_or_error.error, lang(req))
+
+    content = content_or_error
+    
+    if "raw" in req.args:
+        content_nav_html = ""
+    else:
+        node = content.node
+        logo = content.logo
+        select_style_link = content.select_style_link
+        styles = content.content_styles
+        content_nav_html = render_content_nav(req, node, logo, styles, select_style_link)
+
+    content_html = content_nav_html + "\n" + content.html(req)
+    return content_html
 
 
 class CollectionLogo(object):
