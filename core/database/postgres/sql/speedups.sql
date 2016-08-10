@@ -13,19 +13,16 @@ CREATE OR REPLACE FUNCTION accessible_container_paths(node_id integer, exclude_c
     AS $f$
 BEGIN
 RETURN QUERY SELECT 
-    array_append(array_agg(q.nid), nm.nid) as path
+    (SELECT array_append(array_agg(q.nid), nm.nid)
+     FROM (SELECT nid 
+           FROM noderelation nr 
+           WHERE nr.cid=nm.nid
+           AND has_read_access_to_node(nr.nid, group_ids, ipaddr, date)
+           AND NOT ARRAY[nr.nid] <@ exclude_container_ids
+           ORDER BY distance DESC) q) as path
 
-    FROM nodemapping nm,
-    LATERAL (
-        SELECT nid, has_read_access_to_node(nid, group_ids, ipaddr, date) as accessible
-        FROM noderelation nr
-        WHERE nr.cid=nm.nid
-        AND NOT ARRAY[nr.nid] <@ exclude_container_ids
-        ORDER BY distance DESC
-    ) q
+    FROM nodemapping nm
     WHERE cid=node_id 
-    AND has_read_access_to_node(nm.nid, group_ids, ipaddr, date)
-    AND q.accessible = true
-    GROUP BY nm.nid;
+    AND has_read_access_to_node(nm.nid, group_ids, ipaddr, date);
 END;
 $f$;
