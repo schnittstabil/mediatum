@@ -488,7 +488,7 @@ class Node(DeclarativeBase, NodeMixin):
 
     @property
     def has_files(self):
-        return len(self.file_objects) == 0
+        return len(self.file_objects) > 0
 
     __mapper_args__ = {
         'polymorphic_identity': 'node',
