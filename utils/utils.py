@@ -950,7 +950,7 @@ def callername():
 def get_user_id(req):
     import core.users as users
     user = users.getUserFromRequest(req)
-    res = "userid=%r|username=%r" % (user.getUserID(), user.getName())
+    res = "userid=%r|username=%r" % (user.id, user.getName())
     return res
 
 
