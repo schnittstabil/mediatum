@@ -792,8 +792,7 @@ class ContentArea(object):
                                "select_style_link": self.content.select_style_link,
                                "node": node,
                                "nodeprint": "1" if printlink else "0",  # XXX: template compat for non-default templates
-                               "printlink": printlink,
-                               "area": req.session.get("area", "")},
+                               "printlink": printlink},
                               macro="path",
                               request=req)
 
