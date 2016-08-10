@@ -39,6 +39,7 @@ CREATE OR REPLACE FUNCTION has_read_access_to_node(node_id integer, _group_ids i
     RETURNS boolean
     LANGUAGE plpgsql
     SET search_path TO :search_path
+    COST 100000
     STABLE
 AS $f$
 BEGIN
