@@ -36,7 +36,7 @@ BEGIN
         organisation, password_hash, comment, can_change_password, can_edit_shoppingbag, authenticator_id, created_at)
     SELECT id,
     name AS login_name,
-    trim(' ' from attrs->>'lastname') || ' ' || trim(' ' from attrs->>'firstname') AS display_name,
+    nullif(trim(' ' from attrs->>'lastname') || ' ' || trim(' ' from attrs->>'firstname'), ' ') AS display_name,
     trim(' ' from attrs->>'firstname') AS firstname,
     trim(' ' from attrs->>'lastname') AS lastname,
     trim(' ' from attrs->>'telephone') AS telephone,
