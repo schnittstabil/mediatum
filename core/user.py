@@ -162,11 +162,8 @@ class GuestUser(UserMixin, flask_login.AnonymousUserMixin):
     def display_name(self):
         return translate("guest")
     
-    @property
-    def id(self):
-        raise Exception("fuck!")
-    
     def __init__(self):
+        self.id = None
         self.is_admin = False
         self.is_editor = False
         self.is_workflow_editor = False
