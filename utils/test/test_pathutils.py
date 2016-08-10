@@ -3,13 +3,11 @@
     :copyright: (c) 2016 by the mediaTUM authors
     :license: GPL3, see COPYING for details
 """
-from pytest import yield_fixture
 from utils.pathutils import get_accessible_paths
 from utils.testing import make_node_public, append_chain_of_containers
-from core.test.factories import DirectoryFactory, NodeFactory
 
 
-def test_get_accessible_paths(session, req, root, collections, content_node):
+def test_get_accessible_paths_multiple(session, req, root, home_root, collections, content_node):
     node = content_node
     
     root.children.append(collections)
@@ -22,11 +20,11 @@ def test_get_accessible_paths(session, req, root, collections, content_node):
     make_node_public(path_nodes_2[1], "read")
     session.flush()
     
-    # only one path should be found because the guest user cannot see the nodes ins path_nodes_1
+    # only one path should be found because the guest user cannot see the nodes in path_nodes_1
     paths = get_accessible_paths(node) 
     assert len(paths) == 1
     path = paths[0]
     assert len(path) == 3
     
-    # first node of path_nodes_2 is the collections root, the tested function omits this node
+    # first node of path_nodes_2 is the collections root, the tested function omits this node because it's not public
     assert path == path_nodes_2[1:]

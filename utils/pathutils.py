@@ -177,7 +177,7 @@ def get_accessible_paths(node, node_query=None):
         node_query = q(Node)
 
     group_ids, ip, date = build_accessfunc_arguments()
-    excluded_node_ids = [get_collections_node().id, get_root_node().id, get_home_root_node().id]
+    excluded_node_ids = [get_root_node().id]
 
     f = mediatumfunc.accessible_container_paths(node.id, excluded_node_ids, group_ids, ip, date)
     id_paths = [t[0] for t in db.session.execute(f).fetchall()]
