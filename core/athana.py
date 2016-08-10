@@ -1213,18 +1213,29 @@ class http_request(object):
             self.push(file_producer(file))
         return
 
-    def setCookie(self, name, value, expire=None):
-        if expire is None:
-            s = name + '=' + value
-        else:
+    def setCookie(self, name, value, expire=None, path=None, http_only=True, secure=False):
+        
+        parts = [name + '=' + value]
+
+        if expire:
             datestr = time.strftime("%a, %d-%b-%Y %H:%M:%S GMT", time.gmtime(expire))
-            s = name + '=' + value + '; expires=' + datestr
-            # +'; path=PATH; domain=DOMAIN_NAME; secure'
+            parts.append('expires=' + datestr)
+            
+        if path:
+            parts.append("path=" + path)
+
+        if http_only:
+            parts.append("HttpOnly")
+            
+        if secure:
+            parts.append("Secure")
+            
+        cookie_str = "; ".join(parts)
 
         if 'Set-Cookie' not in self.reply_headers:
-            self.reply_headers['Set-Cookie'] = [s]
+            self.reply_headers['Set-Cookie'] = [cookie_str]
         else:
-            self.reply_headers['Set-Cookie'] += [s]
+            self.reply_headers['Set-Cookie'] += [cookie_str]
 
     def makeSelfLink(self, params):
         params2 = self.params.copy()
