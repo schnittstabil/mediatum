@@ -1201,3 +1201,6 @@ msgstr "no version number"
 
 msgid "current_version"
 msgstr "Current Version"
+
+msgid "guest"
+msgstr "Guest"

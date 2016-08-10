@@ -1214,3 +1214,6 @@ msgstr "ohne Versionsnummer"
 
 msgid "current_version"
 msgstr "Aktuelle Version"
+
+msgid "guest"
+msgstr "Gast"

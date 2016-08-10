@@ -20,6 +20,7 @@
 from warnings import warn
 import core.config as config
 import flask_login
+from core.translation import translate
 
 
 class UserMixin(object):
@@ -146,11 +147,8 @@ class UserMixin(object):
 class GuestUser(UserMixin, flask_login.AnonymousUserMixin):
 
     """
-    This is a lame attempt at caching the information for the guest user ;)
-    Many normal user operations will fail, but it should be sufficient for get_guest_user().
-    GuestUser.get_db_object() returns the proper database user object.
+    A Guest user...
     """
-
     _instance = None
 
     @classmethod
@@ -159,17 +157,20 @@ class GuestUser(UserMixin, flask_login.AnonymousUserMixin):
             cls._instance = cls()
 
         return cls._instance
-
+    
+    @property
+    def display_name(self):
+        return translate("guest")
+    
+    @property
+    def id(self):
+        raise Exception("fuck!")
+    
     def __init__(self):
-
-        db_obj = self.get_db_object()
-        self.__dict__.update(db_obj.to_dict())
-
-        for prop in ("group_ids", "is_editor", "is_admin", "is_workflow_editor",
-                     "hidden_edit_functions", "upload_dir", "trash_dir"):
-            setattr(self, prop, getattr(db_obj, prop))
-
-    def get_db_object(self):
-        from core import User
-        from core import db
-        return db.query(User).filter_by(login_name=config.get_guest_name()).one()
+        self.is_admin = False
+        self.is_editor = False
+        self.is_workflow_editor = False
+        self.can_change_password = False
+        self.login_name = "guest"
+        self.group_ids = []
+        

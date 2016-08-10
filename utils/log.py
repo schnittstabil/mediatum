@@ -345,9 +345,8 @@ def extra_log_info_from_req(req, add_user_info=True):
 
         if not user.is_anonymous:
             extra["user_id"] = user.id
-
-        extra["user_is_editor"] = user.is_editor
-        extra["user_is_admin"] = user.is_admin
+            extra["user_is_editor"] = user.is_editor
+            extra["user_is_admin"] = user.is_admin
 
         extra["headers"] = {k.lower(): v for k, v in [h.split(": ", 1) for h in req.header]}
 
