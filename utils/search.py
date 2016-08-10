@@ -5,6 +5,7 @@
 """
 
 import logging
+from sqlalchemy import func as sqlfunc
 from core import db, File
 from contenttypes import Data
 
@@ -43,8 +44,14 @@ def import_node_fulltext(node, overwrite=False):
     return False
 
 
-def import_fulltexts(overwrite=False):
+def import_fulltexts(overwrite=False, mod_n=None, mod_i=None):
     nodes = q(Data).filter(Data.files.any(File.filetype == "fulltext"))
+    
+    if mod_n:
+        if mod_i is None:
+            raise Exception("mod_i must be specified when mod_n is given!")
+        
+        nodes = nodes.filter(sqlfunc.mod(Data.id, mod_n) == mod_i)
 
     # don't overwrite = ignore nodes that have a fulltext
     if not overwrite:

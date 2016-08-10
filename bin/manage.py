@@ -193,14 +193,19 @@ def fulltext(args):
     # we must initialize all node types to import fulltexts
     init.full_init()
 
-    nid_or_all = args.nid_or_all.lower()
+    nid_mod_or_all = args.nid_mod_or_all.lower()
 
-    if nid_or_all == "all":
+    if nid_mod_or_all == "all":
         remove_versioning()
         import_count = utils.search.import_fulltexts(args.overwrite)
         logg.info("loaded fulltexts for %s nodes", import_count)
+    elif nid_mod_or_all.startswith("mod"):
+        mod_n, mod_i = [int(x) for x in nid_mod_or_all.split(" ")[1:]]
+        import_count = utils.search.import_fulltexts(args.overwrite, mod_n, mod_i)
+        logg.info("loaded fulltexts for %s nodes with id mod %s == %s", import_count, mod_n, mod_i)
+        
     else:
-        nid = int(args.nid_or_all)
+        nid = int(nid_mod_or_all)
         node = q(Node).get(nid)
         if node is None:
             logg.warn("node # %s not found!", nid)
@@ -308,7 +313,7 @@ def main():
 
     fulltext_subparser = subparsers.add_parser("fulltext", help="import fulltext files into the database")
     fulltext_subparser.add_argument("--overwrite", "-o", action="store_true", help="overwrite existing fulltexts")
-    fulltext_subparser.add_argument("nid_or_all", help="node id to load fulltext for or 'all'")
+    fulltext_subparser.add_argument("nid_mod_or_all", help="node ID, 'all' or 'mod n i' to partition the list of node IDs")
     fulltext_subparser.set_defaults(func=fulltext)
 
     searchindex_subparser = subparsers.add_parser("searchindex", help="manage full text search indexing")
