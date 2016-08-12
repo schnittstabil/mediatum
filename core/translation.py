@@ -140,10 +140,10 @@ def lang(req):
     if hasattr(req, "_lang"):
         return req._lang
     
-    language_from_session = req.session.get("language")
-    if language_from_session:
-        req._lang = language_from_session
-        return language_from_session
+    language_from_cookie = req.Cookies.get("language")
+    if language_from_cookie:
+        req._lang = language_from_cookie
+        return language_from_cookie
 
     allowed_languages = config.languages
     
@@ -151,11 +151,11 @@ def lang(req):
         languages = req.request_headers["Accept-Language"]
         for language in languages.split(";"):
             if language and language in allowed_languages:
-                req.session["language"] = req._lang = language
+                req.Cookies["language"] = req._lang = language
                 return language
             
     if allowed_languages and allowed_languages[0]:
-        req.session["language"] = req._lang = allowed_languages[0]
+        req.Cookies["language"] = req._lang = allowed_languages[0]
         return allowed_languages[0]
     else:
         return "en"
@@ -167,7 +167,7 @@ def switch_language(req, language):
         language = allowed_languages[0]
     elif language not in allowed_languages:
         raise "Language %s not configured" % language
-    req.session["language"] = language
+    req.Cookies["language"] = language
 
 
 def t(target, key):

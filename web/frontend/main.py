@@ -25,7 +25,7 @@ from werkzeug.datastructures import ImmutableMultiDict
 
 import core.config as config
 from core.metatype import Context
-from core.translation import lang
+from core.translation import lang, switch_language
 from core.transition import httpstatus
 from core import db
 from core import Node, NodeAlias
@@ -83,12 +83,13 @@ known_node_aliases = {}
 def change_language_request(req):
     language = req.args.get("change_language")
     if language:
-        # only change session lang if language is configured
-        if language in config.languages:
-            req.session["language"] = language
+        # change language cookie if language is configured
+        switch_language(req, language)
         params = req.args.copy()
         del params["change_language"]
         req.request["Location"] = build_url_from_path_and_params(req.path, params)
+        # set the language cookie for caching
+        req.setCookie("language", language)
         return httpstatus.HTTP_MOVED_TEMPORARILY
 
 
