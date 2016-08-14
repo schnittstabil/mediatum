@@ -271,7 +271,7 @@ msgid "back_to_list_view_start"
 msgstr "Zurück zum Anfang der Trefferliste"
 
 msgid "back"
-msgstr "Zürück"
+msgstr "Zurück"
 
 msgid "search_hit"
 msgstr "Treffer"
