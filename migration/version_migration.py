@@ -63,6 +63,7 @@ def create_alias_version(current_version_node, old_version_node):
                      operation_type=operation_type)
 
     s.add(nv)
+    s.flush()
     return nv
 
 
