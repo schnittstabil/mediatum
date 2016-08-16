@@ -207,8 +207,8 @@ def finish():
     res = s.execute("INSERT INTO transaction DEFAULT VALUES RETURNING id")
     tx_id = res.fetchone()[0]
     
-    tx_meta_stmt = "INSERT INTO transaction_meta (key, value) VALUES ('mysql_migration', 'migrated unversioned nodes')"
-    s.execute(tx_meta_stmt)
+    tx_meta_stmt = "INSERT INTO transaction_meta (transaction_id, key, value) VALUES ({tx_id}, 'mysql_migration', 'migrated unversioned nodes')"
+    s.execute(tx_meta_stmt.format(tx_id=tx_id))
     
     node_stmt = ("INSERT INTO node_version (id, name, type, schema, attrs, orderpos, transaction_id, operation_type) " +
            "SELECT id, name, type, schema, attrs, orderpos, {}, {} " +
