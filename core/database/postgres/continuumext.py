@@ -8,6 +8,7 @@
 
 import types
 from sqlalchemy_continuum.utils import parent_class
+from werkzeug.utils import cached_property
 
 
 class MtVersionBase(object):
@@ -27,6 +28,8 @@ class MtVersionBase(object):
             return types.MethodType(attr.__func__, self, parent_cls)
         elif isinstance(attr, property):
             return attr.fget(self)
+        elif isinstance(attr, cached_property):
+            return attr.__get__(self)
 
         return attr
 
