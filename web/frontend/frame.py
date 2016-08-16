@@ -207,11 +207,7 @@ class Searchlet(object):
             None
 
 
-def render_search_box(nid, rootnode, language, req):
-    container = q(Container).get(nid) if nid else None
-    if container is None:
-        container = rootnode
-
+def render_search_box(container, language, req):
     search_portlet = Searchlet(container)
     search_portlet.feedback(req)
     liststyle = req.args.get("liststyle")
@@ -442,13 +438,20 @@ class UserLinks(object):
         return build_url_from_path_and_params(self.path, params)
 
 
-def render_page(req, nid, contentHTML, show_navbar=True):
+def render_page(req, node, contentHTML, show_navbar=True):
     """Renders the navigation frame with the inserted content HTML and returns the whole page.
     """
     user = current_user
     userlinks = UserLinks(user, req)
     language = lang(req)
     rootnode = get_collections_node()
+    
+    if node is None:
+        node = rootnode
+        container = rootnode
+    else:
+        container = node.get_container()
+    
     frame_template = theme.getTemplate("frame.html")
 
     front_lang = {
@@ -460,7 +463,7 @@ def render_page(req, nid, contentHTML, show_navbar=True):
         "footer_left_items": rootnode.getCustomItems("footer_left"),
         "footer_right_items": rootnode.getCustomItems("footer_right"),
         "header_items": rootnode.getCustomItems("header"),
-        "id": nid,
+        "id": node.id,
         "language": front_lang,
         "show_navbar": show_navbar,
         "user": user, 
@@ -472,10 +475,10 @@ def render_page(req, nid, contentHTML, show_navbar=True):
 
     if show_navbar and not req.args.get("disable_navbar"):
         if not req.args.get("disable_search"):
-            search_html = render_search_box(nid, rootnode, language, req)
+            search_html = render_search_box(container, language, req)
 
         if not req.args.get("disable_navtree"):
-            navtree_html = render_navtree(language, nid, user)
+            navtree_html = render_navtree(language, node.id, user)
 
     frame_context["search"] = search_html
     frame_context["tree"] = navtree_html

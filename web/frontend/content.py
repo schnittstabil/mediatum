@@ -221,7 +221,7 @@ def apply_order_by_for_sortfields(query, sortfields_to_comp, before=False):
 def get_accessible_node(nid):
     """Fetches node by ID, checking read access.
     Returns a Node or Node if node not found or not accessible by user."""
-    return q(Node).filter_by(id=nid).filter_read_access().prefetch_attrs().prefetch_system_attrs().first()
+    return q(Node).filter_by(id=nid).filter_read_access().prefetch_attrs().prefetch_system_attrs().scalar()
     
 
 SORT_FIELDS = 2
@@ -668,16 +668,13 @@ class NodeNotAccessible(object):
         self.status = status
 
 
-def make_node_content(req):
+def make_node_content(node, req):
     """Renders the inner parts of the content area.
     The current node can be a container or a content node. 
     A container can render a static HTML page, a node list view or a single node from that list.
     For a content node, the detail view is displayed.
     If the wanted node cannot be accessed, a NodeNotAccessible instance is returned.
     """
-    nid = req.args.get("id", get_collections_node().id, type=int)
-    node = get_accessible_node(nid)
-
     if node is None:
         return NodeNotAccessible()
 
@@ -700,8 +697,13 @@ def make_node_content(req):
                 return c.content
             return c
 
+    
     version_id = req.args.get("v")
-    version = node.get_tagged_version(unicode(version_id))
+    
+    if version_id:
+        version = node.get_tagged_version(unicode(version_id))
+    else:
+        version = None
 
     c = ContentNode(version) if version is not None else ContentNode(node)
     c.feedback(req)
@@ -769,11 +771,11 @@ def render_content_error(error, language):
     return tal.getTAL(theme.getTemplate("content_error.html"), {"error": error}, language=language)
 
 
-def render_content(req):
+def render_content(node, req):
     make_search_content = get_make_search_content_function(req)
 
     if make_search_content is None:
-        content_or_error = make_node_content(req)
+        content_or_error = make_node_content(node, req)
     else:
         content_or_error = make_search_content(req)
 

@@ -167,18 +167,24 @@ def _display(req, show_navbar):
         return handle_json_request(req)
 
     nid = req.args.get("id", type=int)
-    if not Node.req_has_access_to_node_id(nid, "read"):
-        nid = None
+    
+    if nid is None:
+        node = get_collections_node()
+    else:
+        node = q(Node).prefetch_attrs().prefetch_system_attrs().get(nid)
+        
+    if not node.has_read_access():
+        node = None
         
     if req.args.get("disable_content"):
         content_html = u""
     else:
-        content_html = render_content(req)
+        content_html = render_content(node, req)
 
     if req.args.get("raw"):
         req.write(content_html)
     else:
-        html = render_page(req, nid, content_html, show_navbar)
+        html = render_page(req, node, content_html, show_navbar)
         req.write(html)
     # ... Don't return a code because Athana overwrites the content if an http error code is returned from a handler.
     # instead, req.setStatus() can be used in the rendering code
