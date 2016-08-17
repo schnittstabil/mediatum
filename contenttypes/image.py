@@ -326,8 +326,6 @@ class Image(Content):
         obj['attachment'] = files
         obj['sum_size'] = sum_size
         obj['presentation_url'] = self.presentation_url
-        versions = obj['versions']
-        obj['tag'] = versions[-1].tag if len(versions) > 0 else None
         obj['fullsize'] = str(self.id)
         if not self.isActiveVersion():
             obj['tag'] = self.tag

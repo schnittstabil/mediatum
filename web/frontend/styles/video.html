@@ -1,18 +1,15 @@
 <link rel="stylesheet" href="css/childs.css">
 
 <style>
-    div.childnode {position:relative;float:left; padding:2px;border:1px solid silver;margin:2px;text-align:center;width:128px;overflow:hidden;height:200px}
-    div.childnode div.morelink{position:absolute;bottom:2px;width:128px;text-align:center}
-
     .video{width:300px; height:200px; border:1px solid silver;float:left;text-align:center}
     .video img{border:0;width:200px;}
     .controls button[data-state="captions"] { height:85%; text-indent:0; font-size:16px; font-size:1rem; font-weight:bold; color:#666; background:#000; border-radius:2px;}
 </style>
 
 
-<metal:macro use-macro="web/frontend/styles/macros.html/version_alerts"/>
+<tal:block replace="raw old_version_alert_html"></tal:block>
+<tal:block replace="raw deleted_version_alert_html"></tal:block>
 
-<metal:macro use-macro="web/frontend/styles/macros.html/deleted"/>
 
 <div style="width:100%; text-align:right">
     <a tal:attributes="href python:u'/print/{}'.format(node.id)" i18n:attributes="title printview" target="_blank"><img src="/img/print_icon.gif"/></a>
@@ -24,9 +21,6 @@
             <source type="video/mp4" tal:attributes="src python:video_url" />
         </video>
         <img tal:condition="python:not video_url" tal:attributes="src python:u'/thumb2/{}'.format(node.id)" style="border:0px;width:300px"/>
-        <br/>
-
-        <metal:macro use-macro="web/frontend/styles/macros.html/object_versions"/>
     </div>
     <div id="object_meta" tal:content="raw metadata">TEXT</div>
 </div>
@@ -36,5 +30,7 @@
 </p>
 
 <div style="clear:both"/>
-<metal:macro use-macro="web/frontend/styles/macros.html/bothView"/>
+<tal:block replace="raw versions_html"></tal:block>
+<div style="clear:both"/>
+<tal:block replace="raw children_html"></tal:block>
 <div style="clear:both"/>

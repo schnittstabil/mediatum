@@ -371,18 +371,43 @@ def prepare_node_data(node, req):
         # If this object is marked as deleted version, render the active version instead.
         active_version = node.getActiveVersion()
         data = prepare_node_data(active_version, req)
+        data["version_deleted_html"] = tal.getTAL("web/frontend/styles/macros.html", data, macro="deleted_version_alert")
         data["deleted"] = True
         return data
 
-    data = {}
-    data["deleted"] = False
-    data["metadata"] = _get_node_metadata_html(node, req)
-    data['node'] = node
-    data['children'] = node.children.filter_read_access().all()
-    data['versions'] = node.tagged_versions.all()
+    data = {
+        "deleted": False,
+        "versions_html": "",
+        "old_version_alert_html": "",
+        "deleted_version_alert_html": "",
+        "children_html": "",
+        "metadata": _get_node_metadata_html(node, req),
+        "node": node,
+        "path": req.args.get("path", "")
+    }
+
+    versions = node.tagged_versions.all()
+
+    if versions:
+        ctx = {
+            "node": node,
+            "tag": versions[-1].tag,
+            "versions": versions,
+        }
+        data['versions_html'] = tal.getTAL("web/frontend/styles/macros.html", ctx, macro="object_versions")
+        if not node.isActiveVersion():
+            data['old_version_alert_html'] = tal.getTAL("web/frontend/styles/macros.html", ctx, macro="old_version_alert")
+
+    children = node.children.filter_read_access().all()
+
     # XXX: this is a hack, remove child display from contenttypes!
-    data['child_node_url'] = child_node_url
-    data['path'] = req.params.get("path", "")
+    if children:
+        ctx = {
+            "children": children,
+            "child_node_url": child_node_url,
+        }
+        data['children_html'] = tal.getTAL("web/frontend/styles/macros.html", ctx, macro="bothView")
+
     return data
 
 

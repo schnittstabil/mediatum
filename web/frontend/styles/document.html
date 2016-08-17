@@ -1,11 +1,7 @@
-<style>
-    div.childnode {position:relative;float:left; padding:2px;border:1px solid silver;margin:2px;text-align:center;width:128px;overflow:hidden;height:200px}
-    div.childnode div.morelink{position:absolute;bottom:2px;width:128px;text-align:center}
-</style>
+<link rel="stylesheet" href="css/childs.css">
 
-<metal:macro use-macro="web/frontend/styles/macros.html/version_alerts"/>
-
-<metal:macro use-macro="web/frontend/styles/macros.html/deleted"/>
+<tal:block replace="raw old_version_alert_html"></tal:block>
+<tal:block replace="raw deleted_version_alert_html"></tal:block>
 
 <div style="width:100%;text-align:right">
     <img tal:condition="python:node.get('metis_url')!=''" tal:attributes="src python:node.get('metis_url')" width="1" height="1" alt="" />
@@ -38,11 +34,10 @@
 	<div style="clear:both" id="bibtex_export" tal:condition="bibtex">
 	    <a tal:attributes="href python:u'/export/{}/bibtex'.format(node.id)" target="bibtexdocument" i18n:attributes="title doc_bibtex_title"><img src="/img/bibtex.gif"/>BibTeX</a>
 	</div>
-	<div style="clear:both" id="object_versions">
-		<metal:macro use-macro="web/frontend/styles/macros.html/object_versions"/>
-	</div>
-
 </div>
 
-<metal:macro use-macro="web/frontend/styles/macros.html/bothView"/>
+<div style="clear:both"/>
+<tal:block replace="raw versions_html"></tal:block>
+<div style="clear:both"/>
+<tal:block replace="raw children_html"></tal:block>
 <div style="clear:both"/>

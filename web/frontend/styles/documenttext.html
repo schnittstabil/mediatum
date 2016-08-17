@@ -1,6 +1,7 @@
-<metal:macro use-macro="web/frontend/styles/macros.html/version_alerts"/>
+<link rel="stylesheet" href="css/childs.css">
 
-<metal:macro use-macro="web/frontend/styles/macros.html/deleted"/>
+<tal:block replace="raw old_version_alert_html"></tal:block>
+<tal:block replace="raw deleted_version_alert_html"></tal:block>
 
 <div id="object_main">
     <div style="width:100%;text-align:right">
@@ -28,6 +29,10 @@
         <a tal:attributes="href python:u'/export/{}/bibtex'.format(node.id)"
            target="bibtexdocument" i18n:attributes="title doc_bibtex_title"><img src="/img/bibtex.gif"/>&nbsp;BibTeX</a>
     </tal:block>
-  <metal:macro use-macro="web/frontend/styles/macros.html/object_versions"/>
 </div>
 
+<div style="clear:both"/>
+<tal:block replace="raw versions_html"></tal:block>
+<div style="clear:both"/>
+<tal:block replace="raw children_html"></tal:block>
+<div style="clear:both"/>

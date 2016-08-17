@@ -70,8 +70,6 @@ def _prepare_document_data(node, req, words=""):
         obj['canseeoriginal'] = False
 
     obj['documentthumb'] = u'/thumb2/{}'.format(node.id)
-    versions = obj['versions']
-    obj['tag'] = versions[-1].tag if len(versions) > 0 else None
     if not node.isActiveVersion():
         obj['documentthumb'] += "?v=" + node.tag
         obj['tag'] = node.tag
