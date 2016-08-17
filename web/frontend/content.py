@@ -510,6 +510,7 @@ class ContentList(ContentBase):
             sortfields_to_comp = prepare_sortfields(None, self.sortfields)
 
         q_nodes = apply_order_by_for_sortfields(q_nodes, sortfields_to_comp, self.before)
+        
 
         ctx = {
             "nav": self,
@@ -529,7 +530,8 @@ class ContentList(ContentBase):
                 refetch_limit = nodes_per_page - node_count + 1
                 sortfields_to_comp = prepare_sortfields(nodes[-1], self.sortfields)
                 position_cond = position_filter(sortfields_to_comp, self.after or not self.before, self.before)
-                q_additional_nodes = q_nodes.filter(position_cond)
+                q_additional_nodes = self.nodes.filter(position_cond)
+                q_additional_nodes = apply_order_by_for_sortfields(q_additional_nodes, sortfields_to_comp, self.before)
 
                 additional_nodes = q_additional_nodes.limit(refetch_limit).prefetch_attrs().all()
                 if not additional_nodes:
