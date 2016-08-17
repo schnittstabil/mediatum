@@ -162,11 +162,14 @@ def display_newstyle(req):
 
 
 @check_change_language_request
-def _display(req, show_navbar):
+def _display(req, show_navbar, params=None):
     if "jsonrequest" in req.params:
         return handle_json_request(req)
 
-    nid = req.args.get("id", type=int)
+    if params is None:
+        params = req.args
+
+    nid = params.get("id", type=int)
     
     if nid is None:
         node = get_collections_node()
@@ -181,7 +184,7 @@ def _display(req, show_navbar):
     else:
         content_html = render_content(node, req)
 
-    if req.args.get("raw"):
+    if params.get("raw"):
         req.write(content_html)
     else:
         html = render_page(req, node, content_html, show_navbar)
@@ -196,8 +199,13 @@ def display(req):
 
 
 @check_change_language_request
-def display_nonavbar(req):
-    _display(req, False)
+def workflow(req):
+    if req.method == "POST":
+        params = req.form
+    else:
+        params = req.args
+
+    _display(req, False, params)
 
 
 #: needed for workflows:
@@ -216,7 +224,7 @@ def publish(req):
                     return 404
 
     req = overwrite_id_in_req(node.id, req)
-    return display_nonavbar(req)
+    return _display(req, False)
 
 
 @check_change_language_request
@@ -224,15 +232,15 @@ def show_parent_node(req):
     parent = None
     node = q(Node).get(req.params.get("id"))
     if node is None:
-        return display_nonavbar(req)
+        return workflow(req)
 
     for p in node.parents:
         if p.type != "directory" and p.type != "collection":
             parent = p
     if not parent:
-        return display_nonavbar(req)
+        return workflow(req)
 
     req.params["id"] = parent.id
     req.params["obj"] = str(node.id)
 
-    return display_nonavbar(req)
+    return workflow(req)

@@ -175,7 +175,7 @@ def initContexts():
     handler.addPattern("/nodes/\d+")
     # /\d+ could also be a node, the handler must check this
     handler.addPattern("/\d+")
-    file.addHandler("display_nonavbar").addPattern("/mask")
+    file.addHandler("workflow").addPattern("/mask")
     file.addHandler("show_parent_node").addPattern("/pnode")
     file.addHandler("publish").addPattern("/publish/.*")
     file = context.addFile("web/frontend/popups.py")
