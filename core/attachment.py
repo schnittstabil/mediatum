@@ -22,7 +22,7 @@ import core.config as config
 from core import File, Node
 
 from utils.utils import getMimeType, format_filesize
-from core.styles import theme
+from core import webconfig
 from sqlalchemy_continuum.utils import version_class
 
 fileicons = {'directory': 'mmicon_dir.gif',
@@ -144,5 +144,5 @@ def filebrowser(node, req):
 
 def getAttachmentBrowser(node, req):
     f, s = filebrowser(node, req)
-    req.writeTAL(theme.getTemplate("popups.html"), {"files": f, "sum_size": s, "id": req.params.get(
+    req.writeTAL(webconfig.theme.getTemplate("popups.html"), {"files": f, "sum_size": s, "id": req.params.get(
         "id", ""), "path": req.params.get("path", "")}, macro="attachmentbrowser")

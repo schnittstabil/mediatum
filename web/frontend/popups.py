@@ -25,7 +25,7 @@ from lib.pdf import printview
 from schema.schema import VIEW_DATA_ONLY, VIEW_HIDE_EMPTY
 from core.translation import t, lang
 from utils.utils import getCollection
-from core.styles import theme
+from core import webconfig
 from core import db
 from core import Node
 from contenttypes import Container
@@ -70,7 +70,7 @@ def show_help(req):
     else:
         field = q(Node).get(req.params.get("id", ""))
 
-    req.writeTAL(theme.getTemplate("popups.html"), {"field": field}, macro="show_help")
+    req.writeTAL(webconfig.theme.getTemplate("popups.html"), {"field": field}, macro="show_help")
 
 #
 # show attachmentbrowser for given node

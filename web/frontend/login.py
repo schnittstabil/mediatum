@@ -31,7 +31,7 @@ import utils.date as date
 from web.frontend import frame
 from core.translation import lang, t
 from utils.utils import mkKey
-from core.styles import theme
+from core import webconfig
 from core.auth import PasswordsDoNotMatch, WrongPassword, PasswordChangeNotAllowed
 from core.users import get_guest_user
 from datetime import datetime
@@ -111,7 +111,7 @@ def login(req):
     # show login form
     user = users.user_from_session(req.session)
     ctx = {"error": error, "user": user, "email": config.get("email.support")}
-    login_html = tal.getTAL(theme.getTemplate("login.html"), ctx, macro="login", language=lang(req))
+    login_html = tal.getTAL(webconfig.theme.getTemplate("login.html"), ctx, macro="login", language=lang(req))
     html = render_page(req, None, login_html)
     req.write(html)
     return httpstatus.HTTP_OK
@@ -155,7 +155,7 @@ def pwdchange(req):
                 req["Location"] = _make_collection_root_link()
                 return httpstatus.HTTP_MOVED_TEMPORARILY
 
-    content_html = tal.getTAL(theme.getTemplate("login.html"), {"error": error, "user": user}, macro="change_pwd", language=lang(req))
+    content_html = tal.getTAL(webconfig.theme.getTemplate("login.html"), {"error": error, "user": user}, macro="change_pwd", language=lang(req))
     html = render_page(req, None, content_html)
     req.write(html)
     return httpstatus.HTTP_OK

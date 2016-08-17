@@ -25,7 +25,7 @@ import core.athana as athana
 import core.config as config
 import core.translation as translation
 
-from core.styles import theme
+from core import webconfig
 from core.users import getUserFromRequest
 from core.transition import httpstatus
 
@@ -182,7 +182,7 @@ def getHelp(req):
             content = getHelpFileContent(req.path, language)
     else:  # page not found 404
         req.setStatus(httpstatus.HTTP_NOT_FOUND)
-        content = req.getTAL(theme.getTemplate("help.html"), {}, macro='notfound')
+        content = req.getTAL(webconfig.theme.getTemplate("help.html"), {}, macro='notfound')
 
     if "export" in req.params:
         if req.params.get('export') == "pdf":
@@ -205,7 +205,7 @@ def getHelp(req):
     v['indexvalues'] = index[language]
     indexchars = sorted(set([i[0].upper() for i in index[language].keys()]))
     v['indexchars'] = indexchars
-    req.writeTAL(theme.getTemplate("help.html"), v, macro='help')
+    req.writeTAL(webconfig.theme.getTemplate("help.html"), v, macro='help')
 
 
 def getHelpFileContent(path, language, z_file='web/help/%s%s.zip'):

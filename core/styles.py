@@ -22,28 +22,27 @@ import codecs
 import logging
 from mediatumtal import tal
 import os
+import attr
 import core.config as config
-from utils.utils import splitpath
-from utils.compat import text_type, string_types
+from core.transition import render_template
+import glob
+from jinja2.loaders import FileSystemLoader
 
 
-contentstyles = {}
+full_styles_by_contenttype = {}
+list_styles = {}
 
 
 logg = logging.getLogger(__name__)
 
 
-class Theme:
+class Theme(object):
 
     def __init__(self, name, path="web/themes/mediatum/", type="intern"):
         self.name = name
         self.path = path
         self.type = type
-
-    def update(self, name, path, type):
-        self.name = name
-        self.path = path
-        self.type = type
+        self.style_path = os.path.join(path, "styles")
 
     def getImagePath(self):
         return self.path + "/img/"
@@ -51,146 +50,148 @@ class Theme:
     def getName(self):
         return self.name
 
+    def make_jinja_loader(self):
+        template_path = os.path.join(config.basedir, self.path)
+        if os.path.isdir(template_path):
+            return FileSystemLoader(template_path)
+
     def getTemplate(self, filename):
         if os.path.exists(os.path.join(config.basedir, self.path + filename)):
             return self.path + filename
         else:
             return "web/themes/mediatum/" + filename
 
-theme = Theme("default", "web/themes/mediatum/", "default")
 
+class FullStyle(object):
 
-class ContentStyle:
-
-    def __init__(self, type="type", contenttype="all", name="name", label="label",
-                 icon="icon", template="template", default="", description="", nodes_per_page=10, maskfield_separator=""):
+    def __init__(self, path="", template=None, contenttype="all", name="name", label="label",
+                 icon="icon", default="", description="", maskfield_separator=""):
+        self.path = path
         self.type = type
         self.contenttype = contenttype
         self.name = name
         self.label = label
         self.icon = icon
         self.template = template
-        self.default = default
+        self.default = default == "true"
         self.description = description
-        self.nodes_per_page = nodes_per_page
         self.maskfield_separator = maskfield_separator
 
-    def getID(self):
-        if self.contenttype != "all" and self.contenttype != "":
-            return "%s_%s" % (self.contenttype, self.name)
-        return self.name
 
-    def getType(self):
-        return self.type
+class TALFullStyle(FullStyle):
 
-    def getContentType(self):
-        return self.contenttype
+    def render_template(self, req, context):
+        template_path = os.path.join(self.path, self.template)
+        return tal.getTAL(template_path, context, request=req)
 
-    def getName(self):
-        return self.name
 
-    def getLabel(self):
-        return self.label
+class JinjaFullStyle(FullStyle):
 
-    def getIcon(self):
-        return self.icon
+    def render_template(self, req, context):
+        template_path = os.path.join("styles", self.template)
+        return render_template(template_path, **context)
 
-    def getTemplate(self):
-        return self.template
 
-    def getThemePath(self):
-        return theme.path
+@attr.s
+class ListStyle(object):
+    name = attr.ib()
+    icon = attr.ib()
+    label = attr.ib()
+    path = attr.ib()
+    template = attr.ib()
+    description = attr.ib()
+    maskfield_separator = attr.ib(default="")
+    nodes_per_page = attr.ib(default=10, convert=int)
 
-    def getDescription(self):
-        return self.description
-
-    def isDefaultStyle(self):
-        if ustr(self.default) == "true":
-            return 1
-        return 0
-
-    # build
-    def renderTemplate(self, req, params={}):
-        try:
-            return tal.getTAL(self.getTemplate(), params, request=req)
-        except Exception as e:
-            logg.exception("exception in template")
-            return "error in template"
+    def render_template(self, req, context):
+        template_path = os.path.join(self.path, self.template)
+        return tal.getTAL(template_path, context, request=req)
 
 
 def readStyleConfig(filename):
-    path, file = splitpath(filename)
-    attrs = {"type": "", "contenttype": "", "name": "", "label": "", "icon": "", "nodes_per_page": 10,
-             "template": path.replace(config.basedir, "") + "/", "description": "", "default": "", "maskfield_separator": ""}
+    attrs = {}
 
     with codecs.open(filename, "rb", encoding='utf8') as fi:
         for line in fi:
             if line.find("#") < 0:
                 line = line.split("=")
-                key = line[0].strip()  
-                if key in attrs:
-                    value = line[1].strip()
-                    if isinstance(attrs[key], string_types):
-                        attrs[key] += value.replace("\r", "").replace("\n", "")
-                    else:
-                        try:
-                            attrs[key] = int(value)
-                        except ValueError:
-                            logg.exception("error in style config {}, key {} must be of type integer".format(filename, key))
-                            
-    return ContentStyle(**attrs)
+                key = line[0].strip()
+                value = line[1].strip().replace("\r", "").replace("\n", "")
+                attrs[key] = value
+                    
+    attrs["path"] = os.path.dirname(filename)
+    return attrs
 
 
-def getContentStyles(type, name=None, contenttype=None):
-    if name:
-        name = name.split(";")[0]
-    global contentstyles
+def make_style_from_config(attrs):
+    style_type = attrs["type"]
+    del attrs["type"]
 
-    if len(contentstyles) == 0:
-        styles = {}
-        # load standard themes
-        for root, dirs, files in os.walk(os.path.join(config.basedir, 'web/frontend/styles')):
-            for n in [f for f in files if f.endswith(".cfg")]:
-                c = readStyleConfig(root + "/" + n)
-                styles[c.getID()] = c
+    if style_type == "smallview":
+        return ListStyle(**attrs)
+    elif style_type == "bigview":
+        template = attrs["template"]
+        if template.endswith("j2.jade") or template.endswith("j2.html"):
+            return JinjaFullStyle(**attrs)
+        else:
+            return TALFullStyle(**attrs)
 
-        # test for external styles by plugin (default for user types) and theme styles of plugin styles
-        for k, v in config.getsubset("plugins").items():
-            path, module = splitpath(v)
 
-            plugin_path = os.path.join(config.basedir, v)
+def _load_styles_from_path(dirpath):
+    full_styles_from_path = {}
+    list_styles_from_path = {}
 
-            if os.path.exists(plugin_path):
-                for root, dirs, files in os.walk(plugin_path):
-                    for n in [f for f in files if f.endswith(".cfg")]:
-                        c = readStyleConfig(root + "/" + n)
-                        styles[c.getID()] = c
-                    break
+    if os.path.exists(dirpath):
+        config_filepaths = glob.glob(dirpath + "/*.cfg")
+        for filepath in config_filepaths:
+            style_config = readStyleConfig(filepath)
+            style = make_style_from_config(style_config)
 
-            # now check theme path
-            theme_path = os.path.join(plugin_path, "themes", theme.getName(), "styles")
-
-            if os.path.exists(theme_path):
-                for root, dirs, files in os.walk(theme_path):
-                    for n in [f for f in files if f.endswith(".cfg")]:
-                        c = readStyleConfig(root + "/" + n)
-                        styles[c.getID()] = c
-
-        contentstyles = styles
-
-    if contenttype is not None:
-        ret = filter(lambda x: x.contenttype == contenttype, contentstyles.values())
-        if len(ret) > 0:
-            if name:
-                return filter(lambda x: x.name == name, ret)
+            if isinstance(style, ListStyle):
+                list_styles_from_path[style.name] = style
             else:
-                return ret
-        else:
-            return []
+                styles_for_type = full_styles_from_path.setdefault(style.contenttype, {})
+                styles_for_type[style.name] = style
+    else:
+        logg.warn("style path %s not found, ignoring", dirpath)
 
-    if name is not None:
-        if name in contentstyles.keys():
-            return contentstyles[name]
-        else:
-            return contentstyles.values()[0]
-    return filter(lambda x: x.getType() == type, contentstyles.values())
+    return full_styles_from_path, list_styles_from_path
+
+
+def _load_all_styles():
+    from core import webconfig
+    default_style_path = os.path.join(config.basedir, 'web/frontend/styles')
+    default_full_styles, default_list_styles = _load_styles_from_path(default_style_path)
+    theme_full_styles, theme_list_styles = _load_styles_from_path(webconfig.theme.style_path)
+
+    # styles from a theme have higher priority
+    full_styles_by_contenttype.update(default_full_styles)
+    full_styles_by_contenttype.update(theme_full_styles)
+
+    list_styles.update(default_list_styles)
+    list_styles.update(theme_list_styles)
+
+
+def get_list_style(style_name):
+    if not list_styles:
+        _load_all_styles()
+
+    return list_styles.get(style_name)
+
+
+def get_full_style(content_type, style_name):
+    if not full_styles_by_contenttype:
+        _load_all_styles()
+
+    styles_for_content_type = full_styles_by_contenttype.get(content_type)
+    if styles_for_content_type is None:
+        raise Exception("no content styles defined for node type {}".format(content_type))
+
+    return styles_for_content_type.get(style_name)
+
+
+def get_styles_for_contenttype(content_type):
+    if not full_styles_by_contenttype:
+        _load_all_styles()
+
+    return full_styles_by_contenttype.get(content_type, {}).values()

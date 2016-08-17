@@ -27,7 +27,7 @@ import core.config as config
 from core import db, Node
 from core.translation import lang, t
 from core.metatype import Context
-from core.styles import theme
+from core import webconfig
 from core.transition import current_user
 from core.users import get_guest_user
 from core.webconfig import node_url
@@ -219,7 +219,7 @@ def render_search_box(container, language, req):
         "search_placeholder": t(language, "search_in") + " " + container.getLabel(language)
     }
 
-    search_html = tal.getTAL(theme.getTemplate("frame.html"), ctx, macro="frame_search", language=language)
+    search_html = tal.getTAL(webconfig.theme.getTemplate("frame.html"), ctx, macro="frame_search", language=language)
     return search_html
 
 
@@ -361,7 +361,7 @@ def _render_navtree_cached_for_anon(language, node_id):
 def _render_navtree(language, node_id):
     collection, container = find_collection_and_container(node_id)
     navtree_entries = make_navtree_entries(language, collection, container)
-    html = tal.getTAL(theme.getTemplate("frame.html"), {"navtree_entries": navtree_entries}, macro="frame_tree", language=language)
+    html = tal.getTAL(webconfig.theme.getTemplate("frame.html"), {"navtree_entries": navtree_entries}, macro="frame_tree", language=language)
     logg.debug("rendered navtree with %s unicode chars", len(html))
     return html
 
@@ -452,7 +452,7 @@ def render_page(req, node, contentHTML, show_navbar=True):
     else:
         container = node.get_container()
     
-    frame_template = theme.getTemplate("frame.html")
+    frame_template = webconfig.theme.getTemplate("frame.html")
 
     front_lang = {
         "name": config.languages,

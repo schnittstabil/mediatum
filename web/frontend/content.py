@@ -22,8 +22,8 @@ import logging
 import urllib
 from warnings import warn
 
-from core import db, config, Node, File
-from core.styles import getContentStyles, theme
+from core import db, config, Node, File, webconfig, styles
+from core.styles import get_list_style, get_styles_for_contenttype
 from core.translation import lang, t
 from core.webconfig import node_url
 from core.systemtypes import Root
@@ -359,12 +359,10 @@ class ContentList(ContentBase):
             else:
                 ls = ls.split(";")[0]
 
-        liststyle = getContentStyles("smallview", ls, contenttype=u"")
+        liststyle = get_list_style(ls)
         
         if not liststyle:
             raise Exception("invalid liststyle " + ls)
-        
-        liststyle = liststyle[0]
         
         self.liststyle = liststyle
 
@@ -444,9 +442,9 @@ class ContentList(ContentBase):
     @property
     def content_styles(self):
         if isinstance(self.content, ContentNode):
-            return getContentStyles("bigview", contenttype=self.content.node.getContentType())
+            return get_styles_for_contenttype(self.content.node.type)
         else:
-            return getContentStyles("smallview")  # , self.collection.get("style") or "default")
+            return styles.list_styles.values()
 
 
     def _single_result(self):
@@ -570,7 +568,7 @@ class ContentList(ContentBase):
             sfile = SingleFile(n, nav_params, self.lang, self.default_fullstyle_name, self.liststyle.maskfield_separator)
             files.append(sfile)
 
-        page_nav = tal.getTAL(theme.getTemplate("content_nav.html"), ctx, macro="page_nav_prev_next", language=self.lang)
+        page_nav = tal.getTAL(webconfig.theme.getTemplate("content_nav.html"), ctx, macro="page_nav_prev_next", language=self.lang)
         return page_nav, files
 
     @ensure_unicode_returned(name="web.frontend.content.ContentList:html")
@@ -578,7 +576,7 @@ class ContentList(ContentBase):
         # do we want to show a single result or the result list?
         if self.content:
             # render single result
-            headline = tal.getTAL(theme.getTemplate("content_nav.html"), {"nav": self}, macro="navheadline", language=self.lang)
+            headline = tal.getTAL(webconfig.theme.getTemplate("content_nav.html"), {"nav": self}, macro="navheadline", language=self.lang)
             return headline + self.content.html(req)
 
         # render result list
@@ -591,12 +589,12 @@ class ContentList(ContentBase):
             "ids": ",".join(str(f.node.id) for f in self.files),
             "op": "", "query": req.args.get("query", "")}
 
-        filesHTML = tal.getTAL(theme.getTemplate("content_nav.html"), ctx, macro="list_header", request=req)
+        filesHTML = tal.getTAL(webconfig.theme.getTemplate("content_nav.html"), ctx, macro="list_header", request=req)
 
         # use template of style and build html content
         ctx = {"files": self.files, "op": "", "language": self.lang}
 
-        contentList = self.liststyle.renderTemplate(req, ctx)
+        contentList = self.liststyle.render_template(req, ctx)
 
         if self.show_sidebar:
             sidebar = u""  # check for sidebar
@@ -640,7 +638,7 @@ class ContentNode(ContentBase):
 
     @property
     def content_styles(self):
-        return getContentStyles("bigview", contenttype=self._node.type)
+        return get_styles_for_contenttype(self._node.type)
 
     def select_style_link(self, style):
         version = self._node.tag if isinstance(self._node, version_class(Node)) else None
@@ -656,14 +654,10 @@ class ContentNode(ContentBase):
         self.paths = paths
 
         if not isinstance(self._node, Container):
-            paths_html = tal.getTAL(theme.getTemplate("content_nav.html"), {"paths": paths}, macro="paths", language=language)
+            paths_html = tal.getTAL(webconfig.theme.getTemplate("content_nav.html"), {"paths": paths}, macro="paths", language=language)
 
-        full_styles = getContentStyles("bigview", self.full_style_name or DEFAULT_FULL_STYLE_NAME, contenttype=self._node.type)
-
-        if full_styles:
-            return getFormatedString(show_node_big(req, template=full_styles[0].getTemplate())) + paths_html
-        else:
-            return getFormatedString(show_node_big(req)) + paths_html
+        style_name = self.full_style_name or DEFAULT_FULL_STYLE_NAME
+        return getFormatedString(show_node_big(req, style_name)) + paths_html
 
 
 class NodeNotAccessible(object):
@@ -738,7 +732,7 @@ def make_content_nav_path(node):
 
 def render_content_nav(req, node, logo, styles, select_style_link):
 
-    content_nav_html = tal.getTAL(theme.getTemplate("content_nav.html"),
+    content_nav_html = tal.getTAL(webconfig.theme.getTemplate("content_nav.html"),
                       {"path": make_content_nav_path(node),
                        "styles": styles,
                        "logo": logo,
@@ -773,7 +767,7 @@ def get_make_search_content_function(req):
 
 
 def render_content_error(error, language):
-    return tal.getTAL(theme.getTemplate("content_error.html"), {"error": error}, language=language)
+    return tal.getTAL(webconfig.theme.getTemplate("content_error.html"), {"error": error}, language=language)
 
 
 def render_content(node, req):

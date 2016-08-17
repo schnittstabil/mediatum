@@ -27,7 +27,7 @@ from core import Node, db, athana
 from core.database.postgres.node import children_rel
 import core.config as config
 from core.translation import lang, t
-from core.styles import getContentStyles
+from core.styles import get_full_style
 from core.transition.postgres import check_type_arg_with_schema
 from export.exportutils import default_context
 from schema.schema import getMetadataType, VIEW_HIDE_EMPTY, SchemaMixin
@@ -221,13 +221,10 @@ class Data(Node):
         # XXX: should be scalar(), but we don't really try to avoid duplicates atm
         return self.files.filter_by(filetype=self.get_upload_filetype()).first() is not None
 
-    def show_node_big(self, req, template="", macro=""):
-        if template == "":
-            styles = getContentStyles("bigview", contenttype=self.type)
-            if len(styles) >= 1:
-                template = styles[0].getTemplate()
-
-        return req.getTAL(template, self._prepareData(req), macro)
+    def show_node_big(self, req, style_name=""):
+        context = self._prepareData(req)
+        style = get_full_style(self.type, style_name)
+        return style.render_template(req, context)
 
     def show_node_image(self, language=None):
         return tal.getTAL(

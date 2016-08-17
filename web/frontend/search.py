@@ -22,7 +22,7 @@ import logging
 from core import Node, db
 from core.translation import lang, translate
 from core.search import SearchQueryException
-from core.styles import theme
+from core import webconfig
 from utils.strings import ensure_unicode_returned
 from contenttypes.container import Container
 from schema.searchmask import SearchMaskItem
@@ -56,10 +56,10 @@ class NoSearchResult(ContentBase):
     @ensure_unicode_returned(name="searchresult:html")
     def html(self, req):
         if self.error:
-            return req.getTAL(theme.getTemplate("searchresult.html"), {
+            return req.getTAL(webconfig.theme.getTemplate("searchresult.html"), {
                               "query": self.query, "r": self, "container": self.container, "language": lang(req)}, macro="error")
 
-        return req.getTAL(theme.getTemplate("searchresult.html"), {
+        return req.getTAL(webconfig.theme.getTemplate("searchresult.html"), {
                           "query": self.query, "r": self, "container": self.container, "language": lang(req)}, macro="noresult")
 
 

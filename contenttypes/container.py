@@ -143,7 +143,8 @@ class Container(Data, ContainerMixin, SchemaMixin):
         return res
 
     """ format big view with standard template """
-    def show_node_big(self, req, template="", macro=""):
+    def show_node_big(self, req, style_name=""):
+        # style_name is ignored
         content = u""
         link = node_url(self.id, files=1)
         sidebar = u""

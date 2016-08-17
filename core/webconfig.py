@@ -23,23 +23,33 @@ import urllib
 from mediatumtal import tal
 import core.athana as athana
 import core.config as config
-from core.styles import theme
-from core import db
+from core.styles import Theme
+from core import db, app
 
 from core.plugins import find_plugin_with_theme
 
 logg = logging.getLogger(__name__)
 
 
+global theme
+theme = None
+
+
 def loadThemes():
 
     def manageThemes(theme_name, theme_basepath, theme_type):
+        global theme
         theme_dir = os.path.join(theme_basepath, "themes", theme_name)
+        theme = Theme(theme_name, theme_dir + "/", theme_type)
+        theme_jinja_loader = theme.make_jinja_loader()
+        if theme_jinja_loader is not None:
+            logg.info("adding jinja loader for theme")
+            app.add_template_loader(theme_jinja_loader, 0)
+            
         athana.addFileStore("/theme/", theme_dir + "/")
         athana.addFileStorePath("/css/", theme_dir + "/css/")
         athana.addFileStorePath("/img/", theme_dir + "/img/")
         athana.addFileStorePath("/js/", theme_dir + "/js/")
-        theme.update(theme_name, theme_dir + "/", theme_type)
         logg.info("Loading theme '%s' from '%s' (%s)", theme_name, theme_dir, theme_type)
 
     theme_name = config.get("config.theme", "")
