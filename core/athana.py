@@ -862,6 +862,7 @@ class http_request(object):
         self.request_number = http_request.request_counter.increment()
         self._split_uri = None
         self._header_cache = {}
+        self.session = None
         
         # XXX: not really a good idea, but we need some place to store request-bound caching data...
         self.app_cache = {}
@@ -4089,6 +4090,7 @@ class AthanaHandler:
             if path.startswith(c.name) and len(c.name) > maxlen:
                 context = c
                 maxlen = len(context.name)
+                
         if context is None:
             request.error(404)
             return
