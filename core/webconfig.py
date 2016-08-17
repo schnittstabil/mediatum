@@ -139,8 +139,14 @@ def current_node_url(**kwargs):
     return node_url(**params)
 
 
-def tal_add_template_globals():
-    tal.add_template_globals(node_url=node_url, current_node_url=current_node_url)
+def add_template_globals():
+    from core.translation import translate
+    template_globals = dict(node_url=node_url, 
+                            current_node_url=current_node_url, 
+                            _t=translate)
+
+    tal.add_template_globals(**template_globals)
+    app.add_template_globals(**template_globals)
 
 
 def initContexts():
@@ -152,7 +158,7 @@ def initContexts():
     tal.set_base(config.basedir)
     tal.add_macro_resolver(resolve_filename)
     tal.add_translator(translate)
-    tal_add_template_globals()
+    add_template_globals()
 
     # XXX: init our temporary child count cahche
     from web.frontend import frame
