@@ -40,7 +40,7 @@ logg = logging.getLogger(__name__)
 
 # for TAL templates from mask cache
 context = default_context.copy()
-### XXX: does this work without hostname? Can we remove this?
+# XXX: does this work without hostname? Can we remove this?
 context['host'] = "http://" + config.get("host.name", "")
 
 
@@ -83,17 +83,16 @@ def log_maskcache_accesscount(req, *args):
             logg.debug("mask cache status for req to %s: %s", req.path, maskcache_report)
 
 
-
 def render_mask_template(node, mask, field_descriptors, language, words=None, separator="", skip_empty_fields=True):
     res = []
-     
+
     for node_attribute, fd in field_descriptors:
         metafield_type = fd['metafield_type']
         maskitem = fd['maskitem']
         metafield = fd["metafield"]
         metatype = fd["metatype"]
         maskitem_type = fd["maskitem_type"]
-        
+
         if metafield_type in ['date', 'url', 'hlist']:
             value = metatype.getFormattedValue(metafield, maskitem, mask, node, language)[1]
 
@@ -106,11 +105,11 @@ def render_mask_template(node, mask, field_descriptors, language, words=None, se
                 else:
                     use_label = True
                 value = getMetadataType(maskitem_type).getViewHTML(
-                                                                 metafield,
-                                                                 [node],  # nodes
-                                                                 0,  # flags
-                                                                 language=language,
-                                                                 mask=mask, use_label=use_label)
+                    metafield,
+                    [node],  # nodes
+                    0,  # flags
+                    language=language,
+                    mask=mask, use_label=use_label)
         else:
             value = node.get_special(node_attribute)
 
@@ -160,7 +159,7 @@ def render_mask_template(node, mask, field_descriptors, language, words=None, se
         if words:
             value = highlight(value, words, '<font class="hilite">', "</font>")
         res.append(fd["template"] % value)
-        
+
     return separator.join(res)
 
 
@@ -230,13 +229,11 @@ class Data(Node):
         return tal.getTAL(
             "contenttypes/data.html", {'children': self.getChildren().sort_by_orderpos(), 'node': self}, macro="show_node_image")
 
-
     def show_node_text(self, words=None, language=None, separator="", labels=0):
         return self.show_node_text_deep(words=words, language=language, separator=separator, labels=labels)
 
-
     def show_node_text_deep(self, words=None, language=None, separator="", labels=0):
-        
+
         if not separator:
             separator = u"<br/>"
 
@@ -263,7 +260,7 @@ class Data(Node):
                 fields = mask.getMaskFields(first_level_only=True)
                 ordered_fields = sorted([(f.orderpos, f) for f in fields])
                 field_descriptors = []
-                
+
                 for _, maskitem in ordered_fields:
                     fd = {}  # field descriptor
                     fd['maskitem_type'] = maskitem.get('type')
@@ -271,15 +268,15 @@ class Data(Node):
                     fd['unit'] = maskitem.getUnit()
                     fd['label'] = maskitem.getLabel()
                     fd['maskitem'] = maskitem
-                    
+
                     default = maskitem.getDefault()
                     fd['default'] = default
-                    
+
                     metafield = maskitem.metafield
                     metafield_type = metafield.get('type')
                     fd['metafield'] = metafield
                     fd['metafield_type'] = metafield_type
-                    
+
                     t = getMetadataType(metafield_type)
                     fd['metatype'] = t
 
