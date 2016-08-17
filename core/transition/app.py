@@ -214,6 +214,8 @@ class AthanaFlaskStyleApp(object):
         else:
             self.jinja_loader.loaders.append(loader)
             
+    def add_template_globals(self, **global_names):
+        self.jinja_env.globals.update(global_names)
 
 
 def detect_athana_or_flask():
