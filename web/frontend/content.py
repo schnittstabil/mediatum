@@ -134,6 +134,9 @@ def _limit_to_size(val, size=2000):
 
 
 def _prepare_value(name, val):
+    if val is None:
+        return val
+    
     val = _limit_to_size(val)
     # XXX: that's a bit hacky, find a better solution (maybe in node_value_expression?)
     if name not in ("node.id", "node.orderpos", "node.name"):
