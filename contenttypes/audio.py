@@ -26,7 +26,6 @@ from utils.utils import splitfilename
 from utils.date import parse_date, format_date, make_date
 from schema.schema import VIEW_HIDE_EMPTY
 from core.translation import lang
-from core.styles import getContentStyles
 from core.transition.postgres import check_type_arg_with_schema
 from core import File
 from core import db
@@ -165,15 +164,6 @@ class Audio(Content):
             obj['canseeoriginal'] = False
 
         return obj
-
-    """ format big view with standard template """
-    def show_node_big(self, req, template="", macro=""):
-        if template == "":
-            styles = getContentStyles("bigview", contenttype=self.type)
-            if len(styles) >= 1:
-                template = styles[0].getTemplate()
-
-        return req.getTAL(template, self._prepareData(req), macro)
 
     def has_object(self):
         for f in self.files:

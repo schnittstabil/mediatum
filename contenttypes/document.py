@@ -27,7 +27,6 @@ from utils.utils import splitfilename, u, OperationException, utf8_decode_escape
 from utils.search import import_node_fulltext
 from schema.schema import VIEW_HIDE_EMPTY
 from core.translation import lang, t
-from core.styles import getContentStyles
 from lib.pdf import parsepdf
 from core.attachment import filebrowser
 from contenttypes.data import Content, prepare_node_data
@@ -114,14 +113,6 @@ class Document(Content):
 
     def _prepareData(self, req, words=""):
         return _prepare_document_data(self, req)
-
-    """ format big view with standard template """
-    def show_node_big(self, req, template="", macro=""):
-        if not template:
-            styles = getContentStyles("bigview", contenttype=self.type)
-            if len(styles) >= 1:
-                template = styles[0].getTemplate()
-        return req.getTAL(template, self._prepareData(req), macro)
 
     @property
     def document(self):

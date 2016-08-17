@@ -32,7 +32,6 @@ from core.transition.postgres import check_type_arg_with_schema
 from core import db, File, config
 from core.config import resolve_datadir_path
 from core.translation import t
-from core.styles import getContentStyles
 from utils.utils import splitfilename
 from utils.date import format_date, make_date
 import utils.process
@@ -91,17 +90,6 @@ class Video(Content):
 
         obj["captions_info"] = json.dumps(captions_info)
         return obj
-
-    def show_node_big(self, req, template="", macro=""):
-        """Formats big view with standard template"""
-        if template == "":
-            styles = getContentStyles("bigview", contenttype=self.getContentType())
-            if len(styles) >= 1:
-                template = styles[0].getTemplate()
-
-        context = self._prepareData(req)
-
-        return req.getTAL(template, context, macro)
 
     def show_node_image(self):
         """Returns preview image"""

@@ -28,7 +28,6 @@ from core import config, File, db
 from core.archive import Archive, get_archive_for_node
 from core.attachment import filebrowser
 from core.translation import t
-from core.styles import getContentStyles
 from core.transition.postgres import check_type_arg_with_schema
 from contenttypes.data import Content, prepare_node_data
 from utils.utils import isnewer, iso2utf8, utf8_decode_escape
@@ -340,15 +339,6 @@ class Image(Content):
             obj['style'] = full_style
 
         return obj
-
-    """ format big view with standard template """
-    def show_node_big(self, req, template="", macro=""):
-        if not template:
-            styles = getContentStyles("bigview", contenttype=self.type)
-            if len(styles) >= 1:
-                template = styles[0].getTemplate()
-        return req.getTAL(template, self._prepareData(req), macro)
-
 
     def _generate_other_format(self, mimetype_to_generate, files=None):
         original_file = filter_scalar(lambda f: f.filetype == u"original", files)
