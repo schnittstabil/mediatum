@@ -67,7 +67,7 @@ class AthanaFlaskStyleApp(object):
 
     app_ctx_globals_class = _AppCtxGlobals
 
-    def __init__(self, import_name, template_folder="templates", name="mediatum", **config):
+    def __init__(self, import_name, template_folder="web/templates", name="mediatum", **config):
         if "DEBUG" not in config:
             config["DEBUG"] = True
         self.blueprints = {}
