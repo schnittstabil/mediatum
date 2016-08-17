@@ -5,7 +5,7 @@ from functools import partial
 from collections import OrderedDict
 import logging
 from os import path
-from jinja2.loaders import FileSystemLoader
+from jinja2.loaders import FileSystemLoader, ChoiceLoader
 from werkzeug.datastructures import ImmutableDict, MultiDict
 import pyaml
 import yaml
@@ -17,6 +17,7 @@ from core.transition.helpers import runswith
 from core.transition.helpers import get_root_path
 from utils.date import dt_fromiso
 import datetime
+from werkzeug.utils import cached_property
 
 logg = logging.getLogger(__name__)
 
@@ -198,10 +199,21 @@ class AthanaFlaskStyleApp(object):
         #rv.trim_blocks = True
         return rv
 
-    @property
+    @cached_property
     def jinja_loader(self):
         if self.template_folder is not None:
-            return FileSystemLoader(path.join(self.root_path, self.template_folder))
+            loaders = [FileSystemLoader(path.join(self.root_path, self.template_folder))]
+        else:
+            loaders = []
+    
+        return ChoiceLoader(loaders)
+
+    def add_template_loader(self, loader, pos=None):
+        if pos:
+            self.jinja_loader.loaders.insert(pos, loader)
+        else:
+            self.jinja_loader.loaders.append(loader)
+            
 
 
 def detect_athana_or_flask():
