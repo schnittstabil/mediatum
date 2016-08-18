@@ -4,9 +4,6 @@
 <tal:block replace="raw deleted_version_alert_html"></tal:block>
 
 
-<div style="width: 100%; text-align:right">
-    <a tal:attributes="href python:'/print/'+ustr(node.id)" i18n:attributes="title printview" target="_blank"><img src="/img/print_icon.gif"/></a>
-</div>
 <div id="object_main">
     <div id="object_image" tal:condition="python:canseeoriginal">
         <a tal:condition="python:not zoom">
