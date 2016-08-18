@@ -18,4 +18,10 @@ class ContentBase(object):
         return ""
     
     def html(self, req):
-        return ""
+        """Renders the component. Must return an unicode string (containing HTML)"""
+        return u""
+
+    def feedback(self, req):
+        """Consumes request parameters and changes the internal state.
+        No return value expected.
+        """

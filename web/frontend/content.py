@@ -771,7 +771,7 @@ def render_content_occurences(node, req, paths):
 def render_content(node, req, render_paths=True):
     make_search_content = get_make_search_content_function(req)
 
-    if render_paths:
+    if render_paths and node is not None:
         paths = get_accessible_paths(node, q(Node).prefetch_attrs())
     else:
         paths = None
