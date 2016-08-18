@@ -280,7 +280,10 @@ def importWorkflow(filename):
 @check_type_arg
 class Workflows(Node):
 
-    def show_node_big(node, req, template="workflow/workflow.html", macro="workflowlist"):
+    def show_node_big(self, req, *args):
+        # style name is ignored
+        template = "workflow/workflow.html"
+        macro= "workflowlist"
         list = []
         for workflow in getWorkflowList():
             if workflow.children.filter_write_access().first() is not None:
@@ -306,14 +309,16 @@ class Workflows(Node):
 @check_type_arg
 class Workflow(Node):
 
-    def show_node_big(node, req, template="workflow/workflow.html", macro="object_list"):
-        if node.children.filter_write_access().first() is None:
+    def show_node_big(self, req, *args): 
+        template = "workflow/workflow.html"
+        macro = "object_list"
+        if self.children.filter_write_access().first() is None:
             return '<i>' + t(lang(req), "permission_denied") + '</i>'
         return req.getTAL(
             template, {
-                "workflow": node, "search": req.params.get(
+                "workflow": self, "search": req.params.get(
                     "workflow_search", ""), "items": workflowSearch(
-                    [node], req.params.get(
+                    [self], req.params.get(
                         "workflow_search", "")), "getStep": getNodeWorkflowStep, "format_date": formatItemDate}, macro=macro)
 
     def getId(self):
@@ -412,7 +417,9 @@ class WorkflowStep(Node):
     def getId(self):
         return self.name
 
-    def show_node_big(self, req, template="workflow/workflow.html", macro="object_step"):
+    def show_node_big(self, req, *args):
+        template = "workflow/workflow.html"
+        macro = "object_step"
 
         # the workflow operations (node forwarding, key assignment,
         # parent node handling) are highly non-reentrant, so protect
