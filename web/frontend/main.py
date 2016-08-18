@@ -235,7 +235,7 @@ def show_parent_node(req):
         return workflow(req)
 
     for p in node.parents:
-        if not isinstance(Container):
+        if not isinstance(p, Container):
             parent = p
     if not parent:
         return workflow(req)
