@@ -21,7 +21,7 @@
             <img tal:condition="python:int(node.get('width'))<int(node.get('height'))" tal:attributes="src presentation_url; onClick python:'fullSizePopup('+ustr(node.id)+', 700, 700)'" style="cursor:pointer;border:1px double silver;" border="1px" />
         </a>
 
-        <div condition="python:image_formats">
+        <div tal:condition="python:image_formats">
           <h3 i18n:translate="image_available_formats"></h3>
           <ul tal:repeat="type python:image_formats">
               <li>
