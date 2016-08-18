@@ -187,7 +187,7 @@ def get_full_style(content_type, style_name):
     if styles_for_content_type is None:
         raise Exception("no content styles defined for node type {}".format(content_type))
 
-    return styles_for_content_type.get(style_name)
+    return styles_for_content_type.get(style_name, styles_for_content_type.values()[0])
 
 
 def get_styles_for_contenttype(content_type):
