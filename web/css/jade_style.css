@@ -1,0 +1,23 @@
+.action_icon {
+    margin-top: 8px;
+    margin-bottom: 8px;
+    margin-right: 8px;
+    float: left;
+}
+
+.clear {
+    clear: both;
+}
+
+.object_container {
+    display: table;
+}
+
+.object_column {
+    vertical-align: top;
+    display: table-cell;
+}
+
+.object_column.left>div {
+    width: 325px;
+}

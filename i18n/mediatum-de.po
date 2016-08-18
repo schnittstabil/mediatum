@@ -899,8 +899,8 @@ msgstr "Fehler bei Dateiverarbeitung! Bitte überprüfen Sie die zu bearbeitende
 msgid "searchresult"
 msgstr "Suchresultate"
 
-msgid "If_you_experience_problems_opening_this_document_please_try"
-msgstr "Wenn Sie Schwierigkeiten haben, dieses Dokument zu öffnen, versuchen Sie auch bitte"
+msgid "alternative_pdf_link"
+msgstr "Wenn Sie Schwierigkeiten haben, das Dokument zu öffnen, versuchen Sie auch bitte diesen Link"
 
 msgid "popup_help_header"
 msgstr "Hilfe"

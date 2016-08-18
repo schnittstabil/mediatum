@@ -877,8 +877,8 @@ msgstr "Error while processing file! Please check processed file."
 msgid "searchresult"
 msgstr "Searchresult"
 
-msgid "If_you_experience_problems_opening_this_document_please_try"
-msgstr "If you experience problems opening this document, please try"
+msgid "alternative_pdf_link"
+msgstr "If you experience problems opening the document, please try this link"
 
 msgid "popup_help_header"
 msgstr "Help"
