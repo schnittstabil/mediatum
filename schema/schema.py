@@ -808,7 +808,7 @@ class Metafield(Node):
         except LookupError:
             t = getMetadataType("default")
 
-        return t.getFormattedValue(self, node, language=language)
+        return t.getFormattedValue(self, None, None, node, language=language)
 
 # helper class for masks
 
