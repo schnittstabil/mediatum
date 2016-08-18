@@ -235,12 +235,12 @@ def show_parent_node(req):
         return workflow(req)
 
     for p in node.parents:
-        if p.type != "directory" and p.type != "collection":
+        if not isinstance(Container):
             parent = p
     if not parent:
         return workflow(req)
 
-    req.params["id"] = parent.id
+    req = overwrite_id_in_req(parent.id, req)
     req.params["obj"] = str(node.id)
 
     return workflow(req)
