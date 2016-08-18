@@ -9,8 +9,9 @@
     clear: both;
 }
 
-.object_container {
+.content_container {
     display: table;
+    padding: 4px;
 }
 
 .object_column {
