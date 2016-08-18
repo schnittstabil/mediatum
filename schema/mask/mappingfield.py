@@ -169,7 +169,7 @@ class m_mappingfield(Metatype):
                 s = s.replace("[" + var + "]", s2)
 
             elif var == "value":
-                v = getMetadataType(attrnode.getFieldtype()).getFormattedValue(attrnode, node)[1]
+                v = getMetadataType(attrnode.getFieldtype()).getFormattedValue(attrnode, None, None, node, "")[1]
                 if v == "":
                     v = node.get(attrnode.getName())
                 if v == "" and default != "":
