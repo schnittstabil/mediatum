@@ -62,6 +62,7 @@ def migrate_special_dirs():
             if not new_dir:
                 old_dirrs = home_dir.children.filter_by(name=old).order_by(Node.id).all()
                 if not old_dirrs:
+                    logg.info("creating missing special dir %s", new)
                     dirr = Directory(new)
                     home_dir.children.append(dirr)
                 else:
