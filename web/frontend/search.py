@@ -67,7 +67,7 @@ def protect(s):
     return '"' + s.replace('"', '') + '"'
 
 
-def search(searchtype, searchquery, readable_query, req):
+def search(searchtype, searchquery, readable_query, paths, req):
     from web.frontend.content import ContentList
     container_id = req.args.get("id", type=int)
     container = q(Container).get(container_id) if container_id else None
@@ -84,7 +84,7 @@ def search(searchtype, searchquery, readable_query, req):
         # query parsing went wrong or the search backend complained about something
         return NoSearchResult(readable_query, container, readable_query, error=True)
 
-    content_list = ContentList(result, container, readable_query, show_sidebar=False)
+    content_list = ContentList(result, container, paths, words=readable_query, show_sidebar=False)
     try:
         content_list.feedback(req)
     except Exception as e:
@@ -109,12 +109,12 @@ def search(searchtype, searchquery, readable_query, req):
         return NoSearchResult(readable_query, container, searchtype)
 
 
-def simple_search(req):
+def simple_search(req, paths):
     searchquery = req.args.get("query")
     readable_searchquery = searchquery
     if searchquery is None:
         raise ValueError("searchquery param missing!")
-    return search("simple", FullMatch(searchquery), readable_searchquery, req)
+    return search("simple", FullMatch(searchquery), readable_searchquery, paths, req)
 
 
 def _extended_searchquery_from_req(req):
@@ -202,6 +202,6 @@ def _extended_searchquery_from_req(req):
     return q_str, q_user.strip()
 
 
-def extended_search(req):
+def extended_search(req, paths):
     searchquery, readable_query = _extended_searchquery_from_req(req)
-    return search("extended", searchquery, readable_query, req)
+    return search("extended", searchquery, readable_query, paths, req)

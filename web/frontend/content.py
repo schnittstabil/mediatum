@@ -19,18 +19,16 @@
 """
 from collections import OrderedDict
 import logging
-import urllib
 from warnings import warn
 
 from core import db, config, Node, File, webconfig, styles
 from core.styles import get_list_style, get_styles_for_contenttype
 from core.translation import lang, t
 from core.webconfig import node_url
-from core.systemtypes import Root
-from contenttypes import Collections
+from contenttypes import Content
 from contenttypes.container import includetemplate
 from utils.strings import ensure_unicode_returned
-from utils.utils import getCollection, Link, getFormatedString, modify_tex
+from utils.utils import getFormatedString
 from utils.compat import iteritems
 from web.frontend.search import simple_search, extended_search
 from contenttypes.container import Container
@@ -39,7 +37,6 @@ from schema.schema import Metadatatype
 from core.database.postgres import mediatumfunc
 from sqlalchemy_continuum.utils import version_class
 import json
-from core.nodecache import get_collections_node
 from utils.pathutils import get_accessible_paths
 from web.frontend import ContentBase
 
@@ -233,23 +230,25 @@ DEFAULT_FULL_STYLE_NAME = "full_standard"
 
 class ContentList(ContentBase):
 
-    def __init__(self, node_query, container, words=None, show_sidebar=True):
+    def __init__(self, node_query, container, paths, words=None, show_sidebar=True):
 
+        self.nodes = node_query
         self.container = container
+        self.paths = paths
+        self.words = words
         self.show_sidebar = show_sidebar
         self.nodes_per_page = None
         self.nav_params = None
         self.before = None
         self.after = None
         self.lang = None
-        self.words = words
-        self.nodes = node_query
         self._num = -1
         self.content = None
         self.liststyle_name = None
         self.collection = container.get_collection()
         self.sortfields = OrderedDict()
         self.default_fullstyle_name = None
+        self.render_occurences = False
 
         coll_default_full_style_name = self.collection.get("style_full")
         if coll_default_full_style_name is not None and coll_default_full_style_name != DEFAULT_FULL_STYLE_NAME:
@@ -489,7 +488,7 @@ class ContentList(ContentBase):
             # doing nothing here when `nav` was not given
             pass
 
-        return ContentNode(show_node, 0, 0, self.words)
+        return ContentNode(show_node, self.paths, 0, 0, self.words)
 
     def _page_nav_prev_next(self):
         q_nodes = self.nodes
@@ -577,6 +576,7 @@ class ContentList(ContentBase):
         if self.content:
             # render single result
             headline = tal.getTAL(webconfig.theme.getTemplate("content_nav.html"), {"nav": self}, macro="navheadline", language=self.lang)
+
             return headline + self.content.html(req)
 
         # render result list
@@ -615,11 +615,11 @@ class ContentList(ContentBase):
 
 class ContentNode(ContentBase):
 
-    def __init__(self, node, nr=0, num=0, words=None):
+    def __init__(self, node, paths, nr=0, num=0, words=None):
         self._node = node
         self.collection = node.get_collection()
         self.id = node.id
-        self.paths = []
+        self.paths = paths
         self.nr = nr
         self.num = num
         self.words = words
@@ -646,18 +646,16 @@ class ContentNode(ContentBase):
 
     @ensure_unicode_returned(name="web.frontend.content:html")
     def html(self, req):
-        language = lang(req)
-        paths_html = u""
         show_node_big = ensure_unicode_returned(self._node.show_node_big, name="show_node_big of %s" % self._node)
-
-        paths = get_accessible_paths(self._node, q(Node).prefetch_attrs())
-        self.paths = paths
-
-        if not isinstance(self._node, Container):
-            paths_html = tal.getTAL(webconfig.theme.getTemplate("content_nav.html"), {"paths": paths}, macro="paths", language=language)
-
         style_name = self.full_style_name or DEFAULT_FULL_STYLE_NAME
-        return getFormatedString(show_node_big(req, style_name)) + paths_html
+        node_html = getFormatedString(show_node_big(req, style_name))
+        
+        if self.paths:
+            occurences_html = render_content_occurences(self.node, req, self.paths)
+        else:
+            occurences_html = u""
+
+        return node_html + occurences_html
 
 
 class NodeNotAccessible(object):
@@ -667,7 +665,7 @@ class NodeNotAccessible(object):
         self.status = status
 
 
-def make_node_content(node, req):
+def make_node_content(node, req, paths):
     """Renders the inner parts of the content area.
     The current node can be a container or a content node. 
     A container can render a static HTML page, a node list view or a single node from that list.
@@ -684,12 +682,12 @@ def make_node_content(node, req):
             html_files = node.files.filter_by(filetype=u"content", mimetype=u"text/html")
             for f in html_files:
                 if f.exists and f.size > 0:
-                    return ContentNode(node)
+                    return ContentNode(node, paths)
 
         if node.show_list_view:
             # no startpage found, list view requested
             allowed_nodes = node.content_children_for_all_subcontainers_with_duplicates.filter_read_access()
-            c = ContentList(allowed_nodes, node)
+            c = ContentList(allowed_nodes, node, paths)
             c.feedback(req)
             # if ContentList feedback produced a content error, return that instead of the list itself
             if isinstance(c.content, NodeNotAccessible):
@@ -704,7 +702,7 @@ def make_node_content(node, req):
     else:
         version = None
 
-    c = ContentNode(version) if version is not None else ContentNode(node)
+    c = ContentNode(version, paths) if version is not None else ContentNode(node, paths)
     c.feedback(req)
     return c
 
@@ -721,25 +719,20 @@ def make_content_nav_printlink(req, node):
     return printlink
     
 
-def make_content_nav_path(node):
-    paths = get_accessible_paths(node)
+def render_content_nav(req, node, logo, styles, select_style_link, paths):
     if paths:
         shortest_path = sorted(paths, key=lambda p: (len(p), p[-1].id))[0]
-        return shortest_path
-
-    return []
-
-
-def render_content_nav(req, node, logo, styles, select_style_link):
-
+    else:
+        shortest_path = None   
+    
     content_nav_html = tal.getTAL(webconfig.theme.getTemplate("content_nav.html"),
-                      {"path": make_content_nav_path(node),
+                      {"path": shortest_path,
                        "styles": styles,
                        "logo": logo,
                        "select_style_link": select_style_link,
                        "node": node,
                        "printlink": make_content_nav_printlink(req, node)},
-                      macro="path",
+                      macro="content_nav",
                       request=req)
 
     return content_nav_html
@@ -770,13 +763,23 @@ def render_content_error(error, language):
     return tal.getTAL(webconfig.theme.getTemplate("content_error.html"), {"error": error}, language=language)
 
 
-def render_content(node, req):
+def render_content_occurences(node, req, paths):
+    language = lang(req)
+    return tal.getTAL(webconfig.theme.getTemplate("content_nav.html"), {"paths": paths}, macro="paths", language=language)
+
+
+def render_content(node, req, render_paths=True):
     make_search_content = get_make_search_content_function(req)
 
-    if make_search_content is None:
-        content_or_error = make_node_content(node, req)
+    if render_paths:
+        paths = get_accessible_paths(node, q(Node).prefetch_attrs())
     else:
-        content_or_error = make_search_content(req)
+        paths = None
+
+    if make_search_content is None:
+        content_or_error = make_node_content(node, req, paths)
+    else:
+        content_or_error = make_search_content(req, paths)
 
     if isinstance(content_or_error, NodeNotAccessible):
         req.setStatus(content_or_error.status)
@@ -791,7 +794,8 @@ def render_content(node, req):
         logo = content.logo
         select_style_link = content.select_style_link
         styles = content.content_styles
-        content_nav_html = render_content_nav(req, node, logo, styles, select_style_link)
+        content_nav_html = render_content_nav(req, node, logo, styles, select_style_link, paths)
+
 
     content_html = content_nav_html + "\n" + content.html(req)
     return content_html

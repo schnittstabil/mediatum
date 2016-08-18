@@ -94,12 +94,12 @@ def change_language_request(req):
 
 def check_change_language_request(func):
     @wraps(func)
-    def checked(req, *args):
+    def checked(req, *args, **kwargs):
         change_lang_http_status = change_language_request(req)
         if change_lang_http_status:
             return change_lang_http_status
 
-        return func(req, *args)
+        return func(req, *args, **kwargs)
 
     return checked
 
@@ -158,11 +158,11 @@ def display_newstyle(req):
 
     # either coming from /nodes/ or nid_or_alias is not a valid alias
     req = overwrite_id_in_req(nid_or_alias, req)
-    return display(req)
+    return _display(req)
 
 
 @check_change_language_request
-def _display(req, show_navbar, params=None):
+def _display(req, show_navbar=True, render_paths=True, params=None):
     if "jsonrequest" in req.params:
         return handle_json_request(req)
 
@@ -182,7 +182,7 @@ def _display(req, show_navbar, params=None):
     if req.args.get("disable_content"):
         content_html = u""
     else:
-        content_html = render_content(node, req)
+        content_html = render_content(node, req, render_paths)
 
     if params.get("raw"):
         req.write(content_html)
@@ -195,7 +195,7 @@ def _display(req, show_navbar, params=None):
 
 @check_change_language_request
 def display(req):
-    _display(req, True)
+    _display(req)
 
 
 @check_change_language_request
@@ -205,7 +205,7 @@ def workflow(req):
     else:
         params = req.args
 
-    _display(req, False, params)
+    _display(req, show_navbar=False, render_paths=False, params=params)
 
 
 #: needed for workflows:
@@ -224,7 +224,7 @@ def publish(req):
                     return 404
 
     req = overwrite_id_in_req(node.id, req)
-    return _display(req, False)
+    return _display(req, False, render_paths=False)
 
 
 @check_change_language_request
