@@ -56,8 +56,8 @@ q = db.query
 
 
 configured_host = config.get("host.name", "")
-allow_cross_origin = config.get("webservice.allow_cross_origin", "").lower() == "true"
-DEFAULT_CACHE_VALID = config.get("services.default_cache_valid", 0)
+allow_cross_origin = config.getboolean("services.allow_cross_origin", False)
+DEFAULT_CACHE_VALID = config.getint("services.default_cache_valid", 0)
 
 from web.services.cache import Cache
 from web.services.cache import date2string as cache_date2string
