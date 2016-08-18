@@ -248,7 +248,6 @@ class ContentList(ContentBase):
         self.collection = container.get_collection()
         self.sortfields = OrderedDict()
         self.default_fullstyle_name = None
-        self.render_occurences = False
 
         coll_default_full_style_name = self.collection.get("style_full")
         if coll_default_full_style_name is not None and coll_default_full_style_name != DEFAULT_FULL_STYLE_NAME:
@@ -615,7 +614,7 @@ class ContentList(ContentBase):
 
 class ContentNode(ContentBase):
 
-    def __init__(self, node, paths, nr=0, num=0, words=None):
+    def __init__(self, node, paths=None, nr=0, num=0, words=None):
         self._node = node
         self.collection = node.get_collection()
         self.id = node.id
@@ -682,7 +681,7 @@ def make_node_content(node, req, paths):
             html_files = node.files.filter_by(filetype=u"content", mimetype=u"text/html")
             for f in html_files:
                 if f.exists and f.size > 0:
-                    return ContentNode(node, paths)
+                    return ContentNode(node)
 
         if node.show_list_view:
             # no startpage found, list view requested
