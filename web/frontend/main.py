@@ -176,7 +176,7 @@ def _display(req, show_navbar=True, render_paths=True, params=None):
     else:
         node = q(Node).prefetch_attrs().prefetch_system_attrs().get(nid)
         
-    if not node.has_read_access():
+    if node is not None and not node.has_read_access():
         node = None
         
     if req.args.get("disable_content"):
