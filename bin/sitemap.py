@@ -21,7 +21,6 @@
 
 import os
 import sys
-from core.users import get_guest_user
 sys.path += ['../..', '../', '.']
 
 import core.config as config
@@ -36,13 +35,13 @@ from math import ceil
 from core.init import full_init
 full_init(prefer_config_filename="sitemap.log")
 
-import core.users as users
 from core import Node
 from core import db
 from contenttypes import Collections
 
 q = db.query
 
+# XXX: alias handling must be fixed before switching this on
 USE_ALIASES = False
 PING_GOOGLE = True
 PING_URL_ENCODED = 'http://www.google.com/webmasters/tools/ping?sitemap=http%3A%2F%2Fmediatum.ub.tum.de%2Fsitemap-index.xml'
@@ -199,6 +198,7 @@ def create():
     Creates the sitemap files and the sitemap index files which are located at /web/root/
     """
     logging.getLogger('everything').info('Creating Sitemaps and Sitemap Index...')
+    from core.users import get_guest_user
 
     base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
     hostname = config.get('host.name')
