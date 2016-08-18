@@ -298,7 +298,6 @@ let
     };
   };
 
-
   dogpile_cache = self.buildPythonPackage {
     name = "dogpile.cache-0.6.1";
     src = fetchurl {
@@ -307,6 +306,15 @@ let
     };
     doCheck = false;
   };
+
+  attrs = self.buildPythonPackage {
+    name = "attrs-16.0.0";
+    src = fetchurl {
+      url = "https://pypi.python.org/packages/89/15/80d388d696c8c8ba14874635207aa698eb30ef1242dbb54d9eccf0e927ff/attrs-16.0.0.tar.gz";
+      md5 = "5bcdd418f6e83e580434c63067c08a73";
+    };  
+    doCheck = false;
+  };  
 
 
   ### test /devel deps
@@ -451,6 +459,7 @@ in {
   production = [
       # python deps
       alembic
+      attrs
       bibtexparser
       coffeescript
       configargparse
