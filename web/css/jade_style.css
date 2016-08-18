@@ -21,3 +21,19 @@
 .object_column.left>div {
     width: 325px;
 }
+
+video {
+  width:300px; 
+  border:1px solid silver;
+  text-align:center;
+}
+
+.controls button[data-state="captions"] { 
+  height:85%; 
+  text-indent:0; 
+  font-size:16px; 
+  font-weight:bold; 
+  color:#666; 
+  background:#000; 
+  border-radius:2px;
+}
