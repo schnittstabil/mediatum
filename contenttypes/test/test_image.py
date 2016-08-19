@@ -9,7 +9,8 @@ import tempfile
 
 from PIL import Image as PILImage
 import pytest
-from contenttypes.image import _create_zoom_tile_buffer, _create_zoom_archive
+from core import config
+from contenttypes.image import _create_zoom_tile_buffer, _create_zoom_archive, get_zoom_zip_filename
 from contenttypes.test import fullpath_to_test_image
 from contenttypes.test.asserts import assert_thumbnails_ok
 from contenttypes.test.helpers import call_event_files_changed
@@ -72,11 +73,11 @@ def test_image_create_zoom_tile_buffer(image_png):
 
 
 @pytest.mark.slow
-def test_create_zoom_archive(image_png):
+def test_create_zoom_archive(image):
     img_path = fullpath_to_test_image("png")
-    with tempfile.NamedTemporaryFile() as tmpfile:
-        _create_zoom_archive(256, img_path, tmpfile)
-        assert os.stat(tmpfile.name).st_size > 1000
+    zip_name = get_zoom_zip_filename(image.id)
+    _create_zoom_archive(256, img_path, zip_name)
+    assert os.stat(os.path.join(config.get('paths.zoomdir'), zip_name)).st_size > 1000
 
 
 def test_image_extract_metadata(image):

@@ -57,6 +57,7 @@ namespace.mediatum=http://www.mediatum.org/oai/mediatum
 [paths]
 datadir=../mediatum_data # !!!
 tempdir=/tmp/
+#zoomdir=/path/for/zoom/tiles  # optional, default: ~$datadir/zoom_tiles
 
 [plugins]
 #mediatum_plugin_package=

@@ -95,7 +95,7 @@ def test_setup():
     # we are doing a 'basic_init()' here for testing that's a bit different from core.init_basic_init()
     # maybe this can be converted to a new init state or replaced by basic_init()
 
-    config.initialize(config_filepath=os.path.join(config.basedir, "test_mediatum.cfg"))
+    config.initialize(config_filepath=os.path.join(config.basedir, "test_mediatum.cfg"))   # TODO: test_mediatum.cfg" should be renamed to mediatum_tests.cfg to make it appear besides the usual one
     add_ustr_builtin()
     import utils.log
     utils.log.initialize()

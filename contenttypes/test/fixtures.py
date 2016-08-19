@@ -18,8 +18,29 @@ from core.config import resolve_datadir_path
 def _image_fixture_proto(mime_subtype, session):
     img_path = TEST_IMAGE_PATHS[mime_subtype]
     img_fullpath = resolve_datadir_path(img_path)
+    if not os.path.isdir(os.path.dirname(img_fullpath)):
+        os.mkdir(os.path.dirname(img_fullpath))
     if not os.path.exists(img_fullpath):
-        pytest.skip(u"test image not found at " + img_fullpath)
+        if 'svg' not in mime_subtype:
+            # generate test images, http://pillow.readthedocs.io/en/latest/handbook/image-file-formats.html
+            # TODO: make all tests pass with the generated images instead of relying on external test images
+            from PIL import Image, ImageDraw
+            img = Image.new('RGBA', (2001, 2001))  # ZOOM_SIZE +1
+            draw = ImageDraw.Draw(img)
+            draw.ellipse((25, 25, 75, 75), fill=(255, 0, 0))
+            draw.text((10, 10), "mediatum test image: " + mime_subtype, fill=(0, 255, 0))
+            save_options = {}
+            if mime_subtype in ['png', 'tiff']:
+                save_options.update(dpi=(400, 400))
+            img.save(img_fullpath, **save_options)
+            # TODO: write Exif to tiff and jpeg
+            if mime_subtype in ['jpeg', 'tiff']:
+                import exiftool
+                with exiftool.ExifTool() as et:
+                    pass
+                    #et.execute("XResolution=300", img_fullpath)
+        else:
+            pytest.skip(u"test image not found at " + img_fullpath)
 
     image = ImageFactory()
     MetadatatypeFactory(name=u"test")

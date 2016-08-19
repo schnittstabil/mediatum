@@ -183,7 +183,12 @@ def _create_zoom_tile_buffer(img, max_level, tilesize, level, x, y):
         buff.close()
 
 
-def _create_zoom_archive(tilesize, image_filepath, zoom_archive_filepath):
+def get_zoom_zip_filename(id):
+    return u"zoom{}.zip".format(id)
+
+
+def _create_zoom_archive(tilesize, image_filepath, zoom_zip_filename):
+    """Create tiles in zip file that will be displayed by zoom.swf"""
     img = PILImage.open(image_filepath)
     img = img.convert("RGB")
 
@@ -194,7 +199,9 @@ def _create_zoom_archive(tilesize, image_filepath, zoom_archive_filepath):
         l = l / 2
         max_level += 1
 
-    with zipfile.ZipFile(zoom_archive_filepath, "w") as zfile:
+    zoom_zip_filepath = os.path.join(config.get("paths.zoomdir"), zoom_zip_filename)
+    logg.debug('Creating: %s' %zoom_zip_filepath)
+    with zipfile.ZipFile(zoom_zip_filepath, "w") as zfile:
         for level in range(max_level + 1):
             t = (tilesize << (max_level - level))
             for x in range((width + (t - 1)) / t):
@@ -451,7 +458,8 @@ class Image(Content):
 
         image_file = self._find_processing_file(files)
 
-        zip_filepath = os.path.join(os.path.dirname(image_file.abspath), u"zoom{}.zip".format(self.id))
+        zip_filename = get_zoom_zip_filename(self.id)
+        zip_filepath = os.path.join(config.get("paths.zoomdir"), zip_filename)
 
         old_zoom_files = filter(lambda f: f.filetype == u"zoom", files)
 
@@ -459,7 +467,7 @@ class Image(Content):
             self.files.remove(old)
             old.unlink()
 
-        _create_zoom_archive(Image.ZOOM_TILESIZE, image_file.abspath, zip_filepath)
+        _create_zoom_archive(Image.ZOOM_TILESIZE, image_file.abspath, zip_filename)
         file_obj = File(path=zip_filepath, filetype=u"zoom", mimetype=u"application/zip")
         self.files.append(file_obj)
 
