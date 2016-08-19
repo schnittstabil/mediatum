@@ -95,4 +95,4 @@ Default data for an empty mediaTUM instance can be loaded by:
 
 MediaTUM can be started like that if you want to use the python interpreter in your PATH (possibly in a virtualenv or nix shell):
 
-    python start.py
+    python mediatum.py
