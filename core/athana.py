@@ -4205,7 +4205,7 @@ class AthanaHandler:
 
             else:
                 logg.error("Error in page: '%s %s', session '%s'",
-                           request.type, request.uri, request.session.id, exc_info=1)
+                           request.type, request.fullpath, request.session.id, exc_info=1)
                 s = "<pre>" + traceback.format_exc() + "</pre>"
 
                 return request.error(500, s)
@@ -4518,7 +4518,7 @@ class AthanaThread:
                 function, req = server.queue.pop()
                 self.lastrequest = time.time()
                 self.status = "working"
-                self.uri = SESSION_PATTERN.sub("xxxxxx-xxxxxx-xxxxxx", req.uri)
+                self.uri = req.fullpath
                 server.queuelock.release()
                 if profiling:
                     self.prof = hotshot.Profile("/tmp/athana%d.prof" % self.number)
