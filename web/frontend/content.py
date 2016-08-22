@@ -350,7 +350,7 @@ class ContentList(ContentBase):
             ls = liststyle_name
             # use default collection style
         else:
-            ls = self.collection.get("style")
+            ls = self.collection.get("style", None)
             if ls is None:
                 # nothing found, use default style
                 ls = "list"
@@ -360,7 +360,7 @@ class ContentList(ContentBase):
         liststyle = get_list_style(ls)
         
         if not liststyle:
-            raise Exception("invalid liststyle " + ls)
+            raise Exception("invalid liststyle '" + ls + "'")
         
         self.liststyle = liststyle
 
