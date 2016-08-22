@@ -45,7 +45,7 @@ def import_node_fulltext(node, overwrite=False):
 
 
 def import_fulltexts(overwrite=False, mod_n=None, mod_i=None):
-    nodes = q(Data).filter(Data.files.any(File.filetype == "fulltext"))
+    nodes = q(Data).filter(Data.files.any(File.filetype == "fulltext")).order_by(Data.id)
     
     if mod_n:
         if mod_i is None:

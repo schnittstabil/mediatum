@@ -195,8 +195,9 @@ def fulltext(args):
 
     nid_mod_or_all = args.nid_mod_or_all.lower()
 
+    remove_versioning()
+
     if nid_mod_or_all == "all":
-        remove_versioning()
         import_count = utils.search.import_fulltexts(args.overwrite)
         logg.info("loaded fulltexts for %s nodes", import_count)
     elif nid_mod_or_all.startswith("mod"):
