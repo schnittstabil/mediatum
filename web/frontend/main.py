@@ -185,6 +185,11 @@ def _display(req, show_navbar=True, render_paths=True, params=None):
     else:
         content_html = render_content(node, req, render_paths)
 
+    if not current_user.is_anonymous:
+        req.reply_headers["Cache-Control"] = "no-cache"
+    elif "Cache-Control" not in req.reply_headers:
+        req.reply_headers["Cache-Control"] = "max-age=300"
+        
     if params.get("raw"):
         req.write(content_html)
     else:
