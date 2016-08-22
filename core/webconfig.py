@@ -153,12 +153,16 @@ def initContexts():
     athana.setBase(config.basedir)
     athana.setTempDir(config.get("paths.tempdir", "/tmp/"))
     from core.config import resolve_filename
-    from core.translation import translate
+    from core.translation import translate, set_language
     from core.ftp import collection_ftpserver
     tal.set_base(config.basedir)
     tal.add_macro_resolver(resolve_filename)
     tal.add_translator(translate)
     add_template_globals()
+
+    @athana.request_started
+    def set_lang(req, *args):
+        set_language(req)
 
     # XXX: init our temporary child count cahche
     from web.frontend import frame
