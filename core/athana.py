@@ -857,7 +857,6 @@ class http_request(object):
         self.reply_headers = {
             'Server': 'Athana/%s' % ATHANA_VERSION,
             'Date': build_http_date(time.time()),
-            'Expires': build_http_date(time.time())
         }
         self.request_number = http_request.request_counter.increment()
         self._split_uri = None
@@ -1042,6 +1041,9 @@ class http_request(object):
 
         if self.session and "PSESSION" not in self.Cookies:
             self.setCookie('PSESSION', self.sessionid, path="/", secure=config.getboolean("host.ssl", True))
+            
+        if "Cache-Control" not in self.reply_headers:
+            self.reply_headers["Cache-Control"] = "no-cache"
 
         reply_header = self.build_reply_header()
         if isinstance(reply_header, unicode):
