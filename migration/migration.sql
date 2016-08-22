@@ -136,6 +136,10 @@ BEGIN
     UPDATE node SET system_attrs = jsonb_object_delete_keys(system_attrs, 'aliascol') WHERE system_attrs ? 'aliascol';
 
     RAISE NOTICE 'deleted obsolete attributes';
+
+    PERFORM setval('node_id_seq', (SELECT max(id) FROM node));
+
+    RAISE NOTICE 'reset node id sequence to max node ID';
 END;
 $f$;
 
