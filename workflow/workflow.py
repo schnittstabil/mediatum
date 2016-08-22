@@ -428,7 +428,7 @@ class WorkflowStep(Node):
         workflow_lock.acquire()
 
         # stop caching
-        req.setCookie("nocache", "1")
+        req.setCookie("nocache", "1", path="/")
 
         try:
             key = req.params.get("key", req.session.get("key", ""))

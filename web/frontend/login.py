@@ -65,7 +65,7 @@ def _handle_login_submit(req):
     user = auth.authenticate_user_credentials(login_name, password, req)
     if user:
         # stop caching
-        req.setCookie("nocache", "1")
+        req.setCookie("nocache", "1", path="/")
         if "contentarea" in req.session:
             del req.session["contentarea"]
         req.session["user_id"] = user.id
@@ -129,8 +129,7 @@ def logout(req):
 
     req.request["Location"] = '/'
     # return to caching
-    req.setCookie("nocache", "0")
-    req.setCookie("language", req.Cookies.get("language"))
+    req.setCookie("nocache", "0", path="/")
     return httpstatus.HTTP_MOVED_TEMPORARILY
 
 
