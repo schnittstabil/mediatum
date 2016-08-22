@@ -1109,6 +1109,13 @@ class http_request(object):
         return "{};{}{}".format(page, self.sessionid, query)
 
     def sendFile(self, path, content_type, force=0):
+        
+        if isinstance(path, unicode):
+            path = path.encode("utf8")
+        
+        if isinstance(content_type, unicode):
+            content_type = content_type.encode("utf8")
+        
 
         x_accel_redirect = config.get("nginx.X-Accel-Redirect", "").lower() == "true"
         file = None
