@@ -221,7 +221,8 @@ class Container(Data, ContainerMixin, SchemaMixin):
             found_logos = [f for f in logo_base_names if f == logo_name]
             if found_logos:
                 return found_logos[0]
-        elif logo_base_names:
+        # XXX: do we really want this legacy behaviour of using the only image as collection logo?
+        elif len(logo_base_names) == 1:
             return logo_base_names[0]
 
         return ""
