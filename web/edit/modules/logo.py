@@ -80,7 +80,8 @@ def getContent(req, ids):
     if "logo_save" in req.params.keys():
         # save url
         if req.params.get("logo_link", "") == "":
-            node.removeAttribute("url")
+            if 'url' in node.attrs:
+                del node.attrs['url']
         else:
             node.set('url', req.params.get("logo_link"))
 
