@@ -30,6 +30,7 @@ from core import db
 from core import Node
 from contenttypes import Container
 from utils.pathutils import getPaths
+from utils import userinput
 
 #
 # execute fullsize method from node-type
@@ -41,9 +42,14 @@ q = db.query
 
 
 def popup_fullsize(req):
-    node = q(Node).get(req.params["id"])
+    nid = userinput.string_to_int(req.args.get("id", type=int))
+    if nid is None:
+        return 400
+    
+    node = q(Node).get(nid)
     if not isinstance(node, Node):
         return 404
+    
     version_id = req.params.get("v")
     version = node.get_tagged_version(unicode(version_id))
 
