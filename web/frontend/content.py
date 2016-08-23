@@ -779,6 +779,7 @@ def render_content(node, req, render_paths=True):
         content_or_error = make_node_content(node, req, paths)
     else:
         content_or_error = make_search_content(req, paths)
+        req.reply_headers["Cache-Control"] = "no-cache"
 
     if isinstance(content_or_error, NodeNotAccessible):
         req.setStatus(content_or_error.status)
