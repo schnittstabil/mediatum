@@ -361,6 +361,25 @@ def child_node_url(child_id, **kwargs):
     return node_url(**params)
 
 
+def get_license_urls(node):
+    """Reads the `license` attribute of `node` and returns the license URL and license logo URL"""
+    license_url = None
+    license_image_url = None
+    license = node.get("license")
+    if license:
+        parts = license.split(",")
+        if len(parts) != 2:
+            logg.warn("invalid license string '%s', must be comma-separated and contain 2 elements", license)
+        elif not parts[1].startswith("http"):
+            logg.warn("invalid license string '%s', second element must start with http", license)
+        else:
+            license_name, license_url = parts
+            # XXX: hardcoded URL
+            license_image_url = "/img/{}.png".format(license_name)
+
+    return license_url, license_image_url
+    
+
 def prepare_node_data(node, req):
     """Prepare data needed for displaying this object.
     :returns: representation dictionary
@@ -385,6 +404,8 @@ def prepare_node_data(node, req):
         "node": node,
         "path": req.args.get("path", "")
     }
+    
+    data["license_url"], data["license_image_url"] = get_license_urls(node)
 
     versions = node.tagged_versions.all()
 
