@@ -38,7 +38,6 @@ from schema.schema import Metafield, SchemaMixin
 
 logg = logging.getLogger(__name__)
 
-
 SRC_PATTERN = re.compile('src="([^":/]*)"')
 
 """ these are not TAL templates, but a much more simplified version. All that
@@ -274,7 +273,7 @@ class Container(Data, ContainerMixin, SchemaMixin):
         return self
 
     def childcount(self):
-        return self.content_children_for_all_subcontainers.count()
+        return self.content_children_count_for_all_subcontainers
 
 
 # concrete Container classes

@@ -17,6 +17,7 @@ from sqlalchemy.ext.declarative.api import DeclarativeMeta
 from sqlalchemy.ext.mutable import MutableDict
 from sqlalchemy.ext.hybrid import hybrid_property
 
+from core import config
 from core.node import NodeMixin, NodeVersionMixin
 from core.database.postgres import db_metadata, DeclarativeBase, MtQuery, mediatumfunc, MtVersionBase, integer_fk
 from core.database.postgres import rel, bref, C, FK
@@ -31,6 +32,9 @@ from utils.date import format_date
 
 
 logg = logging.getLogger(__name__)
+
+
+USE_CACHED_CHILDCOUNT = config.getboolean("database.use_cached_childcount")
 
 
 class NodeType(DeclarativeBase):
@@ -301,6 +305,14 @@ class Node(DeclarativeBase, NodeMixin):
         nr = t_noderelation
         # TODO: check if it's better to use the _subquery_subtree() here
         return object_session(self).query(Content).filter_by(subnode=False).join(nr, Content.id == nr.c.cid).filter(nr.c.nid==self.id)
+
+    @property
+    def content_children_count_for_all_subcontainers(self):
+        if USE_CACHED_CHILDCOUNT:
+            return exec_sqlfunc(object_session(self), mediatumfunc.count_content_children_for_all_subcontainers(self.id))
+        else:
+            return self.content_children_for_all_subcontainers.count()
+
 
     def all_children_by_query(self, query):
         sq = _subquery_subtree_distinct(self)
