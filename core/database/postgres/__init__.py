@@ -8,7 +8,7 @@ import logging
 import time
 
 import pyaml
-from ipaddr import IPv4Network, IPv4Address
+from ipaddr import IPv4Network, IPv4Address, AddressValueError
 import psycopg2.extensions
 from psycopg2.extensions import adapt, AsIs
 import sqlalchemy as sqla
@@ -153,11 +153,11 @@ def build_accessfunc_arguments(user=None, ip=None, date=None, req=None):
 
         user = user_from_session(req.session)
         # XXX: like in mysql version, what's the real solution?
-        if "," in req.remote_addr:
-            logg.warn("multiple IP adresses %s, refusing IP-based access", req.remote_addr)
-            ip = None
-        else:
+        try:
             ip = IPv4Address(req.remote_addr)
+        except AddressValueError:
+            logg.warn("illegal IP address %s, refusing IP-based access", req.remote_addr)
+            ip = None
 
     if user is None:
         user = get_guest_user()

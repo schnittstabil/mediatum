@@ -23,7 +23,7 @@ from core.database.postgres import db_metadata, DeclarativeBase, MtQuery, mediat
 from core.database.postgres import rel, bref, C, FK
 from core.database.postgres.alchemyext import LenMixin, view, exec_sqlfunc
 from core.database.postgres.attributes import Attributes, AttributesExpressionAdapter
-from ipaddr import IPv4Address
+from ipaddr import IPv4Address, AddressValueError
 from sqlalchemy_continuum import versioning_manager
 from sqlalchemy_continuum.utils import version_class
 from werkzeug.utils import cached_property
@@ -331,11 +331,11 @@ class Node(DeclarativeBase, NodeMixin):
         user = user_from_session(req.session)
 
         # XXX: like in mysql version, what's the real solution?
-        if "," in req.remote_addr:
-            logg.warn("multiple IP adresses %s, refusing IP-based access", req.remote_addr)
-            ip = None
-        else:
+        try:
             ip = IPv4Address(req.remote_addr)
+        except AddressValueError:
+            logg.warn("illegal IP address %s, refusing IP-based access", req.remote_addr)
+            ip = None
 
         return Node.has_access_to_node_id(node_id, accesstype, user, ip, date)
 
