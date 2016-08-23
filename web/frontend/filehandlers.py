@@ -337,3 +337,9 @@ def send_from_webroot(req):
         return req.sendFile(filename, getMimeType(filename)[0])
     else:
         return 404
+
+### redirects for legacy handlers
+
+def redirect_images(req):
+    req.reply_headers["Location"] = "/image" + req.uri[7:]
+    return 301
