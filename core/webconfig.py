@@ -261,7 +261,7 @@ def initContexts():
 
     # === Export ===
     context = athana.addContext("/export", ".")
-    file = context.addFile("export/export.py")
+    file = context.addFile("web/frontend/export.py")
     file.addHandler("export").addPattern("/.*")
 
     # === static files ===
