@@ -44,7 +44,7 @@ def calcChecksum(filename, method):
 
 def calcChecksumFromMetadata(node):
     h = hashlib.sha1()
-    h.update(node.id)
+    h.update(str(node.id))  # h.update requires string or buffer as argument
     h.update(node.getName())
 
     def attributesToString(node):
