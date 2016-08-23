@@ -149,19 +149,26 @@ class Audio(Content):
 
         node = self
 
-        obj['audiothumb'] = u'/thumb2/{}'.format(node.id)
-        if node.has_object():
-            obj['canseeoriginal'] = node.has_data_access()
-            obj['audiolink'] = u'/file/{}/{}'.format(node.id, node.getName())
-            obj['audiodownload'] = u'/download/{}/{}'.format(node.id, node.getName())
+        # adapted from video.py
+        # user must have data access for audio playback
+        if self.has_data_access():
+            audio_file = self.files.filter_by(filetype=u"audio").scalar()
+            obj["audio_url"] = u"/file/{}/{}".format(self.id, audio_file.base_name) if audio_file is not None else None
             versions = self.tagged_versions.all()
             obj['tag'] = versions[-1].tag if len(versions) > 0 else None
             if not self.isActiveVersion():
-               obj['audiothumb'] += "?v=" + self.tag
-               obj['audiolink'] += "?v=" + self.tag
-               obj['audiodownload'] += "?v=" + self.tag
+                obj['audio_url'] += "?v=" + self.tag
+
+            if node.isActiveVersion():
+                if node.system_attrs.get('origname') == "1":
+                    obj['audiodownload'] = u'/download/{}/{}'.format(node.id, node.name)
+                else:
+                    obj['audiodownload'] = u'/download/{}/{}.mp3'.format(node.id, node.id)
+            else:
+                    obj['audiodownload'] += "?v=" + node.tag
+
         else:
-            obj['canseeoriginal'] = False
+            obj["audio_url"] = None
 
         return obj
 

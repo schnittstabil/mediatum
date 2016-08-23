@@ -1204,3 +1204,6 @@ msgstr "Current Version"
 
 msgid "guest"
 msgstr "Guest"
+
+msgid "audio_download_link"
+msgstr "download"

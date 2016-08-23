@@ -8,13 +8,16 @@
 
 
 - block before_metadata
-  if canseeoriginal
-    .left
-      a(href=documentlink, target="documentdownload", title=_t("doc_fulltext_title"))
-        img(src=documentthumb, width="300")
-      br
-      a(href=documentdownload)= _t("alternative_pdf_link")
-
+  if audio_url
+    .object_audio.object_column.left
+      .audio_container
+        audio(controls="controls")
+          source(type="audio/mp3", src=audio_url)
+    .document_download
+      a(href=audiodownload)= _t("audio_download_link")
+  else
+    .audio_thumb
+      img(src="/thumb2/{{ node.id }}", width="300")
 
 // generated from jade
 //- vim: set filetype=jade sw=2 ts=2 sts=2 expandtab:
