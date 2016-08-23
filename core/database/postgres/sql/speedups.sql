@@ -39,6 +39,8 @@ SELECT
 
 FROM :search_path.node no WHERE no.type IN (SELECT name FROM nodetype WHERE is_container=true);
 
+-- needed to refresh container_info concurrently
+CREATE UNIQUE INDEX ON container_info (nid);
 
 CREATE OR REPLACE FUNCTION count_content_children_for_all_subcontainers(container_id integer)
     RETURNS integer
