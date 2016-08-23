@@ -197,6 +197,9 @@ def send_file(req):
         nidstr = nidstr[:-13]
 
     nid = userinput.string_to_int(nidstr)
+    if nid is None:
+        return 400
+
     version_id = version_id_from_req(req)
 
     node = get_node_or_version(nid, version_id)
@@ -273,10 +276,10 @@ def send_attfile(req):
         return 400
 
     nid = userinput.string_to_int(parts[0])
-    version_id = version_id_from_req(req)
-
     if nid is None:
         return 400
+
+    version_id = version_id_from_req(req)
 
     node = get_node_or_version(nid, version_id, Data)
 

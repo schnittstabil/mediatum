@@ -17,6 +17,7 @@ def string_to_int(data):
         nid = int(data)
     except ValueError:
         logg.warn("invalid user input for int: %s", data)
+        return None
 
     return nid
 

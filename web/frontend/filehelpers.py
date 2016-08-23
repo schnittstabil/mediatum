@@ -53,12 +53,12 @@ def node_id_from_req_path(req):
     parts = splitpath(req.path)
 
     if not parts:
-        raise ValueError("invalid path")
+        raise ValueError("invalid node ID path '{}'".format(req.path))
 
     nid = userinput.string_to_int(parts[0])
 
     if nid is None:
-        raise ValueError("invalid node id")
+        raise ValueError("path contains an invalid node ID: '{}'".format(req.path))
 
     return nid
 
@@ -68,6 +68,9 @@ def version_id_from_req(req):
 
 
 def get_node_or_version(nid, version_id=None, nodeclass=Node):
+    if nid is None:
+        return None
+
     node = q(nodeclass).get(nid)
 
     version = None
