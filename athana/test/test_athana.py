@@ -9,6 +9,7 @@ import os.path
 from pytest import fixture, yield_fixture
 from flask import Flask, Response, request
 import nap.url
+from core import athana
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -204,3 +205,18 @@ def test_wsgi_binary_upload(app, cl):
         res = cl.post("/test", files={"file": fi})
 
     assert res.content == content
+
+
+def test_build_reply_header_with_unicode():
+    req = athana.http_request(*([None] * 6))
+    req.reply_headers = {}
+    req.reply_headers[u"kä1"] = u"vä"
+    req.reply_headers["k1"] = "v"
+    req.reply_headers[u"kä2"] = "v"
+    req.reply_headers["k2"] = u"vä"
+    reply_header = req.build_reply_header()
+    assert "kä1: vä" in reply_header
+    assert "k1: v" in reply_header
+    assert "kä2: v" in reply_header
+    assert "k2: vä" in reply_header
+    

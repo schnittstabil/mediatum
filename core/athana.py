@@ -887,10 +887,18 @@ class http_request(object):
     def build_reply_header(self):
         h = []
         for k, vv in self.reply_headers.items():
-            if type(vv) != type([]):
+            if not isinstance(vv, list):
+                if isinstance(k, unicode):
+                    k = k.encode("utf8")
+                if isinstance(vv, unicode):
+                    vv = vv.encode("utf8")
                 h += ["%s: %s" % (k, vv)]
             else:
                 for v in vv:
+                    if isinstance(k, unicode):
+                        k = k.encode("utf8")
+                    if isinstance(v, unicode):
+                        v = v.encode("utf8")
                     h += ["%s: %s" % (k, v)]
         return string.join([self.response(self.reply_code)] + h, '\r\n') + '\r\n\r\n'
 
@@ -1046,8 +1054,6 @@ class http_request(object):
             self.reply_headers["Cache-Control"] = "no-cache"
 
         reply_header = self.build_reply_header()
-        if isinstance(reply_header, unicode):
-            reply_header = reply_header.encode('utf8')
 
         outgoing_header = simple_producer(reply_header)
 
