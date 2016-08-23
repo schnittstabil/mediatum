@@ -162,6 +162,22 @@ def display_newstyle(req):
     return _display(req)
 
 
+def set_cache_headers_for_node_display(req):
+    if current_user.is_anonymous and "Cache-Control" not in req.reply_headers:
+        # check if displayed node is public
+        show_id = req.args.get("show_id", type=int)
+        if show_id is not None:
+            displayed_nid = show_id
+        else:
+            displayed_nid = req.args.get("id", type=int)
+            
+        if displayed_nid is not None:
+            node_is_public = Node.has_access_to_node_id(displayed_nid, "read", user=current_user)
+            if node_is_public:
+                req.reply_headers["Cache-Control"] = "max-age=300"
+        
+
+
 @check_change_language_request
 def _display(req, show_navbar=True, render_paths=True, params=None):
     if "jsonrequest" in req.params:
@@ -185,11 +201,8 @@ def _display(req, show_navbar=True, render_paths=True, params=None):
     else:
         content_html = render_content(node, req, render_paths)
 
-    if not current_user.is_anonymous:
-        req.reply_headers["Cache-Control"] = "no-cache"
-    elif "Cache-Control" not in req.reply_headers:
-        req.reply_headers["Cache-Control"] = "max-age=300"
-        
+    set_cache_headers_for_node_display(req)
+
     if params.get("raw"):
         req.write(content_html)
     else:
