@@ -219,7 +219,17 @@ class m_mappingfield(Metatype):
         field_vals = []
 
         for field in fields:
-            attrnode = q(Node).get(field.get("attribute"))
+            attribute_nid = field.get("attribute", None)
+            if attribute_nid is None:
+                continue
+
+            try:
+                attribute_nid = int(attribute_nid)
+            except ValueError:
+                logg.warn("ignoring field # %s with invalid attribute id: '%r'", field.id, attribute_nid)
+                continue
+
+            attrnode = q(Node).get(attribute_nid)
             if attrnode is None:
                 continue
 
