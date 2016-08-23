@@ -637,7 +637,7 @@ class Image(Content):
         use_flash_zoom = not no_flash_requested and config.getboolean("image.use_flash_zoom", True) and self.should_use_zoom
 
         if use_flash_zoom and not self.zoom_available:
-            return 404
+            logg.warn("missing zoom file for image # %s", self.id, trace=False)
 
         d = {}
         d["flash"] = use_flash_zoom
