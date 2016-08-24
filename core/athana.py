@@ -1114,7 +1114,7 @@ class http_request(object):
                     query += "&"
                 query += "{}={}".format(urllib.quote(k), urllib.quote(unicode(v)))
                 first = 0
-        return "{};{}{}".format(page, self.sessionid, query)
+        return "{}{}".format(page, query)
 
     def sendFile(self, path, content_type, force=0):
         
