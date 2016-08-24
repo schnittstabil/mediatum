@@ -76,8 +76,9 @@ def test_image_create_zoom_tile_buffer(image_png):
 def test_create_zoom_archive(image):
     img_path = fullpath_to_test_image("png")
     zip_name = get_zoom_zip_filename(image.id)
-    _create_zoom_archive(256, img_path, zip_name)
-    assert os.stat(os.path.join(config.get('paths.zoomdir'), zip_name)).st_size > 1000
+    zip_path = os.path.join(config.get('paths.zoomdir'), zip_name)
+    _create_zoom_archive(256, img_path, zip_path)
+    assert os.stat(zip_path).st_size > 1000
 
 
 def test_image_extract_metadata(image):
