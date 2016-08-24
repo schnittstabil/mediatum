@@ -59,6 +59,6 @@ def test_prepare_searchstring_leading_stars_only_in_one():
 
 
 def test_prepare_searchstring_postgres_operators():
-    searchstring=u'|&:"!)('
+    searchstring=u'|&:"!)(\\'
     res = _prepare_searchstring("|", searchstring)
-    assert res == ur'\|\&\:\"\!\)\('
+    assert res == ur'\|\&\:\"\!\)\(\\'

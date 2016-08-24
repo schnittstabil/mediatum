@@ -52,6 +52,7 @@ def _rewrite_prefix_search(t):
 
 def _escape_postgres_ts_operators(t):
     return (t
+            .replace(u'\\', ur'\\')
             .replace(u"&", ur"\&")
             .replace(u"|", ur"\|")
             .replace(u"!", ur"\!")
