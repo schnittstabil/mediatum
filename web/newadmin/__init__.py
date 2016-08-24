@@ -23,6 +23,7 @@ from flask.ext.admin import helpers, expose
 import os
 from web.newadmin.views.node import NodeView, FileView
 from web.newadmin.views.setting import SettingView
+from web.newadmin.views.acl import AccessRulesetView, AccessRuleView, AccessRulesetToRuleView
 
 q = db.query
 
@@ -98,6 +99,10 @@ def make_app():
     admin.add_view(FileView())
 
     admin.add_view(SettingView())
+
+    admin.add_view(AccessRuleView())
+    admin.add_view(AccessRulesetView())
+    admin.add_view(AccessRulesetToRuleView())
 
     admin.add_view(rediscli.RedisCli(Redis(db=1)))
     
