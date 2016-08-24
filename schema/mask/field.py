@@ -136,7 +136,7 @@ class m_field(Metatype):
         unit = maskitem.getUnit()
 
         if value and unit:
-            value += value + " " + unit
+            value += " " + unit
 
         if flags & VIEW_DATA_ONLY:
             # return a valuelist

@@ -1416,7 +1416,8 @@ class Maskitem(Node):
             field[0].set("multilang", value)
 
     def getUnit(self):
-        return self.get("unit")
+        # XXX: we don't want empty units, better sanitize user input instead of stripping here
+        return self.get("unit").strip()
 
     def setUnit(self, value):
         self.set("unit", value)
