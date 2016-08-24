@@ -325,6 +325,9 @@ class Collection(Container):
 @check_type_arg_with_schema
 class Collections(Container):
 
+    # XXX: as in other places, we assume that the Collections root is public.
+    cache_duration = 600
+
     def get_collection(self):
         return self
     

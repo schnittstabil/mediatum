@@ -628,6 +628,10 @@ class ContentNode(ContentBase):
         self.full_style_name = req.args.get("style")
 
     @property
+    def cache_duration(self):
+        return self.node.cache_duration
+
+    @property
     def node(self):
         return self._node
 
@@ -657,12 +661,16 @@ class ContentNode(ContentBase):
         return node_html + occurences_html
 
 
-class NodeNotAccessible(object):
+class NodeNotAccessible(ContentBase):
 
     def __init__(self, error="no such node", status=404):
         self.error = error
         self.status = status
-
+        
+    @property
+    def cache_duration(self):
+        return 30
+    
 
 def make_node_content(node, req, paths):
     """Renders the inner parts of the content area.
@@ -779,6 +787,12 @@ def render_content(node, req, render_paths=True):
         content_or_error = make_node_content(node, req, paths)
     else:
         content_or_error = make_search_content(req, paths)
+
+    
+    cache_duration = content_or_error.cache_duration
+    if cache_duration:
+        req.reply_headers["Cache-Control"] = "max-age=" + str(cache_duration)
+    else:
         req.reply_headers["Cache-Control"] = "no-cache"
 
     if isinstance(content_or_error, NodeNotAccessible):

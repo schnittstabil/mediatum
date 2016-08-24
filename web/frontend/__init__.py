@@ -25,3 +25,8 @@ class ContentBase(object):
         """Consumes request parameters and changes the internal state.
         No return value expected.
         """
+        
+    @property
+    def cache_duration(self):
+        """Returns the duration for which the content can be cached (HTTP proxies, for example)"""
+        return 0

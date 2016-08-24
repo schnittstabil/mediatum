@@ -18,6 +18,9 @@ class NodeMixin(object):
     Contains legacy methods (camelCase) needed for old code which will be removed when they become unused.
     """
 
+    #: how long may contents derived from this node be cached?
+    cache_duration = 0
+
     @classmethod
     def get_all_subclasses(cls, filter_classnames=[]):
         """Returns all known subclasses of cls"""
