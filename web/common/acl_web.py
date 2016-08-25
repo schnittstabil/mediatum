@@ -20,6 +20,7 @@
 from core.translation import translate, lang
 from core.database.postgres.permission import AccessRuleset
 from core import db
+from collections import OrderedDict
 
 q = db.query
 
@@ -30,7 +31,8 @@ def makeList(req, name, rights, readonlyrights, overload=0, type=""):
     for r in rights:
         rightsmap[r] = None
 
-    rulelist = q(AccessRuleset).all()
+    # ignore private rulesets starting with _
+    rulelist = q(AccessRuleset).filter(~AccessRuleset.name.like("\_%")).order_by(AccessRuleset.name).all()
 
     val_left = ""
     val_right = ""
