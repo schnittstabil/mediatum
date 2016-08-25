@@ -222,8 +222,9 @@ from core.systemtypes import Mappings, Metadatatypes, Root, Searchmasks
 from schema.schema import Metadatatype, Maskitem, Mask, Metafield
 from schema.mapping import Mapping, MappingField
 from workflow.workflow import Workflow, Workflows
-from core.database.postgres.permission import NodeToAccessRule, NodeToAccessRuleset, EffectiveNodeToAccessRuleset
+from core.database.postgres.permission import NodeToAccessRule, NodeToAccessRuleset, EffectiveNodeToAccessRuleset, AccessRulesetToRule
 from core.oauth import OAuthUserCredentials
+from core.permission import get_or_add_access_rule
 
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -697,6 +698,30 @@ class MediatumMagics(Magics):
         ars = q(AccessRuleset).get(args.ruleset_name)
         for ra in ars.rule_assocs:
             print(format_access_rule_assoc(ra))
+
+
+    @needs_init("basic")
+    @magic_arguments()
+    @argument("group_name")
+    @line_magic
+    def create_ruleset_for_group(self, line):
+        args = parse_argstring(self.create_ruleset_for_group, line)
+        group_name = args.group_name
+        usergroup = q(UserGroup).filter_by(name=group_name).scalar()
+        if usergroup is None:
+            print("usergroup {} does not exist, doing nothing!".format(group_name))
+            return
+        
+        existing_ruleset = q(AccessRuleset).filter_by(name=group_name).scalar()
+        if existing_ruleset is not None:
+            print("ruleset with the name of the usergroup already exists, doing nothing!".format(group_name))
+            return
+        
+        rule = get_or_add_access_rule(group_ids=[usergroup.id])
+        ruleset = AccessRuleset(name=group_name, description=group_name)
+        arr = AccessRulesetToRule(rule=rule)
+        ruleset.rule_assocs.append(arr)
+
 
     @needs_init("basic")
     @magic_arguments()
