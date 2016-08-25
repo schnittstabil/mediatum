@@ -46,6 +46,7 @@ def getContent(req, ids):
     The standard method,  which has to be implemented by every module.
     It's called in edit.py, where all the modules will be identified.
     """
+    raise Exception("ACL must be fixed!")
     user = current_user
     node = q(Node).get(ids[0])
     # access_nobody = u'nicht Jeder'
@@ -96,7 +97,7 @@ def getContent(req, ids):
                     node.set('system.identifierstate', u'2')
                     db.session.commit()
 
-                    # add nobody rule if not set
+                    # add nobody ruleset if not set
                     if node.access_rule_assocs.filter_by(ruletype=u'write', invert=True, blocking=True).scalar() is None:
                         everybody_rule = AccessRule()
                         db.session.add(everybody_rule)

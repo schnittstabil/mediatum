@@ -32,6 +32,7 @@ def register():
 class WorkflowStep_Publish(WorkflowStep):
 
     def runAction(self, node, op=""):
+        raise Exception("ACL must be fixed!")
         ugid = q(UserGroup).filter_by(name=u'Workflow').one().id
 
         # remove access rule with 'Workflow' user group id
