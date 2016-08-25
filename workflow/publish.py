@@ -18,30 +18,27 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 from .workflow import WorkflowStep, registerStep
-from core import db
-from core.database.postgres.permission import AccessRule, AccessRulesetToRule
-from core import UserGroup
+from core import UserGroup, db
+from core.permission import get_or_add_access_rule
 q = db.query
 
 
 def register():
-    #tree.registerNodeClass("workflowstep-publish", WorkflowStep_Publish)
     registerStep("workflowstep_publish")
 
 
 class WorkflowStep_Publish(WorkflowStep):
 
     def runAction(self, node, op=""):
-        raise Exception("ACL must be fixed!")
-        ugid = q(UserGroup).filter_by(name=u'Workflow').one().id
+        ugid = q(UserGroup).filter_by(name=u'_workflow').one().id
 
-        # remove access rule with 'Workflow' user group id
+        # remove access rule with '_workflow' user group id
         special_access_ruleset = node.get_special_access_ruleset(ruletype=u'read')
-        for e in special_access_ruleset.rule_assocs:
-            ar = q(AccessRule).get(e.rule_id)
-            if ar is not None and ar.group_ids is not None and (ugid in ar.group_ids):
-                q(AccessRulesetToRule).filter_by(rule_id=ar.id).delete()
-                q(AccessRule).filter_by(id=e.rule_id).delete()
-        db.session.commit()
+        workflow_rule = get_or_add_access_rule(group_ids=[ugid])
 
+        for rule_assoc in special_access_ruleset.rule_assocs:
+            if rule_assoc.rule == workflow_rule:
+                db.session.delete(rule_assoc)
+
+        db.session.commit()
         self.forward(node, True)
