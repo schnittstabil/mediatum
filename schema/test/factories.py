@@ -45,6 +45,13 @@ class TextMetafieldFactory(MetafieldFactory):
     })
 
 
+class CheckMetafieldFactory(MetafieldFactory):
+    attrs = factory.Dict({
+        "type": "check",
+        "label": fuzzy.FuzzyText(length=6, chars=string.lowercase)
+    })
+
+
 
 class FieldMaskitemFactory(SQLAFactory):
     class Meta:

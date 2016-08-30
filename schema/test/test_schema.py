@@ -4,6 +4,7 @@
     :license: GPL3, see COPYING for details
 """
 import schema.schema
+from core.test.fixtures import editor_user
 
 def test_filter_masks(content_node_with_mdt):
     node = content_node_with_mdt
@@ -27,10 +28,9 @@ def test_filter_masks_language_type(content_node_with_mdt):
     assert masks[0]["masktype"] == "testmasktype"
     
     
-def test_update_node(session, req, editor_user, some_node, simple_mask_with_maskitems, guest_user):
+def test_update_node(session, req, schema_init, some_node, simple_mask_with_maskitems, guest_user):
     mask = simple_mask_with_maskitems
     node = some_node
-    schema.schema.init()
     req.form["testattr"] = u"updated"
     req.form["newattr"] = u"new"
     req.form["nodename"] = u"new_name"
@@ -38,3 +38,20 @@ def test_update_node(session, req, editor_user, some_node, simple_mask_with_mask
     assert node["testattr"] == u"updated"
     assert node["newattr"] == u"new"
     assert node.name == u"new_name"
+    
+    
+def test_update_node_check(session, req, schema_init, some_node, simple_mask_with_maskitems, guest_user):
+    mask = simple_mask_with_maskitems
+    node = some_node
+    # initial value
+    mask.update_node(node, req, guest_user)
+    node["check"] = "1"
+
+    # enabled -> disabled without request value
+    mask.update_node(node, req, guest_user)
+    assert node["check"] == "0"
+
+    # disabled -> enabled
+    req.form["check"] = "1"
+    mask.update_node(node, req, guest_user)
+    assert node["check"] == "1"

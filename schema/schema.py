@@ -1068,7 +1068,7 @@ class Mask(Node):
                         updated_attrs[field.name] = value
 
                 elif field["type"] == "check":
-                    updated_attrs[field.name] = 0
+                    updated_attrs[field.name] = "0"
 
                 # handle multilang heritage
                 elif field.name == 'nodename' and translation.getDefaultLanguage() + '__nodename' in form:

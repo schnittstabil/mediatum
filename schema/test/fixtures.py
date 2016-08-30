@@ -8,11 +8,12 @@ import os
 
 from pytest import yield_fixture, fixture
 
+from core.test.fixtures import content_node
+import schema.schema
 from utils.compat import iteritems, itervalues
-logg = logging.getLogger(__name__)
 
 from .factories import *
-from core.test.fixtures import content_node
+
 
 
 METAFIELDS = [
@@ -133,12 +134,20 @@ def simple_mask_with_maskitems(session):
     mi1 = FieldMaskitemFactory(name=u"testattr")
     mi2 = FieldMaskitemFactory(name=u"newattr")
     mi3 = FieldMaskitemFactory(name=u"nodename")
+    mi_check = FieldMaskitemFactory(name=u"check")
     mf1 = TextMetafieldFactory(name=u"testattr")
     mf2 = TextMetafieldFactory(name=u"newattr")
     mf3 = TextMetafieldFactory(name=u"nodename")
+    mf_check = CheckMetafieldFactory(name=u"check")
     mi1.metafield = mf1
     mi2.metafield = mf2
     mi3.metafield = mf3
-    mask.children.extend([mi1, mi2, mi3])
+    mi_check.metafield = mf_check
+    mask.children.extend([mi1, mi2, mi3, mi_check])
     session.flush()
     return mask
+
+
+@fixture(scope="session")
+def schema_init():
+    schema.schema.init()
