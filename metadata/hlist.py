@@ -58,10 +58,9 @@ class m_hlist(Metatype):
         attrfilter = req.args.get(u'attrfilter')
         pidlist = req.args.get(u'id').split(u'|')
 
-        def getAllContainerChildren(node, nodes=list(), attrfilter=attrfilter):
-            for n in node.container_children:
-                nodes = getAllContainerChildren(n, nodes)
-            nodes.extend(filter(lambda c: c and (c.get(attrfilter) != u""), node.container_children))
+        def getAllContainerChildren(node, attrfilter=attrfilter):
+            from contenttypes import Container
+            nodes = node.all_children_by_query(q(Container).filter(Node.a[attrfilter] != ''))
             return nodes
 
         # try direct container children
