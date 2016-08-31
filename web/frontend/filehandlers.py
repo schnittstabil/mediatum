@@ -120,7 +120,8 @@ def send_image(req):
 
     node = get_node_or_version(nid, version_id, Content)
 
-    if node is None or not node.has_data_access():
+    # XXX: should be has_data_access instead, see #1135
+    if node is None or not node.has_read_access():
         return 404
 
     image_files_by_mimetype = {f.mimetype: f for f in node.files.filter_by(filetype=u"image")}
