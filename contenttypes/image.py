@@ -637,7 +637,8 @@ class Image(Content):
 
     """ fullsize popup-window for image node """
     def popup_fullsize(self, req):
-        if not self.has_data_access() or not self.has_read_access():
+        # XXX: should be has_data_access instead, see #1135>
+        if not self.has_read_access():
             return 404
 
         no_flash_requested = req.args.get("no_flash", type=int) == 1
