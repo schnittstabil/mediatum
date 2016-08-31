@@ -19,7 +19,6 @@
 """
 
 from web.edit.edit_common import showdir
-from web.edit.edit import nodeIsChildOfNode
 from core.users import getHomeDir
 from core.transition import current_user
 import logging
@@ -95,7 +94,7 @@ def getContent(req, ids):
                     error = True
 
                 if not error:
-                    if not nodeIsChildOfNode(dest,obj):
+                    if not obj.is_descendant_of(dest):
                         dest.children.append(obj)
                         remove_from_src = True
 

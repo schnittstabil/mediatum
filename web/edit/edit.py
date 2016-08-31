@@ -377,15 +377,6 @@ def getIDs(req):
     return idlist
 
 
-def nodeIsChildOfNode(node1, node2):
-    if node1.id == node2.id:
-        return 1
-    for c in node2.children:
-        if nodeIsChildOfNode(node1, c):
-            return 1
-    return 0
-
-
 @dec_entry_log
 def edit_tree(req):
     language = lang(req)
