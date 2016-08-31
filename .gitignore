@@ -12,3 +12,4 @@ web/root/robots.txt
 migration/mysql_migration.load
 .venv
 py
+docs/build
