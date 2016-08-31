@@ -544,7 +544,8 @@ _parents_rel_options = dict(
     lazy="dynamic",
     primaryjoin=Node.id == t_nodemapping.c.cid,
     secondaryjoin=Node.id == t_nodemapping.c.nid,
-    query_class=NodeAppenderQuery
+    query_class=NodeAppenderQuery,
+    viewonly=True
 )
 
 _all_parents_rel_options = dict(
