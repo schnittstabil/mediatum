@@ -65,8 +65,7 @@ from web.services.cache import date2string as cache_date2string
 resultcache = Cache(maxcount=25, verbose=True)
 
 SEND_TIMETABLE = False
-DEFAULT_NODEQUERY_START = 0
-DEFAULT_NODEQUERY_LIMIT = 100
+DEFAULT_NODEQUERY_LIMIT = config.getint("services.default_limit", 1000)
 
 
 def add_mask_xml(xmlroot, node, mask_name, language):
@@ -614,7 +613,7 @@ def get_node_data_struct(
     sortfield = params.get('sortfield', '')
     sortformat = params.get('sortformat', '')  # 'sissfi'
     limit = params.get("limit", DEFAULT_NODEQUERY_LIMIT)
-    offset = params.get("start", DEFAULT_NODEQUERY_START)
+    offset = params.get("start", 0)
 
     # check node existence
     node = q(Node).get(id)
