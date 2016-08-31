@@ -111,8 +111,13 @@ def getContent(req, ids):
                         logg.error("Error in publishing of node %s: Destination node %s is child of node.", obj_id, dest.id)
 
             if remove_from_src:
-                src.children.remove(obj)
-                db.session.commit()
+                try:
+                    src.children.remove(obj)
+                    db.session.commit()
+                except:
+                    logg.exception("Error in publishing of node %s: Database error", obj.id)
+                    actionerror.append(obj.id)
+                    
 
         v = {}
         v["id"] = publishdir.id
