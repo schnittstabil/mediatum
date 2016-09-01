@@ -328,6 +328,32 @@ BEGIN
 END;
 $f$;
 
+CREATE TYPE integrity_check_inherited_access_rules AS (nid integer, rule_id integer, ruletype text, invert boolean, blocking boolean, reason text);
+
+
+CREATE OR REPLACE FUNCTION integrity_check_inherited_access_rules()
+    RETURNS SETOF integrity_check_inherited_access_rules
+    LANGUAGE plpgsql
+    SET search_path TO :search_path
+    STABLE
+AS $f$
+BEGIN
+RETURN QUERY
+    WITH expected_rules AS (
+        SELECT i.* FROM node JOIN LATERAL inherited_access_rules_read(node.id) i ON TRUE
+        UNION ALL
+        SELECT i.* FROM node JOIN LATERAL inherited_access_rules_write(node.id) i ON TRUE
+        UNION ALL
+        SELECT i.* FROM node JOIN LATERAL inherited_access_rules_data(node.id) i ON TRUE
+    )
+    , missing AS (SELECT * FROM expected_rules EXCEPT SELECT * FROM node_to_access_rule WHERE inherited=true)
+    , excess AS (SELECT * FROM node_to_access_rule WHERE inherited=true EXCEPT SELECT * FROM expected_rules)
+
+    (SELECT nid, rule_id, ruletype, invert, blocking, 'missing' FROM missing)
+    UNION ALL
+    (SELECT nid, rule_id, ruletype, invert, blocking, 'excess' FROM excess);
+END;
+$f$;
 
 CREATE OR REPLACE FUNCTION update_inherited_access_rules_for_node(node_id integer)
     RETURNS SETOF node_to_access_rule
