@@ -381,7 +381,7 @@ AND nid = OLD.nid;
 
 -- re-add incoming transitive connections to `cid`
 INSERT INTO noderelation
-SELECT DISTINCT * FROM transitive_closure_for_node(OLD.cid) WHERE distance > 2;
+SELECT DISTINCT * FROM transitive_closure_for_node(OLD.cid) WHERE distance > 1;
 -- recalculate connections to the subtree under `cid` (all paths going through `cid`)
 PERFORM update_inherited_access_rules_for_node(OLD.cid);
 PERFORM recalculate_relation_subtree(OLD.cid);
