@@ -454,6 +454,59 @@ let
     doCheck = false;
   }; 
 
+  sphinx = self.buildPythonPackage {
+    name = "Sphinx-1.4.6";
+    src = fetchurl {
+      url = "https://pypi.python.org/packages/55/77/75d85633ae923006d6942cc16cf11ba2cbd6c3bd3cac5de029c46aa04afe/Sphinx-1.4.6.tar.gz";
+      sha256 = "9e43430aa9b491ecd86302a1320edb8977da624f63422d494257eab2541a79d3";
+    };
+    doCheck = false;
+    propagatedBuildInputs = with self; [
+      Babel
+      jinja2
+      pygments
+      alabaster
+      docutils
+      six
+      snowballstemmer
+      imagesize
+    ];
+    meta = with pkgs.stdenv.lib; {
+      homepage = "";
+      license = licenses.bsdOriginal;
+      description = "Python documentation generator";
+    };
+  };
+
+  snowballstemmer = self.buildPythonPackage {
+    name = "snowballstemmer-1.2.1";
+    src = fetchurl {
+      url = "https://pypi.python.org/packages/20/6b/d2a7cb176d4d664d94a6debf52cd8dbae1f7203c8e42426daa077051d59c/snowballstemmer-1.2.1.tar.gz";
+      sha256 = "919f26a68b2c17a7634da993d91339e288964f93c274f1343e3bbbe2096e1128";
+    };
+    doCheck = false;
+    propagatedBuildInputs = [ ];
+    meta = with pkgs.stdenv.lib; {
+      homepage = "";
+      license = licenses.bsdOriginal;
+      description = "This package provides 16 stemmer algorithms (15 + Poerter English stemmer) generated from Snowball algorithms.";
+    };
+  };
+
+  imagesize = self.buildPythonPackage {
+    name = "imagesize-0.7.1";
+    src = fetchurl {
+      url = "https://pypi.python.org/packages/53/72/6c6f1e787d9cab2cc733cf042f125abec07209a58308831c9f292504e826/imagesize-0.7.1.tar.gz";
+      sha256 = "0ab2c62b87987e3252f89d30b7cedbec12a01af9274af9ffa48108f2c13c6062";
+    };
+    doCheck = false;
+    propagatedBuildInputs = [ ];
+    meta = with pkgs.stdenv.lib; {
+      homepage = "";
+      license = licenses.mit;
+      description = "Getting image size from png/jpeg/jpeg2000/gif file";
+    };
+  };
 
 in {
   production = [
@@ -526,6 +579,7 @@ in {
       redis-collections
       pkgs.redis
       pytest-splinter
+      sphinx
       yappi
     ];
 
