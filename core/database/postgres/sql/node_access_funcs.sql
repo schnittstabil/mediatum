@@ -344,6 +344,7 @@ RETURN QUERY
         SELECT * FROM inherited_access_rules_write(node_id)
         UNION ALL
         SELECT * FROM inherited_access_rules_data(node_id)
+    ON CONFLICT DO NOTHING
     RETURNING *;
 END;
 $f$;
