@@ -383,6 +383,7 @@ AND nid = OLD.nid;
 INSERT INTO noderelation
 SELECT DISTINCT * FROM transitive_closure_for_node(OLD.cid) WHERE distance > 2;
 -- recalculate connections to the subtree under `cid` (all paths going through `cid`)
+PERFORM update_inherited_access_rules_for_node(OLD.cid);
 PERFORM recalculate_relation_subtree(OLD.cid);
 
 -- check if old parent and child are content nodes (is_container = false)
