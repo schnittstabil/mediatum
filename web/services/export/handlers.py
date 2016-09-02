@@ -712,7 +712,7 @@ def get_node_data_struct(
     if singlenode:
         # we already checked that node can be accessed by the user, just return the node
         nodelist = [node]
-        start = 0
+        node_count = 1
         limit = 1
     else:
         if mdt_name:
