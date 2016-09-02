@@ -153,6 +153,7 @@ def struct2xml(req, path, params, data, d, debug=False, singlenode=False, send_c
             xml_nodelist = create_xml_nodelist(xmlroot)
             xml_nodelist.set("start", unicode(d["nodelist_start"]))
             xml_nodelist.set("count", unicode(d["nodelist_limit"]))
+            xml_nodelist.set("actual_count", unicode(d["nodelist_count"]))
 
             for n in d['nodelist']:
                 xmlnode = add_node_to_xmldoc(n, xml_nodelist, children=False, exclude_filetypes=exclude_filetypes, attribute_name_filter=attribute_name_filter)
@@ -731,12 +732,13 @@ def get_node_data_struct(
             nodelist = nodequery.all()
         except Exception as e:
             return _client_error_response(400, "the database failed with the message: {}".format(str(e)))
-
-        timetable.append(['fetching nodes from db returned {} results'.format(len(nodelist)), time.time() - atime])
+        
+        node_count = len(nodelist)
+        timetable.append(['fetching nodes from db returned {} results'.format(node_count), time.time() - atime])
         atime = time.time()
 
     i0 = int(params.get('i0', '0'))
-    i1 = int(params.get('i1', len(nodelist)))
+    i1 = int(params.get('i1', node_count))
 
     def attr_list(node, sfields):
         r = []
@@ -778,6 +780,7 @@ def get_node_data_struct(
     res['timetable'] = timetable
     res['nodelist_start'] = offset
     res['nodelist_limit'] = limit
+    res['nodelist_count'] = node_count
     res['path'] = req.path
     res['status'] = 'ok'
     res['html_response_code'] = '200'  # ok
