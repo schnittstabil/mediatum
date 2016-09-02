@@ -46,16 +46,34 @@ def test_prepare_searchstring_multiple_stars():
     assert res == u"pyth:*|ni:*|sca:*"
 
 
-def test_prepare_searchstring_leading_stars():
-    searchstring = u"**o*n **"
+def test_prepare_searchstring_only_star():
+    searchstring = u"*"
     with raises(SearchQueryException):
         _prepare_searchstring("|", searchstring)
+
+
+def test_prepare_searchstring_leading_stars():
+    searchstring = u"**o*n **"
+    res = _prepare_searchstring("|", searchstring)
+    assert res == u"o:*"
+
+
+def test_prepare_searchstring_leading_regex_wildcard():
+    searchstring = u".*Authorname*"
+    res = _prepare_searchstring("|", searchstring)
+    assert res == u"Authorname:*"
+
+
+def test_prepare_searchstring_leading_regex_wildcard_space():
+    searchstring = u".*Authorname, A.*"
+    res = _prepare_searchstring("|", searchstring)
+    assert res == u"Authorname,|A.:*"
 
 
 def test_prepare_searchstring_leading_stars_only_in_one():
     searchstring = u"pyth* ni *la"
     res = _prepare_searchstring("|", searchstring)
-    assert res == u"pyth:*|ni"
+    assert res == u"pyth:*|ni|la"
 
 
 def test_prepare_searchstring_postgres_operators():

@@ -42,12 +42,20 @@ class Fts(DeclarativeBase):
 
 
 def _rewrite_prefix_search(t):
-    # we must ignore searchterms starting with * or Postgres will complain
-    starpos = t.find(u"*")
-    # term starts with *: search term would be empty, Postgres doesn't like that
-    if starpos == 0:
-        return
-    return t[:starpos] + u":*"
+    # .* is stripped because some users try to use regex-like syntax. 
+    # Just removing it should lead to better results in most cases.
+    term_without_leading_wildcard = t.lstrip(u".*")
+    if not term_without_leading_wildcard:
+        # term is empty without wildcards, ignore it
+        return 
+    
+    starpos = term_without_leading_wildcard.find(u"*")
+    
+    if starpos == -1:
+        # we removed all stars from the beginning, it's not a wildcard search anymore
+        return term_without_leading_wildcard
+    
+    return term_without_leading_wildcard[:starpos] + u":*"
 
 
 def _escape_postgres_ts_operators(t):
@@ -64,7 +72,8 @@ def _escape_postgres_ts_operators(t):
 
 
 def _prepare_searchstring(op, searchstring):
-    terms = searchstring.strip().strip('"').strip().split()
+    searchstring_cleaned = searchstring.strip().strip('"').strip()
+    terms = searchstring_cleaned.split()
     # escape chars with special meaning in postgres tsearch
     terms = [_escape_postgres_ts_operators(t) for t in terms]
     # Postgres needs the form term:* for prefix search, we allow simple stars at the end of the word
