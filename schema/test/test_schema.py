@@ -34,10 +34,12 @@ def test_update_node(session, req, schema_init, some_node, simple_mask_with_mask
     req.form["testattr"] = u"updated"
     req.form["newattr"] = u"new"
     req.form["nodename"] = u"new_name"
+    req.form["system.attr"] = u"sys"
     mask.update_node(node, req, guest_user)
     assert node["testattr"] == u"updated"
     assert node["newattr"] == u"new"
     assert node.name == u"new_name"
+    assert node.system_attrs["attr"] == u"sys"
     
     
 def test_update_node_check(session, req, schema_init, some_node, simple_mask_with_maskitems, guest_user):

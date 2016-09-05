@@ -134,16 +134,19 @@ def simple_mask_with_maskitems(session):
     mi1 = FieldMaskitemFactory(name=u"testattr")
     mi2 = FieldMaskitemFactory(name=u"newattr")
     mi3 = FieldMaskitemFactory(name=u"nodename")
+    mi4 = FieldMaskitemFactory(name=u"system.attr")
     mi_check = FieldMaskitemFactory(name=u"check")
     mf1 = TextMetafieldFactory(name=u"testattr")
     mf2 = TextMetafieldFactory(name=u"newattr")
     mf3 = TextMetafieldFactory(name=u"nodename")
+    mf4 = TextMetafieldFactory(name=u"system.attr")
     mf_check = CheckMetafieldFactory(name=u"check")
     mi1.metafield = mf1
     mi2.metafield = mf2
     mi3.metafield = mf3
+    mi4.metafield = mf4
     mi_check.metafield = mf_check
-    mask.children.extend([mi1, mi2, mi3, mi_check])
+    mask.children.extend([mi1, mi2, mi3, mi4, mi_check])
     session.flush()
     return mask
 

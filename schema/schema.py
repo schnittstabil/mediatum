@@ -1053,6 +1053,7 @@ class Mask(Node):
         form = req.form
         # collect all changes first and apply them at the end because SQLAlchemy would issue an UPDATE for each attr assignment
         updated_attrs = {}
+        updated_system_attrs = {}
         for item in self.all_maskitems:
             field = item.metafield
 
@@ -1065,7 +1066,10 @@ class Mask(Node):
                         node.name = value
                     else:
                         value = t.format_request_value_for_db(field, form, field.name)
-                        updated_attrs[field.name] = value
+                        if field.name.startswith("system."):
+                            updated_system_attrs[field.name[len("system."):]] = value
+                        else:
+                            updated_attrs[field.name] = value
 
                 elif field["type"] == "check":
                     updated_attrs[field.name] = "0"
@@ -1086,6 +1090,7 @@ class Mask(Node):
         updated_attrs["updatetime"] = format_date()
 
         node.attrs.update(updated_attrs)
+        node.system_attrs.update(updated_system_attrs)
 
         if hasattr(node, "event_metadata_changed"):
             node.event_metadata_changed()
