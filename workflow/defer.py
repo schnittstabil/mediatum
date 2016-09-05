@@ -25,9 +25,10 @@ from .workflow import WorkflowStep, registerStep
 from core.translation import t, addLabels
 from core import db
 from schema.schema import Metafield
-from core.database.postgres.permission import AccessRule, AccessRulesetToRule
-from psycopg2._range import DateRange
+from core.database.postgres.permission import AccessRulesetToRule
+from psycopg2.extras import DateRange
 import datetime
+from core.permission import get_or_add_access_rule
 
 q = db.query
 
@@ -38,6 +39,14 @@ def register():
     #tree.registerNodeClass("workflowstep-defer", WorkflowStep_Defer)
     registerStep("workflowstep_defer")
     addLabels(WorkflowStep_Defer.getLabels())
+
+
+def get_or_add_defer_daterange_rule(year, month, day):
+    """Gets an access rule that blocks access until the date given by `year`, `month` and `day`.
+    The rule is created if it's missing."""
+    dateranges = set([DateRange(datetime.date(year, month, day), datetime.date(9999, 12, 31), '[)')])
+    rule = get_or_add_access_rule(dateranges=dateranges)
+    return rule
 
 
 class WorkflowStep_Defer(WorkflowStep):
@@ -65,11 +74,10 @@ class WorkflowStep_Defer(WorkflowStep):
                     node.set('updatetime', date.format_date(date.parse_date(l_date)))
                     formated_date = date.format_date(date.parse_date(l_date), "dd.mm.yyyy")
                     d = formated_date.split('.')
-                    dateranges = set([DateRange(datetime.date(int(d[2]), int(d[1]), int(d[0])), datetime.date(9999, 12, 31), '[)')])
-                    for item in self.get('accesstype').split(';'):
-                        rule = AccessRule(dateranges=dateranges)
-                        db.session.add(rule)
-                        special_access_ruleset = node.get_or_add_special_access_ruleset(ruletype=item)
+                    rule = get_or_add_defer_daterange_rule(int(d[2]), int(d[1]), int(d[0]))
+
+                    for access_type in self.get('accesstype').split(';'):
+                        special_access_ruleset = node.get_or_add_special_access_ruleset(ruletype=access_type)
                         special_access_ruleset.rule_assocs.append(AccessRulesetToRule(rule=rule))
 
                     db.session.commit()
