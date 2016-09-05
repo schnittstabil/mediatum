@@ -210,10 +210,11 @@ def show_content(req, op):
 def getAdminModules(path):
     mods = {}
     for root, dirs, files in path:
-        for name in [f for f in files if f.endswith(".py") and f != "__init__.py"]:
-            m = __import__("web.admin.modules." + name[:-3])
-            m = eval("m.admin.modules." + name[:-3])
-            mods[name[:-3]] = m
+        if os.path.basename(root) not in ("test", "__pycache__"):
+            for name in [f for f in files if f.endswith(".py") and f != "__init__.py"]:
+                m = __import__("web.admin.modules." + name[:-3])
+                m = eval("m.admin.modules." + name[:-3])
+                mods[name[:-3]] = m
 
     # test for external modules by plugin
     for k, v in config.getsubset("plugins").items():
