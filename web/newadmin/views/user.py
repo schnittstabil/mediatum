@@ -12,8 +12,11 @@ from web.newadmin.views import BaseAdminView
 from wtforms.ext.sqlalchemy.fields import QuerySelectMultipleField
 from flask.ext.admin import form
 from core.auth import INTERNAL_AUTHENTICATOR_KEY
+from core.permission import get_or_add_access_rule
+from core.database.postgres.permission import AccessRuleset, AccessRulesetToRule, NodeToAccessRuleset
+from schema.schema import Metadatatype
 
-
+q = db.query
 logg = logging.getLogger(__name__)
 
 
@@ -62,24 +65,49 @@ class UserView(BaseAdminView):
         if form.password.data and user.authenticator_info.authenticator_key == INTERNAL_AUTHENTICATOR_KEY:
             user.change_password(form.password.data)
 
-
 class UserGroupView(BaseAdminView):
 
     form_excluded_columns = "user_assocs"
     column_details_list = ["id", "name", "description", "hidden_edit_functions", "is_editor_group",
-                           "is_workflow_editor_group", "is_admin_group", "created_at", "user_names"]
+                           "is_workflow_editor_group", "is_admin_group", "created_at", "metadatatype_access", "user_names"]
 
     column_searchable_list = ("name", "description")
 
     column_filters = ("name", "description", "is_editor_group", "is_workflow_editor_group", "is_admin_group")
     can_export = True
 
-    column_labels = dict(user_names = 'Users')
+    column_labels = dict(metadatatype_access = 'Metadatatypes', user_names = 'Users')
 
     form_extra_fields = {
         "users": QuerySelectMultipleField(query_factory=lambda: db.query(User).order_by(User.login_name),
                                           widget=form.Select2Widget(multiple=True)),
+        "metadatatypes": QuerySelectMultipleField(query_factory=lambda: db.query(Metadatatype).order_by(Metadatatype.name),
+                                          widget=form.Select2Widget(multiple=True)),
     }
+
+    def on_form_prefill(self, form, id):
+        form.metadatatypes.data = form._obj.metadatatype_access
+
+    def on_model_change(self, form, usergroup, is_created):
+        if is_created:
+            """ create ruleset for group """
+            existing_ruleset = q(AccessRuleset).filter_by(name=usergroup.name).scalar()
+            if existing_ruleset is None:
+                rule = get_or_add_access_rule(group_ids=[usergroup.id])
+                ruleset = AccessRuleset(name=usergroup.name, description=usergroup.name)
+                arr = AccessRulesetToRule(rule=rule)
+                ruleset.rule_assocs.append(arr)
+
+        """ add/remove access to Metadatatypes """
+        for mt in q(Metadatatype):
+            nrs_list = q(NodeToAccessRuleset).filter_by(nid=mt.id).filter_by(ruleset_name=usergroup.name).all()
+            if mt in form.metadatatypes.data:
+                if not nrs_list:
+                    mt.access_ruleset_assocs.append(NodeToAccessRuleset(ruleset_name=usergroup.name, ruletype=u'read'))
+            else:
+                for nrs in nrs_list:
+                    mt.access_ruleset_assocs.remove(nrs)
+
 
 
     def __init__(self, session=None, *args, **kwargs):

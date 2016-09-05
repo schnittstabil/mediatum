@@ -18,6 +18,10 @@ from core.database.postgres import TimeStamp, integer_fk, integer_pk
 from core import config
 from core.user import UserMixin
 from core.usergroup import UserGroupMixin
+from core import db
+from core.database.postgres.permission import NodeToAccessRuleset
+
+q = db.query
 
 
 logg = logging.getLogger(__name__)
@@ -65,6 +69,11 @@ class UserGroup(DeclarativeBase, TimeStamp, UserGroupMixin):
     def user_names(self):
         _user_names = [unicode(u) for u in self.users]
         return sorted(_user_names, key=unicode.lower)
+
+    @property
+    def metadatatype_access(self):
+        from schema.schema import Metadatatype
+        return db.query(Metadatatype).join(NodeToAccessRuleset).filter_by(ruleset_name=self.name).all()
 
     def __unicode__(self):
         return self.name
