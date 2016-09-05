@@ -106,7 +106,7 @@ def node_value_expression(name):
         return Node.id
     elif name == "node.orderpos":
         return Node.orderpos
-    elif name == "node.name":
+    elif name == "node.name" or name == "nodename":
         return Node.name
     else:
         return mediatumfunc.jsonb_limit_to_size(Node.attrs[name])
