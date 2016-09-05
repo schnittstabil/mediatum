@@ -50,6 +50,7 @@ class WorkflowStep_EditMetadata(WorkflowStep):
 
         if "metaDataEditor" in req.params:
             mask.update_node(node, req, current_user)
+            db.session.commit()
             missing = mask.validate([node])
             if not missing or "gofalse" in req.params:
                 op = "gotrue" in req.params
