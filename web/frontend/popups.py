@@ -106,7 +106,6 @@ def getPrintChildren(req, node, ret):
 
 
 def show_printview(req):
-    raise NotImplementedError("later!")
     from web.edit.edit import printmethod
     """ create a pdf preview of given node (id in path e.g. /print/[id]/[area])"""
     p = req.path[1:].split("/")

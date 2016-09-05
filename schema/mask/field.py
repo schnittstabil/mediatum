@@ -129,7 +129,7 @@ class m_field(Metatype):
 
         value = value.strip()
 
-        if flags & VIEW_HIDE_EMPTY and not value:
+        if flags & VIEW_HIDE_EMPTY  and not flags & VIEW_DATA_ONLY and not value:
             # hide empty elements
             return u''
 
