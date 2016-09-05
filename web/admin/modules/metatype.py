@@ -63,7 +63,19 @@ def checkString(string):
     return False
 
 
-""" standard method for admin module """
+def add_remove_rulesets_from_metadatatype(mtype, new_ruleset_names):
+    new_ruleset_names = set(new_ruleset_names)
+    current_ruleset_assocs_by_ruleset_name = {rs.ruleset.name: rs for rs in mtype.access_ruleset_assocs.filter_by(ruletype=u"read")}
+    current_ruleset_names = set(current_ruleset_assocs_by_ruleset_name)
+    removed_ruleset_names = current_ruleset_names - new_ruleset_names
+    added_ruleset_names = new_ruleset_names - current_ruleset_names
+    
+    for ruleset_name in removed_ruleset_names:
+        rsa = current_ruleset_assocs_by_ruleset_name[ruleset_name]
+        mtype.access_ruleset_assocs.remove(rsa)
+    
+    for ruleset_name in added_ruleset_names:
+        mtype.access_ruleset_assocs.append(NodeToAccessRuleset(ruleset_name=ruleset_name, ruletype=u"read"))
 
 
 def validate(req, op):
@@ -191,14 +203,9 @@ def validate(req, op):
                            orig_name=req.params.get("mname_orig", ""))
             mtype = q(Metadatatype).filter_by(name=req.params.get("mname")).scalar()
             if mtype:
-                for r in mtype.access_ruleset_assocs.filter_by(ruletype=u'read'):
-                    db.session.delete(r)
+                new_ruleset_names = set(req.form.getlist("leftread"))
+                add_remove_rulesets_from_metadatatype(mtype, new_ruleset_names)
 
-                for key in req.params.keys():
-                    if key.startswith("left"):
-                        for r in req.params.get(key).split(';'):
-                            mtype.access_ruleset_assocs.append(NodeToAccessRuleset(ruleset_name=r, ruletype=key[4:]))
-                        break
             db.session.commit()
 
     elif req.params.get("acttype") == "field":
