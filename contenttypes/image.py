@@ -294,10 +294,11 @@ class Image(Content):
         image_files = self.files.filter_by(filetype=u"image")
         image_formats = {}
         for img_file in image_files:
-            image_formats[img_file.mimetype] = {
-                "url": self.image_url_for_mimetype(img_file.mimetype),
-                "display_size": humanize.filesize.naturalsize(img_file.size)
-            }
+            if img_file.exists:
+                image_formats[img_file.mimetype] = {
+                    "url": self.image_url_for_mimetype(img_file.mimetype),
+                    "display_size": humanize.filesize.naturalsize(img_file.size)
+                }
 
         return image_formats
 
