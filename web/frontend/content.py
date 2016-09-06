@@ -38,7 +38,7 @@ from core.database.postgres import mediatumfunc
 from sqlalchemy_continuum.utils import version_class
 import json
 from utils.pathutils import get_accessible_paths
-from web.frontend import ContentBase
+from web.frontend.contentbase import ContentBase
 
 
 logg = logging.getLogger(__name__)

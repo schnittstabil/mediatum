@@ -29,7 +29,7 @@ from schema.searchmask import SearchMaskItem
 from core.webconfig import node_url
 from core.search.representation import FullMatch
 from core.nodecache import get_collections_node
-from web.frontend import ContentBase
+from web.frontend.contentbase import ContentBase
 
 q = db.query
 
