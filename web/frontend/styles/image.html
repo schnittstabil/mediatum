@@ -81,6 +81,17 @@
             </tal:block>
         </a>
         <img tal:condition="python:not zoom" tal:attributes="src presentation_url" style="width: 300px;border:1px double silver;" border="1px"/>
+
+        <div tal:condition="python:image_formats">
+          <h3 i18n:translate="image_available_formats"></h3>
+          <ul tal:repeat="type python:image_formats">
+              <li>
+              <a tal:attributes="href python:image_formats[type]['url']">
+                  <span tal:replace="python:type"></span> (<span tal:replace="python:image_formats[type]['display_size']"></span>)
+              </a>
+              </li>
+          </ul>
+        </div>
     </div>
     <div id="object_meta" tal:content="raw metadata" style="margin-left: 325px;" />
 </div>
