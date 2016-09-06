@@ -10,6 +10,7 @@ from markupsafe import Markup
 from wtforms.fields.core import StringField
 from web.newadmin.views import BaseAdminView
 from wtforms.ext.sqlalchemy.fields import QuerySelectMultipleField
+from wtforms import SelectMultipleField
 from flask.ext.admin import form
 from core.auth import INTERNAL_AUTHENTICATOR_KEY
 from core.permission import get_or_add_access_rule
@@ -78,10 +79,18 @@ class UserGroupView(BaseAdminView):
 
     column_labels = dict(metadatatype_access = 'Metadatatypes', user_names = 'Users')
 
+    edit_functions = ['acls', 'admin', 'changeschema', 'classes', 'editor', 'files', 'ftp', 'identifier',
+                      'license', 'logo', 'lza',
+                      'metadata', 'search', 'searchmask', 'sortfiles', 'statsaccess', 'statsfiles', 'upload']
+
+    edit_function_choices = [(x, x) for x in edit_functions]
+
     form_extra_fields = {
         "users": QuerySelectMultipleField(query_factory=lambda: db.query(User).order_by(User.login_name),
                                           widget=form.Select2Widget(multiple=True)),
         "metadatatypes": QuerySelectMultipleField(query_factory=lambda: db.query(Metadatatype).order_by(Metadatatype.name),
+                                          widget=form.Select2Widget(multiple=True)),
+        "hidden_edit_functions": SelectMultipleField(choices=edit_function_choices,
                                           widget=form.Select2Widget(multiple=True)),
     }
 
