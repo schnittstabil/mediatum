@@ -625,7 +625,7 @@ def action(req):
                             dest.has_write_access() and
                             obj.has_write_access() and
                             isDirectory(dest)):
-                    if not obj.is_descendant_of(dest):
+                    if not dest.is_descendant_of(obj):
                         if action == "move":
                             mysrc.children.remove(obj)
                             changednodes[mysrc.id] = 1  # getLabel(mysrc)
