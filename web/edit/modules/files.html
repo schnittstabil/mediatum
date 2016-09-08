@@ -410,7 +410,7 @@
             <h1 i18n:translate="edit_files_choosedirectory">TEXT</h1>
             <div style="height:150px; overflow:auto;border:1px solid silver;background-color:white">
                 <ul id="tree" class="tree">
-                    <li tal:repeat="basedir basedirs" tal:attributes="id python:'Node'.format(basedir.id)"><a tal:attributes="id python:str(basedir.id); title python: '{} ({})'.format(basedir.getLabel(), str(basedir.id))" tal:content="python:basedir.getLabel()" href="#">TEXT</a>
+                    <li tal:repeat="basedir basedirs" tal:attributes="id python:'Node{}'.format(basedir.id)"><a tal:attributes="id python:str(basedir.id); title python: '{} ({})'.format(basedir.getLabel(), str(basedir.id))" tal:content="python:basedir.getLabel()" href="#">TEXT</a>
                         <ul>
                             <li tal:attributes="parentId python:basedir.id" class="spinner.gif"><a href="#" id="node_0"> </a></li>
                         </ul>
