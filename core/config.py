@@ -282,11 +282,16 @@ def initialize(config_filepath=None, prefer_config_filename=None):
     check_create_dir(settings.get("paths.zoomdir"), "zoomdir")
 
     # extract log dir from log file path and create it if neccessary
-
     log_filepath = settings.get("logging.file")
     if log_filepath:
         log_dirpath = os.path.dirname(log_filepath)
         check_create_dir(log_dirpath, "dir for logging.file")
+        
+    # create log dir if specified
+    log_dirpath = settings.get("logging.dir")
+    if log_dirpath:
+        check_create_dir(log_dirpath, "log dir")
+
 
 
 def check_create_test_db_dir():
