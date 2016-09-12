@@ -367,7 +367,7 @@ def get_license_urls(node):
     license_image_url = None
     license = node.get("license")
     if license:
-        parts = license.split(",")
+        parts = [p.strip() for p in license.split(",")]
         if len(parts) != 2:
             logg.warn("invalid license string '%s', must be comma-separated and contain 2 elements", license)
         elif not parts[1].startswith("http"):

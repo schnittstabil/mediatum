@@ -8,7 +8,7 @@ from contenttypes.data import get_license_urls
 
 
 def test_get_license_urls_valid():
-    node = {"license": "license,http://example.com/license"}
+    node = {"license": "license, http://example.com/license"}
     license_url, license_image_url = get_license_urls(node)
     assert license_url == "http://example.com/license"
     assert license_image_url == "/img/license.png"
