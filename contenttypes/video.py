@@ -77,8 +77,6 @@ class Video(Content):
         if self.has_data_access():
             video = self.files.filter_by(filetype=u"video").scalar()
             obj["video_url"] = u"/file/{}/{}".format(self.id, video.base_name) if video is not None else None
-            versions = self.tagged_versions.all()
-            obj['tag'] = versions[-1].tag if len(versions) > 0 else None
             if not self.isActiveVersion():
                 obj['video_url'] += "?v=" + self.tag
         else:
