@@ -21,6 +21,7 @@
 from werkzeug._compat import wsgi_encoding_dance
 from werkzeug.http import parse_accept_header
 from werkzeug.utils import cached_property
+from array import array
 
 #===============================================================
 #
@@ -3757,7 +3758,8 @@ class upload_input_collector:
         self.handler = handler
         self.boundary = boundary
         request.channel.set_terminator(length)
-        self.data = self._all_data = ""
+        self.data = ""
+        self._all_data = array('c', '')
         self.pos = 0
         self.start_marker = "--" + boundary + "\r\n"
         self.end_marker = "--" + boundary + "--"
@@ -3810,7 +3812,7 @@ class upload_input_collector:
     def collect_incoming_data(self, newdata):
         self.pos += len(newdata)
         self.data += newdata
-        self._all_data += newdata
+        self._all_data += array('c', newdata)
 
         while len(self.data) > 0:
             if self.data.startswith(self.end_marker):
@@ -3863,7 +3865,7 @@ class upload_input_collector:
         d = self.data
         del self.data
         r = self.request
-        r._data = self._all_data
+        r._data = self._all_data.tostring()
         del self.request
         self.handler.continue_request(r, self.form)
 
