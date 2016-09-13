@@ -56,12 +56,12 @@ class ImageZoomData(object):
         if node is None:
             raise ValueError("requested node does not exist or is not an image node: " + str(node_id))
 
-        self.width = int(node.get("origwidth") or 0)
+        self.width = int(node.get("origwidth") or node.get("width", 0))
 
         if not self.width:
             logg.warn("original width for image %s is zero or missing!", self.node_id)
 
-        self.height = int(node.get("origheight") or 0)
+        self.height = int(node.get("origheight") or node.get("width", 0))
 
         if not self.height:
             logg.warn("original width for image %s is zero or missing!", self.node_id)
