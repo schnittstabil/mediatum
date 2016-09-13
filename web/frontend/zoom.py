@@ -94,7 +94,7 @@ class ImageZoomData(object):
 def send_imageproperties_xml(req):
     nid, data = splitpath(req.path)
 
-    if not Node.req_has_access_to_node_id(nid, u"data", req):
+    if not Node.req_has_access_to_node_id(nid, u"read", req):
         return 404
 
     img = get_cached_image_zoom_data(nid)
@@ -105,7 +105,7 @@ def send_imageproperties_xml(req):
 def send_tile(req):
     nid, data = splitpath(req.path)
 
-    if not Node.req_has_access_to_node_id(nid, u"data", req):
+    if not Node.req_has_access_to_node_id(nid, u"read", req):
         return 404
 
     if not req.path.endswith(".jpg"):
