@@ -155,7 +155,7 @@ class Audio(Content):
             audio_file = self.files.filter_by(filetype=u"audio").scalar()
             obj["audio_url"] = u"/file/{}/{}".format(self.id, audio_file.base_name) if audio_file is not None else None
             versions = self.tagged_versions.all()
-            obj['tag'] = versions[-1].tag if len(versions) > 0 else None
+            obj['tag'] = versions[-1].tag if len(versions) > 1 else None
             if not self.isActiveVersion():
                 obj['audio_url'] += "?v=" + self.tag
 

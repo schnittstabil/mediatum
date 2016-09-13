@@ -409,7 +409,8 @@ def prepare_node_data(node, req):
 
     versions = node.tagged_versions.all()
 
-    if versions:
+    # a single version is ignored
+    if len(versions) > 1:
         ctx = {
             "node": node,
             "tag": versions[-1].tag,
