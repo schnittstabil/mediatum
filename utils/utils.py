@@ -261,7 +261,11 @@ def format_filesize(size):
 
 def get_hash(filename):
     try:
-        fi = open(filename, "rb")
+        pathname = filename
+        if not os.path.exists(pathname):
+            import core.config as config
+            pathname = os.path.join(config.settings["paths.datadir"], filename )
+        fi = open(pathname, "rb")
         s = fi.read()
         fi.close()
         return hashlib.md5(s).hexdigest()
@@ -275,8 +279,9 @@ def get_filesize(filename):
             stat = os.stat(filename)
             return stat[6]
         import core.config as config
-        if os.path.exists(config.settings["paths.datadir"] + "/" + filename):
-            stat = os.stat(config.settings["paths.datadir"] + "/" + filename)
+        pathname = os.path.join(config.settings["paths.datadir"], filename )
+        if os.path.exists(pathname):
+            stat = os.stat(pathname)
             return stat[6]
         else:
             return 0
