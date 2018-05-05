@@ -13,7 +13,7 @@ let
 
   ### production deps
 
-  inherit (self) 
+  inherit (self)
   decorator
   flask
   httplib2
@@ -21,7 +21,7 @@ let
   ipdb
   ipython
   jinja2
-  ldap 
+  ldap
   lxml
   pillow
   pygments
@@ -42,6 +42,7 @@ let
       md5 = "f1ed0d26bc66027568bd3385bbb740f7";
     };
     propagatedBuildInputs = with self; [ Mako sqlalchemy python-editor ];
+    checkInputs = with self; [mock pytest];
   };
 
   bibtexparser = self.buildPythonPackage rec {
@@ -255,7 +256,7 @@ let
     };
     propagatedBuildInputs = with self; [six];
   };
-  
+
   pympler = self.buildPythonPackage {
     name = "pympler-0.4.2";
     src = fetchurl {
@@ -283,7 +284,7 @@ let
   };
 
   requests = self.requests2;
-  
+
   scrypt = self.buildPythonPackage {
     name = "scrypt-0.7.1";
     src = fetchurl {
@@ -292,7 +293,7 @@ let
     };
 
     propagatedBuildInputs = with self; [pkgs.openssl];
-    
+
     doCheck = false;
   };
 
@@ -341,9 +342,9 @@ let
     src = fetchurl {
       url = "https://pypi.python.org/packages/89/15/80d388d696c8c8ba14874635207aa698eb30ef1242dbb54d9eccf0e927ff/attrs-16.0.0.tar.gz";
       md5 = "5bcdd418f6e83e580434c63067c08a73";
-    };  
+    };
     doCheck = false;
-  };  
+  };
 
 
   ### test /devel deps
@@ -410,7 +411,7 @@ let
     };
     propagatedBuildInputs = with self; [redis];
   };
-  
+
   selenium = self.buildPythonPackage rec {
     name = "selenium-2.53.6";
     src = pkgs.fetchurl {
@@ -480,11 +481,11 @@ let
       url = "https://bitbucket.org/sumerc/yappi/";
       rev = "69d70e0663fc";
       sha256 = "0phpkxwqill2g4vrh0fyn594jyck3l9r7fvik5906w6192z7k6yq";
-    };  
-    propagatedBuildInputs = with pkgs; []; 
-    buildInputs = with pkgs; []; 
+    };
+    propagatedBuildInputs = with pkgs; [];
+    buildInputs = with pkgs; [];
     doCheck = false;
-  }; 
+  };
 
   sphinx = self.buildPythonPackage {
     name = "Sphinx-1.4.6";

@@ -13,3 +13,6 @@ migration/mysql_migration.load
 .venv
 py
 docs/build
+
+.vagrant/
+*.log
