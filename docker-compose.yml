@@ -1,0 +1,59 @@
+# Setup
+#
+# MediaTUM Config File:
+#    cp mediatum.cfg.template mediatum.cfg
+#    vim mediatum.cfg
+#       [database]
+#       host=postgres
+#       ...
+#       [host]
+#       name=127.0.0.1
+#       ssl=false
+#       ...
+#       [logging]
+#       file=/mediatum/mediatum.log
+#       ...
+#       [paths]
+#       datadir=/mediatum/data/
+#       ...
+#       [server]
+#       mail=somemail.example.com
+#       ...
+#       [services]
+#       activate=true
+#
+# Database Schema Setup and Loading Default Data:
+#    docker-compose build
+#    docker-compose up postgres
+#    # wait until postgres is ready...
+#    docker-compose run --rm mediatum nix-shell --run "bin/manage.py schema create"
+#    docker-compose run --rm mediatum nix-shell --run "bin/manage.py data init"
+#    docker-compose stop
+#
+# Usage:
+#    docker-compose up
+#    xdg-open http://127.0.0.1:8081
+#
+version: "3.7"
+services:
+  postgres:
+    container_name: postgres
+    image : postgres:9.5
+    ports:
+      - 127.0.0.1:5432:5432
+    environment:
+      POSTGRES_DB: mediatum
+      POSTGRES_USER: mediatum
+      POSTGRES_PASSWORD: m
+    volumes:
+      - ./docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
+  mediatum:
+    depends_on:
+      - postgres
+    build: .
+    ports:
+      - 127.0.0.1:8081:8081
+    environment:
+      FLASK_DEBUG: 1
+    volumes:
+      - .:/mediatum/mediatum
