@@ -175,6 +175,7 @@ def initContexts():
     admin_enabled = config.getboolean("admin.activate", True)
     edit_enabled = config.getboolean("edit.activate", True)
     oai_enabled = config.getboolean("oai.activate", False)
+    api_enabled = config.getboolean("api.activate", False)
 
     # === public area ===
     file = context.addFile("web/frontend/filehandlers.py")
@@ -285,6 +286,11 @@ def initContexts():
     # === last: path aliasing for collections ===
     handler = main_file.addHandler("display_alias")
     handler.addPattern("/([_a-zA-Z][_/a-zA-Z0-9]+)$")
+
+    if api_enabled:
+        import web.api
+        athana.add_wsgi_context("/api", web.api.app)
+        athana.add_wsgi_context("/api/.*", web.api.app)
 
     # 404
     handler = main_file.addHandler("display_404")

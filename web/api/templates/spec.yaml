@@ -1,0 +1,333 @@
+openapi: 3.0.0
+info:
+  version: 1.0.0
+  title: mediaTUM API
+servers:
+  - url: /api
+security:
+  - BasicAuth: []
+paths:
+  /metafields:
+    get:
+      summary: Returns metafields
+      tags:
+        - metafield
+      parameters:
+        - name: name
+          in: query
+          required: false
+          description: The name of the metafields to retrieve
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Metafields
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Metafield'
+        default:
+          $ref: '#/components/responses/UnexpectedError'
+  /metafields/{metafield}:
+    get:
+      summary: Info for a specific metafield
+      tags:
+        - metafield
+      parameters:
+        - $ref: '#/components/parameters/metafield'
+      responses:
+        '200':
+          description: Metafield
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Metafield'
+        '404':
+          description: Metafield not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          $ref: '#/components/responses/UnexpectedError'
+  /nodes/{node}:
+    get:
+      summary: Returns Node
+      tags:
+        - node
+      parameters:
+        - $ref: '#/components/parameters/node'
+        - $ref: '#/components/parameters/fulltext'
+      responses:
+        '200':
+          description: Nodes
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Node'
+        default:
+          $ref: '#/components/responses/UnexpectedError'
+  /nodes/allchildren:
+    get:
+      summary: Returns all children
+      tags:
+        - node
+      parameters:
+        - $ref: '#/components/parameters/searchquery'
+        - $ref: '#/components/parameters/nodetype'
+        - $ref: '#/components/parameters/includeSelf'
+        - $ref: '#/components/parameters/queryLimit'
+        - $ref: '#/components/parameters/fulltext'
+      responses:
+        '200':
+          description: Nodes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Node'
+        default:
+          $ref: '#/components/responses/UnexpectedError'
+  /nodes/{node}/allchildren:
+    get:
+      summary: Returns all children
+      tags:
+        - node
+      parameters:
+        - $ref: '#/components/parameters/node'
+        - $ref: '#/components/parameters/searchquery'
+        - $ref: '#/components/parameters/nodetype'
+        - $ref: '#/components/parameters/includeSelf'
+        - $ref: '#/components/parameters/queryLimit'
+        - $ref: '#/components/parameters/fulltext'
+      responses:
+        '200':
+          description: Nodes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Node'
+        default:
+          $ref: '#/components/responses/UnexpectedError'
+  /nodes/{node}/files/{file}:
+    get:
+      summary: Returns file of node
+      tags:
+        - file
+      parameters:
+        - $ref: '#/components/parameters/node'
+        - $ref: '#/components/parameters/file'
+      responses:
+        '200':
+          description: File
+        default:
+          $ref: '#/components/responses/UnexpectedError'
+  /containers/{node}:
+    post:
+      summary: Add a new node to a container
+      tags:
+        - container
+      parameters:
+        - $ref: '#/components/parameters/node'
+        - $ref: '#/components/parameters/fulltext'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Node'
+            example:
+              type: "document"
+              schema: "import-projekte"
+              attrs:
+                name1: "Projektleiter Nachname 1"
+                name2: "Projektleiter Nachname 2"
+                name3: "Projektleiter Nachname 3"
+                title1: "Projektleiter Titel 1"
+                title2: "Projektleiter Titel 2"
+                title3: "Projektleiter Titel 3"
+                company: "Firma"
+                Vorname2: "Projektleiter Vorname 2"
+                Vorname3: "Projektleiter Vorname 3"
+                proj-end: "2012-12-12T00:00:00"
+                firstname1: "Projektleiter Vorname1"
+                institute01: "BAU 1 - Institut für Mathematik und Bauinformatik"
+                institute02: "EIT 1 - Institut für Plasmatechnik und Mathematik"
+                institute03: "Department für Bildungswissenschaft"
+                institute04: "SOWI 1 - Institut für Öffentliches Recht und Völkerrecht"
+                institute05: "LRT 1 - Institut für Mathematik und Rechneranwendung"
+                proj-beginn: "1991-01-01T00:00:00"
+                department01: "Fakultät für Bauingenieurwesen und Umweltwissenschaften"
+                department02: "Fakultät für Elektrotechnik und Informationstechnik"
+                department03: "Fakultät für Humanwissenschaften"
+                department04: "Fakultät für Informatik"
+                department05: "Fakultät für Luft- und Raumfahrttechnik"
+                contactperson: "Ansprechpartner"
+                name-complete: "Projektleiter"
+                project-title: "Projektbezeichnung"
+                external-funds: "Drittmittelgeber"
+                research_hub01: "Forschungszentrum"
+                project-abstract: "Projektbeschreibung"
+      responses:
+        '201':
+          description: The request has been fulfilled and resulted in a new node being created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Node'
+        default:
+          $ref: '#/components/responses/UnexpectedError'
+components:
+  schemas:
+    Metafield:
+      type: object
+      additionalProperties: true
+      description: HAL Document (https://tools.ietf.org/html/draft-kelly-json-hal-08)
+      required:
+        - valueList
+      properties:
+        valueList:
+          type: array
+          items:
+            type: string
+    Node:
+      type: object
+      additionalProperties: true
+      description: HAL Document (https://tools.ietf.org/html/draft-kelly-json-hal-08)
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        type:
+          type: string
+        schema:
+          type: string
+        attrs:
+          type: object
+          additionalProperties: true
+    Error:
+      type: object
+      additionalProperties: true
+      description: HAL Document (https://tools.ietf.org/html/draft-kelly-json-hal-08)
+      required:
+        - error
+      properties:
+        error:
+          type: string
+        request:
+          additionalProperties: true
+          type: object
+
+  parameters:
+    metafield:
+      name: metafield
+      in: path
+      required: true
+      description: The id of the metafield to retrieve
+      schema:
+        type: integer
+
+    node:
+      name: node
+      in: path
+      required: true
+      description: The id of the node
+      schema:
+        type: integer
+      examples:
+        Upload:
+          value: 165
+        Projekte:
+          value: 536
+
+    file:
+      name: file
+      in: path
+      required: true
+      description: The id of the file
+      schema:
+        type: integer
+
+    searchquery:
+      name: query
+      in: query
+      required: false
+      description: The searchquery
+      schema:
+        type: string
+      examples:
+        all:
+          value: null
+        attrs:
+          value: company=firma
+
+    queryLimit:
+      name: limit
+      in: query
+      required: false
+      schema:
+        type: integer
+        default: 1000
+      examples:
+        all:
+          value: 0
+        top3:
+          value: 3
+
+    includeSelf:
+      name: self
+      in: query
+      required: false
+      description: include queried node in results
+      schema:
+        type: boolean
+        default: false
+        nullable: true
+
+    nodetype:
+      name: type
+      in: query
+      required: false
+      description: Node type
+      schema:
+        type: string
+      examples:
+        all:
+          value: ''
+        only containers:
+          value: (collection|directory)
+        only documents:
+          value: document
+
+    fulltext:
+      name: fulltext
+      in: query
+      required: false
+      description: Include fulltext
+      schema:
+        type: boolean
+        default: false
+        nullable: true
+      examples:
+        include fulltext:
+          value: true
+        exclude fulltext:
+          value: false
+  responses:
+    UnexpectedError:
+      description: Unexpected error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  securitySchemes:
+    BasicAuth:
+      type: http
+      scheme: basic
