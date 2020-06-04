@@ -1,5 +1,8 @@
 # Setup
 #
+# Workaround:
+#  sed -i "s/'native_versioning': True/'native_versioning': False/" core/database/postgres/connector.py
+#
 # MediaTUM Config File:
 #    cp mediatum.cfg.template mediatum.cfg
 #    vim mediatum.cfg
