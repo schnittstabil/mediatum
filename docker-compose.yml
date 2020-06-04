@@ -6,6 +6,10 @@
 # MediaTUM Config File:
 #    cp mediatum.cfg.template mediatum.cfg
 #    vim mediatum.cfg
+#       [api]
+#       activate=true
+#       debug=true
+#
 #       [database]
 #       host=postgres
 #       ...
