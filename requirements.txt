@@ -39,3 +39,4 @@ unicodecsv
 werkzeug
 git+https://mediatumdev.ub.tum.de/sqlalchemy-continuum.git@my
 git+https://github.com/smarnach/pyexiftool
+pillow>=8.1.0 # not directly required, pinned by Snyk to avoid a vulnerability
